@@ -11,7 +11,7 @@
 namespace ModelUtility {
 // std::shared_ptr<rclcpp::Node> node_;
 
-inline urdf::Model getURDFModel(const rclcpp::Node::SharedPtr &node, const std::string URDF_param) {
+inline urdf::Model getURDFModel(const rclcpp::Node::SharedPtr &node, const std::string URDF_param, const std::string robot_ns) {
   urdf::Model robot_model;
   std::string urdf_string, urdf_xml, full_urdf_xml;
   // nh.param("urdf_xml", urdf_xml, URDF_param);
@@ -26,11 +26,11 @@ inline urdf::Model getURDFModel(const rclcpp::Node::SharedPtr &node, const std::
 
   // nh.param(full_urdf_xml, xml_string, std::string());
   // RclcppUtility::declare_and_get_parameter(node, full_urdf_xml, std::string(), xml_string, false);
-  auto param_client_ = std::make_shared<rclcpp::SyncParametersClient>(node, "/robot_state_publisher");
+  auto param_client_ = std::make_shared<rclcpp::SyncParametersClient>(node, robot_ns + "robot_state_publisher");
 
   using namespace std::chrono_literals;
-  while (!param_client_->wait_for_service(1s)) {
-    RCLCPP_INFO(node->get_logger(), "waiting for service");
+  while (!param_client_->wait_for_service(1s) || !rclcpp::ok()) {
+    RCLCPP_INFO_STREAM(node->get_logger(), "waiting for service: " << robot_ns << "robot_state_publisher");
   }
 
   auto params = param_client_->get_parameters({ URDF_param });

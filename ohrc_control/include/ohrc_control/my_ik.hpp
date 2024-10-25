@@ -22,15 +22,14 @@
 #include "ohrc_common/utility.h"
 #include "rclcpp/rclcpp.hpp"
 
-namespace MyIK{
+namespace MyIK {
 
 enum SolveType { Pure };
 enum BasicJointType { RotJoint, TransJoint, Continuous };
 
-class MyIK: public std::enable_shared_from_this<MyIK>  {
+class MyIK : public std::enable_shared_from_this<MyIK> {
   rclcpp::Node::SharedPtr node;
   bool initialized, enableSelfCollisionAvoidance = false;
-
 
   KDL::Chain chain;
   KDL::JntArray lb, ub, vb;
@@ -68,7 +67,6 @@ class MyIK: public std::enable_shared_from_this<MyIK>  {
 
   // void initializeSingleRobot(const KDL::Chain& chain);
 
-
   int addSelfCollisionAvoidance(const KDL::JntArray& q_cur, std::vector<double>& lower_vel_limits_, std::vector<double>& upper_vel_limits_, std::vector<MatrixXd>& A_ca);
 
   std::vector<std::vector<long long>> combsRobot, combosLink;
@@ -97,8 +95,8 @@ public:
   VectorXd getUpdatedJntVelLimit(const KDL::JntArray& q_cur, std::vector<double>& lower_vel_limits, std::vector<double>& upper_vel_limits, const double& dt);
 
   // single robot initilizer (with URDF)
-  MyIK(const rclcpp::Node::SharedPtr& node, const std::string& base_link, const std::string& tip_link, const std::string& URDF_param = "/robot_description", double _eps = 1e-5,
-       Affine3d T_base_world = Affine3d::Identity(), SolveType _type = Pure);
+  MyIK(const rclcpp::Node::SharedPtr& node, const std::string robot_ns, const std::string& base_link, const std::string& tip_link,
+       const std::string& URDF_param = "/robot_description", double _eps = 1e-5, Affine3d T_base_world = Affine3d::Identity(), SolveType _type = Pure);
   // single robot initilizer (without URDF)
   MyIK(const rclcpp::Node::SharedPtr& node, const KDL::Chain& _chain, const KDL::JntArray& _q_min, const KDL::JntArray& _q_max, double _eps = 1e-5,
        Affine3d T_base_world = Affine3d::Identity(), SolveType _type = Pure);

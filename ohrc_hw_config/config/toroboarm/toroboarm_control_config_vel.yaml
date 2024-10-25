@@ -16,10 +16,10 @@
     # initIKAngle: [0, 0, 0, 0, 0, 0, 0]
     # initial_pose: [0.4, 0.0, 0.3, 0.0, 3.141592, 0]
 
-    follower_list: # robot namespace list. They should be unique. if you ("") means the robot has no namespace
-      toroboarm: # robot config name
-        - "toroboarm_1" # robot namespace
-        # - "toroboarm_2"
+    follower:
+      hw: ["toroboarm"] # robot config name, which needs to be defined in hw_config.yaml
+      ns: # robot namespaces for each robot, which should be unique among all robots. ("") means the robot has no namespace
+        toroboarm: ["aaa"]
 
     priority: "Manual" #"Automation" #  (for multi-follower)
     MF_mode: "Parallel" # "Individual" #  (for multi-follower)

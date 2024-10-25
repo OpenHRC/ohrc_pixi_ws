@@ -50,11 +50,12 @@ void CartController::init(std::string robot, std::string hw_config) {
   RCLCPP_INFO_STREAM(node->get_logger(), "Initializing " + header);
 
   if (robot != "")
-    robot_ns = robot + ".";
-  urdf_param = robot_ns + "robot_description";
+    robot_ns = robot + "/";
 
   if (hw_config != "")
     hw_config_ns = hw_config + ".";
+
+  urdf_param = "robot_description";
 
   if (!getRosParams()) {
     RCLCPP_FATAL_STREAM(node->get_logger(), "Failed to get ROS parameters for" << header);
@@ -94,6 +95,7 @@ void CartController::init(std::string robot, std::string hw_config) {
   RclcppUtility::declare_and_get_parameter(this->node, robot_ns + "ft_sensor_link", std::string("ft_sensor_link"), ft_sensor_link);
   RclcppUtility::declare_and_get_parameter(this->node, robot_ns + "ft_topic", std::string("ft_sensor/filtered"), ft_topic);
 
+#if 0
   RCLCPP_INFO_STREAM(node->get_logger(), "Looking for force/torque sensor TF: " << ft_sensor_link << ", topic: " << ft_topic);
   if (trans->canTransform(robot_ns + chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration(1.0, 0))) {
     this->Tft_eff = trans->getTransform(robot_ns + chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration(1., 0));
@@ -105,16 +107,19 @@ void CartController::init(std::string robot, std::string hw_config) {
     RCLCPP_WARN_STREAM(node->get_logger(), "force/torque sensor was not found. Compliance control does not work.");
 
   // client = nh.serviceClient<std_srvs::Empty>("/" + robot_ns + "ft_filter/reset_offset");
-  if (ftFound) {
+  // if (ftFound) {
+  if (false) {
     client = node->create_client<std_srvs::srv::Empty>("/" + robot_ns + "ft_filter/reset_offset");
     while (!client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(this->get_logger(), "Client interrupted while waiting for service");
         return;
       }
-      RCLCPP_INFO(this->get_logger(), "waiting for service...");
+      RCLCPP_INFO_STREAM(this->get_logger(), "waiting for service...: " << robot_ns + "ft_filter/reset_offset");
     }
   }
+
+#endif
   // if (publisher == PublisherType::Trajectory){
   //   // jntCmdPublisher = nh.advertise<trajectory_msgs::JointTrajectory>("/" + robot_ns + publisherTopicName + "/command", 1);
   //   jntCmdPublisher = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("/" + robot_ns + publisherTopicName + "/command", rclcpp::QoS(1));
@@ -190,7 +195,7 @@ void CartController::initMembers() {
   dt = 1.0 / freq;
 
   this->T_base_root = trans->getTransform(root_frame, robot_ns + chain_start, rclcpp::Time(0), rclcpp::Duration(1, 0));
-  myik_solver_ptr = std::make_shared<MyIK::MyIK>(this->node, chain_start, chain_end, urdf_param, eps, T_base_root);
+  myik_solver_ptr = std::make_shared<MyIK::MyIK>(this->node, robot_ns, chain_start, chain_end, urdf_param, eps, T_base_root);
   myik_solver_ptr->initializeSingleRobot();
   bool valid = myik_solver_ptr->getKDLChain(chain);
   chain_segs = chain.segments;
