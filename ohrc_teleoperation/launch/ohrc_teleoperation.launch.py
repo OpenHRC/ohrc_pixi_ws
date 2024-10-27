@@ -1,25 +1,66 @@
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo,OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration, PythonExpression, TextSubstitution
 from launch.conditions import IfCondition
 from launch_ros.substitutions import FindPackageShare
 
-# def get_user_frame_args():
-#   if EqualsSubstitution(LaunchConfiguration('user_frame_viewpoint'), 'back'):
-#     return ['--x', '0', '--y', '0','--z', '0', '--yaw', '0', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
-#   elif EqualsSubstitution(LaunchConfiguration('user_frame_viewpoint'), 'face'):
-#     return ['--x', '0', '--y', '0','--z', '0', '--yaw', '3.141592', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
-#   elif EqualsSubstitution(LaunchConfiguration('user_frame_viewpoint'), 'right'):
-#     return ['--x', '0', '--y', '0','--z', '0', '--yaw', '1.57079', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
-#   elif EqualsSubstitution(LaunchConfiguration('user_frame_viewpoint'), 'left'):
-#     return ['--x', '0', '--y', '0','--z', '0', '--yaw', '-1.57079', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
 
+
+def launch_setup(context, *args, **kwargs):
+
+    def get_user_frame_args(view):
+      if view == 'back':
+        return ['--x', '0', '--y', '0','--z', '0', '--yaw', '0', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
+      elif view == 'face':
+        return ['--x', '0', '--y', '0','--z', '0', '--yaw', '3.141592', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
+      elif view == 'right':
+        return ['--x', '0', '--y', '0','--z', '0', '--yaw', '1.57079', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
+      elif view == 'left':
+        return ['--x', '0', '--y', '0','--z', '0', '--yaw', '-1.57079', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
+      
+    view = LaunchConfiguration('user_frame_viewpoint').perform(context)
+
+    node_to_start = [
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                [FindPackageShare('ohrc_control'), '/launch/ohrc_control.launch.py']),
+            launch_arguments={
+                'app': 'teleoperation',
+                'robot': LaunchConfiguration('robot'),
+                'controller': LaunchConfiguration('controller'),
+                'interface': LaunchConfiguration('interface'),
+                'feedback_mode': LaunchConfiguration('feedback_mode'),
+                'use_ft_filter': LaunchConfiguration('use_ft_filter'),
+                'hw_config': LaunchConfiguration('hw_config'),
+                'admittance_config': LaunchConfiguration('admittance_config'),
+                'control_config': LaunchConfiguration('control_config'),
+                'interface_config': LaunchConfiguration('interface_config'),
+                'use_rviz': LaunchConfiguration('use_rviz'),
+                'rviz_config': LaunchConfiguration('rviz_config')
+            }.items()
+        ),
+
+        # Node(
+        #   package='tf2_ros',
+        #   executable='static_transform_publisher',
+        #   name='user_frame_broadcaster',
+        #   arguments=get_user_frame_args()
+        # ),
+
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='user_frame_broadcaster',
+            arguments=get_user_frame_args(view),
+        ),
+    ]
+    return node_to_start
 
 def generate_launch_description():
-    return LaunchDescription([
+    declared_arguments = [
         DeclareLaunchArgument('robot', default_value='ur5e'),
         # vel or vel_trj or vel_pos
         DeclareLaunchArgument('controller', default_value='vel'),
@@ -41,68 +82,9 @@ def generate_launch_description():
         DeclareLaunchArgument('use_rviz', default_value='true'),
         DeclareLaunchArgument('rviz_config', default_value=[FindPackageShare(
             'ohrc_teleoperation'), '/config/teleoperation.rviz']),
+    ]
 
 
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [FindPackageShare('ohrc_control'), '/launch/ohrc_control.launch.py']),
-            launch_arguments={
-                'app': 'teleoperation',
-                'robot': LaunchConfiguration('robot'),
-                'controller': LaunchConfiguration('controller'),
-                'interface': LaunchConfiguration('interface'),
-                'feedback_mode': LaunchConfiguration('feedback_mode'),
-                'use_ft_filter': LaunchConfiguration('use_ft_filter'),
-                'hw_config': LaunchConfiguration('hw_config'),
-                'admittance_config': LaunchConfiguration('admittance_config'),
-                'control_config': LaunchConfiguration('control_config'),
-                'interface_config': LaunchConfiguration('interface_config'),
-                'use_rviz': LaunchConfiguration('use_rviz'),
-                'rviz_config': LaunchConfiguration('rviz_config')
-            }.items()
-        ),
+    return LaunchDescription(declared_arguments  + [OpaqueFunction(function=launch_setup)])
 
 
-        # Node(
-        #   package='tf2_ros',
-        #   executable='static_transform_publisher',
-        #   name='user_frame_broadcaster',
-        #   arguments=get_user_frame_args()
-        # ),
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='user_frame_broadcaster',
-            # arguments=get_user_frame_args(),
-            arguments=['--x', '0', '--y', '0', '--z', '0', '--yaw', '0', '--pitch', '0',
-                       '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame'],
-            condition=IfCondition(PythonExpression(
-                ["'", LaunchConfiguration('user_frame_viewpoint'), "' == 'back'"]))
-        ),
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='user_frame_broadcaster',
-            arguments=['--x', '0', '--y', '0', '--z', '0', '--yaw', '3.141592', '--pitch',
-                       '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame'],
-            condition=IfCondition(PythonExpression(
-                ["'", LaunchConfiguration('user_frame_viewpoint'), "' == 'face'"]))
-        ),
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            arguments=['--x', '0', '--y', '0', '--z', '0', '--yaw', '1.57079', '--pitch',
-                       '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame'],
-            condition=IfCondition(PythonExpression(
-                ["'", LaunchConfiguration('user_frame_viewpoint'), "' == 'right'"]))
-        ),
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='user_frame_broadcaster',
-            arguments=['--x', '0', '--y', '0', '--z', '0', '--yaw', '-1.57079', '--pitch',
-                       '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame'],
-            condition=IfCondition(PythonExpression(
-                ["'", LaunchConfiguration('user_frame_viewpoint'), "' == 'left'"]))
-        ),
-    ])

@@ -45,18 +45,20 @@ inline urdf::Model getURDFModel(const rclcpp::Node::SharedPtr &node, const std::
   return robot_model;
 }
 
-inline KDL::Chain getKDLChain(const urdf::Model &robot_model, const std::string &base_link, const std::string &tip_link) {
+inline KDL::Chain getKDLChain(const rclcpp::Node::SharedPtr &node, const urdf::Model &robot_model, const std::string &base_link, const std::string &tip_link) {
   // ROS_DEBUG_STREAM("Reading joints and links from URDF");
 
   KDL::Chain chain;
   KDL::Tree tree;
-  if (!kdl_parser::treeFromUrdfModel(robot_model, tree)) {
+  if (!kdl_parser::treeFromUrdfModel(robot_model, tree)){
+    RCLCPP_FATAL_STREAM(node->get_logger(), "Failed to extract kdl tree from xml robot description");
+    rclcpp::shutdown();
   }
-  // ROS_FATAL("Failed to extract kdl tree from xml robot description");
 
-  if (!tree.getChain(base_link, tip_link, chain)) {
+  if (!tree.getChain(base_link, tip_link, chain)){
+    RCLCPP_FATAL_STREAM(node->get_logger(), "Failed to extract kdl chain from kdl tree form " << base_link << " to " << tip_link);
+    rclcpp::shutdown();
   }
-  // ROS_FATAL("Couldn't find chain %s to %s", base_link.c_str(), tip_link.c_str());
 
   return chain;
 }

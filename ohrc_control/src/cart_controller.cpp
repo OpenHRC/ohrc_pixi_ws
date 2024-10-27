@@ -328,6 +328,7 @@ void CartController::cbJntState(const sensor_msgs::msg::JointState::SharedPtr ms
       break;
     }
   }
+  // std::cout << chain_segs.size() << std::endl;
 
   if (!allJntFound)
     return;

@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     toroboarm:
-      chain_start: "link0" # base frame of commands
+      chain_start: "base" # base frame of commands
       chain_end: "link7" #"link7" # target eff frame
 
 

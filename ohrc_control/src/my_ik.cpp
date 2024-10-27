@@ -6,7 +6,7 @@ MyIK::MyIK(const rclcpp::Node::SharedPtr& node, const std::string robot_ns, cons
            Affine3d T_base_world, SolveType _type)
   : node(node), nRobot(1), initialized(false), eps(_eps), T_base_world(T_base_world), solvetype(_type) {
   urdf::Model robot_model = ModelUtility::getURDFModel(node, URDF_param, robot_ns);
-  chain = ModelUtility::getKDLChain(robot_model, base_link, tip_link);
+  chain = ModelUtility::getKDLChain(node, robot_model, base_link, tip_link);
 
   nJnt = chain.getNrOfJoints();
   nSeg = chain.getNrOfSegments();
