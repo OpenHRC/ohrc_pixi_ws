@@ -25,6 +25,11 @@ jobs:
         mkdir -p ${WS}/src
         ln -s ${GITHUB_WORKSPACE} ${WS}/src/
 
+    - name: clone ur_gz
+      run: |
+        cd ${WS}/src
+        git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation.git -b humble
+
     - name: pre build
       run: |
         source /opt/ros/humble/setup.bash
