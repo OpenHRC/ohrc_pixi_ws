@@ -19,7 +19,7 @@
     follower:
       hw: ["toroboarm"] # robot config name, which needs to be defined in hw_config.yaml
       ns: # robot namespaces for each robot, which should be unique among all robots. ("") means the robot has no namespace
-        toroboarm: ["abc"]
+        toroboarm: ["toroboarm_1"]
 
     priority: "Manual" #"Automation" #  (for multi-follower)
     MF_mode: "Parallel" # "Individual" #  (for multi-follower)
