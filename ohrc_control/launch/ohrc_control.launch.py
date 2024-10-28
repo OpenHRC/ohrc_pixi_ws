@@ -59,11 +59,11 @@ def generate_launch_description():
         #     condition=IfCondition(LaunchConfiguration('use_ft_filter'))
         # ),
 
-        # Node(
-        #   package='rviz2',
-        #   executable='rviz2',
-        #   name='rviz',
-        #   arguments=['-d', LaunchConfiguration('rviz_config')],
-        #   condition=IfCondition(LaunchConfiguration('use_rviz'))
-        # ),
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz',
+            arguments=['-d', LaunchConfiguration('rviz_config')],
+            condition=IfCondition(LaunchConfiguration('use_rviz'))
+        ),
     ])
