@@ -16,9 +16,7 @@ OpenHRC has been developed and tested in the following environments:
 Note: Imigration of OpenHRC to ROS2 is under developemnt. If you want to use ROS1 version, please checkout the `master` branch.
 
 
-## Native (Ubuntu 20.04) / Docker (on Ubuntu distribution) Installation
-
-If you just try OpneHRC with minimum effor on other operating systems, please take a look at [Docker-VNC Installation](#Docker-VNC-Installation) section.
+## Installation
 
 In the following instruction, the catkin workspace directory is assumed to be `~/ros2_ws` on host.
 
@@ -26,7 +24,7 @@ In the following instruction, the catkin workspace directory is assumed to be `~
 ```bash
 $ mkdir -p ~/ros2_ws/src
 $ cd ~/ros2_ws/src
-$ git clone https://github.com/Automation-Research-Team/OpenHRC.git --recursive
+$ git clone https://github.com/Automation-Research-Team/OpenHRC.git -b ros2 --recursive
 ```
 
 ### Resolve Dependencies
