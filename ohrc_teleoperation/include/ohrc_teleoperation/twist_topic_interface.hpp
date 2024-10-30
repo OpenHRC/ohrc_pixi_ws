@@ -23,8 +23,6 @@ protected:
 
   ohrc_msgs::msg::State state;
 
-  std::string stateTopicName = "/cmd_vel", stateFrameId = "world";
-
   void cbTwist(const geometry_msgs::msg::Twist::SharedPtr msg);
   // virtual void modifyTargetState(geometry?::State& state){};
   virtual void setSubscriber();
