@@ -23,10 +23,7 @@ void TwistTopicInterface::initInterface() {
 
 void TwistTopicInterface::setSubscriber() {
   this->getTopicAndFrameName("cmd_vel", "user_frame");
-  if (stateTopicName[0] != '/')
-    stateTopicName = controller->getRobotNs() + stateTopicName;
 
-  // subTwist = n.subscribe<geometry_msgs::msg::Twist>(stateTopicName, 2, &TwistTopicInterface::cbTwist, this, th);
   subTwist = node->create_subscription<geometry_msgs::msg::Twist>(stateTopicName, rclcpp::QoS(1), std::bind(&TwistTopicInterface::cbTwist, this, std::placeholders::_1));
 }
 

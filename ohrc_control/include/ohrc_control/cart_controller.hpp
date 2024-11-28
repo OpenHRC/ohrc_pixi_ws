@@ -178,6 +178,7 @@ protected:
   // int moveInitPos();
 
   void sendPositionCmd(const VectorXd& q_des);
+  void sendJointStateCmd(const VectorXd& q_des, const VectorXd& dq_des);
   void sendVelocityCmd(const VectorXd& dq_des);
   void sendVelocityCmd(const VectorXd& q_des, const VectorXd& dq_des, const KDL::JntArray& q_cur, const bool& lastLoop);
   void sendTrajectoryCmd(const VectorXd& q_des, const double& T);
@@ -385,6 +386,7 @@ public:
 
   // template <typename MsgType>
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr jntCmdPublisher;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr jntStateCmdPublisher;
   rclcpp::Publisher<ohrc_msgs::msg::State>::SharedPtr desStatePublisher, curStatePublisher;
   // rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr markerPublisher;
 

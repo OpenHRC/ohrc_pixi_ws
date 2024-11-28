@@ -13,33 +13,28 @@ namespace ModelUtility {
 
 inline urdf::Model getURDFModel(const rclcpp::Node::SharedPtr &node, const std::string URDF_param, const std::string robot_ns) {
   urdf::Model robot_model;
-  std::string urdf_string, urdf_xml, full_urdf_xml;
-  // nh.param("urdf_xml", urdf_xml, URDF_param);
-  // RclcppUtility::declare_and_get_parameter(node, "urdf_xml", URDF_param, urdf_xml);
-  // nh.searchParam(urdf_xml, full_urdf_xml)
-  full_urdf_xml = URDF_param;
 
-  // if (!RclcppUtility::declare_and_get_parameter(node, full_urdf_xml, xml_string, ) {
-  //   ROS_FATAL("Could not load the xml from parameter server: %s", urdf_xml.c_str());
-  //   return robot_model;
-  // }
+  std::string urdf_path = "";
+  RclcppUtility::declare_and_get_parameter(node, "urdf_path", std::string(""), urdf_path);
 
-  // nh.param(full_urdf_xml, xml_string, std::string());
-  // RclcppUtility::declare_and_get_parameter(node, full_urdf_xml, std::string(), xml_string, false);
-  auto param_client_ = std::make_shared<rclcpp::SyncParametersClient>(node, robot_ns + "robot_state_publisher");
+  if (urdf_path == "") {
+    auto param_client_ = std::make_shared<rclcpp::SyncParametersClient>(node, robot_ns + "robot_state_publisher");
 
-  using namespace std::chrono_literals;
-  while (!param_client_->wait_for_service(1s) || !rclcpp::ok()) {
-    RCLCPP_INFO_STREAM(node->get_logger(), "waiting for service: " << robot_ns << "robot_state_publisher");
-  }
-
-  auto params = param_client_->get_parameters({ URDF_param });
-
-  for (auto &param : params) {
-    if (param.get_name() == URDF_param) {
-      robot_model.initString(param.value_to_string());
-      break;
+    using namespace std::chrono_literals;
+    while (!param_client_->wait_for_service(1s) && rclcpp::ok()) {
+      RCLCPP_INFO_STREAM(node->get_logger(), "waiting for service: " << robot_ns << "robot_state_publisher");
     }
+
+    auto params = param_client_->get_parameters({ URDF_param });
+
+    for (auto &param : params) {
+      if (param.get_name() == URDF_param) {
+        robot_model.initString(param.value_to_string());
+        break;
+      }
+    }
+  } else {
+    robot_model.initFile(urdf_path);
   }
 
   return robot_model;
@@ -50,12 +45,12 @@ inline KDL::Chain getKDLChain(const rclcpp::Node::SharedPtr &node, const urdf::M
 
   KDL::Chain chain;
   KDL::Tree tree;
-  if (!kdl_parser::treeFromUrdfModel(robot_model, tree)){
+  if (!kdl_parser::treeFromUrdfModel(robot_model, tree)) {
     RCLCPP_FATAL_STREAM(node->get_logger(), "Failed to extract kdl tree from xml robot description");
     rclcpp::shutdown();
   }
 
-  if (!tree.getChain(base_link, tip_link, chain)){
+  if (!tree.getChain(base_link, tip_link, chain)) {
     RCLCPP_FATAL_STREAM(node->get_logger(), "Failed to extract kdl chain from kdl tree form " << base_link << " to " << tip_link);
     rclcpp::shutdown();
   }

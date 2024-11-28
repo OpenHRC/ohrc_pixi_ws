@@ -87,7 +87,7 @@ void CartController::init(std::string robot, std::string hw_config) {
 
   // jntStateSubscriber = nh.subscribe("/" + robot_ns + "joint_states", 1, &CartController::cbJntState, this, th);
   std::string jnt_state_topic = "/" + robot_ns + "joint_states";
-  subJntState = node->create_subscription<sensor_msgs::msg::JointState>(jnt_state_topic, rclcpp::QoS(1), std::bind(&CartController::cbJntState, this, _1));
+  subJntState = node->create_subscription<sensor_msgs::msg::JointState>(jnt_state_topic, rclcpp::QoS(10), std::bind(&CartController::cbJntState, this, _1));
   subFlagPtrs.push_back(&flagJntState);
 
   std::string ft_sensor_link, ft_topic;
@@ -128,7 +128,11 @@ void CartController::init(std::string robot, std::string hw_config) {
   //   jntCmdPublisher = nh.advertise<control_msgs::msg::FollowJointTrajectoryActionGoal>("/" + robot_ns + publisherTopicName + "/follow_joint_trajectory/goal", 1);
   // else
   // jntCmdPublisher = nh.advertise<std_msgs::msg::Float64MultiArray>("/" + robot_ns + publisherTopicName + "/command", 2);
-  jntCmdPublisher = node->create_publisher<std_msgs::msg::Float64MultiArray>("/" + robot_ns + publisherTopicName + "/commands", rclcpp::QoS(1));
+
+  if (publisher == PublisherType::JointState)
+    jntStateCmdPublisher = node->create_publisher<sensor_msgs::msg::JointState>(publisherTopicName, rclcpp::QoS(10));
+  else
+    jntCmdPublisher = node->create_publisher<std_msgs::msg::Float64MultiArray>("/" + robot_ns + publisherTopicName + "/commands", rclcpp::QoS(10));
 
   desStatePublisher = node->create_publisher<ohrc_msgs::msg::State>("/" + robot_ns + "state/desired", rclcpp::QoS(100));
   curStatePublisher = node->create_publisher<ohrc_msgs::msg::State>("/" + robot_ns + "state/current", rclcpp::QoS(100));
@@ -136,7 +140,12 @@ void CartController::init(std::string robot, std::string hw_config) {
   if (robot_ns != "")
     service = node->create_service<std_srvs::srv::Empty>("/" + robot_ns + "reset", std::bind(&CartController::resetService, this, _1, _2));
 
-  Affine3d T_init_base = getTransform_base(robot_ns + initPoseFrame);
+  if (initPoseFrame[0] != '/')
+    initPoseFrame = robot_ns + initPoseFrame;
+  else
+    initPoseFrame.erase(0, 1);
+
+  Affine3d T_init_base = getTransform_base(initPoseFrame);
   T_init = Translation3d(initPose[0], initPose[1], initPose[2]) *
            (AngleAxisd(initPose[3], Vector3d::UnitX()) * AngleAxisd(initPose[4], Vector3d::UnitY()) * AngleAxisd(initPose[5], Vector3d::UnitZ()));
   T_init = T_init_base * T_init;
@@ -171,6 +180,8 @@ bool CartController::getRosParams() {
     defaltPublisherTopicName = "joint_velocity_controller";
   else if (publisher == PublisherType::Trajectory || publisher == PublisherType::TrajectoryAction)
     defaltPublisherTopicName = "joint_trajectory_controller";
+  else if (publisher == PublisherType::JointState)
+    defaltPublisherTopicName = "/joint_command";
   RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "topic_namespace", defaltPublisherTopicName, publisherTopicName);
 
   double freq_bound;
@@ -194,13 +205,30 @@ void CartController::initMembers() {
 
   dt = 1.0 / freq;
 
-  this->T_base_root = trans->getTransform(root_frame, robot_ns + chain_start, rclcpp::Time(0), rclcpp::Duration(1, 0));
-  myik_solver_ptr = std::make_shared<MyIK::MyIK>(this->node, robot_ns, chain_start, chain_end, urdf_param, eps, T_base_root);
+  std::string chain_start_ = chain_start, chain_end_ = chain_end;
+  if (chain_start_[0] == '/')
+    chain_start_.erase(0, 1);
+  if (chain_end_[0] == '/')
+    chain_end_.erase(0, 1);
+
+  myik_solver_ptr = std::make_shared<MyIK::MyIK>(this->node, robot_ns, chain_start_, chain_end_, urdf_param, eps, T_base_root);
   myik_solver_ptr->initializeSingleRobot();
   bool valid = myik_solver_ptr->getKDLChain(chain);
   chain_segs = chain.segments;
 
   fk_solver_ptr = std::make_unique<KDL::ChainFkSolverPos_recursive>(chain);
+
+  if (chain_start[0] != '/')
+    chain_start = robot_ns + chain_start;
+  else
+    chain_start = chain_start.erase(0, 1);
+
+  if (chain_end[0] != '/')
+    chain_end = robot_ns + chain_end;
+  else
+    chain_end = chain_end.erase(0, 1);
+
+  this->T_base_root = trans->getTransform(root_frame, chain_start, rclcpp::Time(0), rclcpp::Duration(1, 0));
 
   nJnt = chain.getNrOfJoints();
   _q_cur.resize(nJnt);
@@ -251,7 +279,7 @@ void CartController::resetPose() {
 }
 
 Affine3d CartController::getTransform_base(std::string target) {
-  return trans->getTransform(robot_ns + chain_start, target, rclcpp::Time(0), rclcpp::Duration(1.0, 0));
+  return trans->getTransform(chain_start, target, rclcpp::Time(0), rclcpp::Duration(1.0, 0));
 }
 
 // void CartController::signal_handler(int signum) {
@@ -371,7 +399,7 @@ void CartController::cbJntState(const sensor_msgs::msg::JointState::SharedPtr ms
 void CartController::cbForce(const geometry_msgs::msg::WrenchStamped::SharedPtr msg) {
   std::lock_guard<std::mutex> lock(mtx);
   _force.header.stamp = msg->header.stamp;
-  _force.header.frame_id = robot_ns + chain_end;
+  _force.header.frame_id = chain_end;
   _force.wrench = geometry_msgs_utility::transformFT(msg->wrench, Tft_eff);
 
   this->pubEefForce->publish(_force);
@@ -470,6 +498,10 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
       // rclcpp::sleep_for(T.second())
       lastLoop = true;
       break;
+    case PublisherType::JointState:
+      sendJointStateCmd(q_des_t, dq_des_t);
+      break;
+
     default:
       // ROS_ERROR_STREAM_ONCE("This publisher is not implemented...");
       RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "This publisher is not implemented...");
@@ -486,6 +518,15 @@ void CartController::sendPositionCmd(const VectorXd& q_des) {
   std_msgs::msg::Float64MultiArray cmd;
   cmd.data = std::vector<double>(q_des.data(), q_des.data() + q_des.rows() * q_des.cols());
   jntCmdPublisher->publish(cmd);
+}
+
+void CartController::sendJointStateCmd(const VectorXd& q_des, const VectorXd& dq_des) {
+  sensor_msgs::msg::JointState cmd;
+  cmd.header.stamp = node->get_clock()->now();
+  cmd.name = nameJnt;
+  cmd.position = std::vector<double>(q_des.data(), q_des.data() + q_des.rows() * q_des.cols());
+  cmd.velocity = std::vector<double>(dq_des.data(), dq_des.data() + dq_des.rows() * dq_des.cols());
+  jntStateCmdPublisher->publish(cmd);
 }
 
 void CartController::sendVelocityCmd(const VectorXd& dq_des) {
@@ -845,6 +886,9 @@ void CartController::sendPosCmd(const KDL::JntArray& q_des, const KDL::JntArray&
     case PublisherType::TrajectoryAction:
       sendTrajectoryActionCmd(q_des.data, dt);
       break;
+    case PublisherType::JointState:
+      sendJointStateCmd(q_des.data, dq_des.data);
+      break;
     default:
       // ROS_ERROR_STREAM_ONCE("This controller is not implemented...");
       RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "This controller is not implemented...");
@@ -865,6 +909,9 @@ void CartController::sendVelCmd(const KDL::JntArray& q_des, const KDL::JntArray&
       break;
     case PublisherType::TrajectoryAction:
       sendTrajectoryActionCmd(q_des.data, dq_des.data, dt);
+      break;
+    case PublisherType::JointState:
+      sendJointStateCmd(q_des.data, dq_des.data);
       break;
     default:
       // ROS_ERROR_STREAM_ONCE("This controller is not implemented...");

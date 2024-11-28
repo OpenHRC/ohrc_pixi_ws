@@ -12,7 +12,7 @@ void MarkerInterface::initInterface() {
 
 void MarkerInterface::configMarker() {
   // set initial marker config
-  int_marker.header.frame_id = controller->getRobotNs() + controller->getChainStart();
+  int_marker.header.frame_id = controller->getChainStart();
   int_marker.header.stamp = rclcpp::Time(0);
   int_marker.pose = tf2::toMsg(controller->getT_cur());
   int_marker.scale = 0.1;

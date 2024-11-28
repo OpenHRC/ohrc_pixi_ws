@@ -21,9 +21,6 @@ void PoseTopicInterface::initInterface() {
 
 void PoseTopicInterface::setSubscriber() {
   getTopicAndFrameName("cmd_pose", "user_frame");
-  
-  if (stateTopicName[0] != '/')
-    stateTopicName = controller->getRobotNs() + stateTopicName;
 
   subPose = node->create_subscription<geometry_msgs::msg::Pose>(stateTopicName, rclcpp::QoS(1), std::bind(&PoseTopicInterface::cbPose, this, std::placeholders::_1));
 }

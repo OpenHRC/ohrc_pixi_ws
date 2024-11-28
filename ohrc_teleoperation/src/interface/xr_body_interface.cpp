@@ -9,13 +9,15 @@ void XrBodyInterface::initInterface() {
   controller->disablePoseFeedback();
   controller->updateVelFilterCutoff(70.0);
 
-  pubFeedback = node->create_publisher<std_msgs::msg::Float32>(std::string("/feedback/") + std::string(magic_enum::enum_name(bodyPart)), rclcpp::QoS(2));
+  // pubFeedback = node->create_publisher<std_msgs::msg::Float32>(std::string("/feedback/") + std::string(magic_enum::enum_name(bodyPart)), rclcpp::QoS(2));
 }
 
 void XrBodyInterface::setSubscriber() {
   getTopicAndFrameName("/body_state", "user_frame");
   // subBody = n.subscribe<ohrc_msgs::BodyState>(stateTopicName, 1, &XrBodyInterface::cbBody, this, th);
-  subBody = node->create_subscription<ohrc_msgs::msg::BodyState>(stateTopicName, rclcpp::QoS(1), std::bind(&XrBodyInterface::cbBody, this, std::placeholders::_1));
+  std::cout << stateTopicName << std::endl;
+  subBody = node->create_subscription<ohrc_msgs::msg::BodyState>(stateTopicName, rclcpp::QoS(10), std::bind(&XrBodyInterface::cbBody, this, std::placeholders::_1));
+  std::cout << "subBody created" << std::endl;
 }
 
 void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {
@@ -100,12 +102,12 @@ void XrBodyInterface::resetInterface() {
 }
 
 void XrBodyInterface::feedback(const KDL::Frame& targetPos, const KDL::Twist& targetTwist) {
-  std_msgs::msg::Float32 amp;
+  // std_msgs::msg::Float32 amp;
 
-  amp.data = std::max(std::min((tf2::fromMsg(controller->getForceEef().wrench).head(3).norm() - 1.0) / 10.0, 1.0), 0.0);
+  // amp.data = std::max(std::min((tf2::fromMsg(controller->getForceEef().wrench).head(3).norm() - 1.0) / 10.0, 1.0), 0.0);
 
-  if (controller->getOperationEnable())
-    pubFeedback->publish(amp);
-  else
-    pubFeedback->publish(std_msgs::msg::Float32());
+  // if (controller->getOperationEnable())
+  //   pubFeedback->publish(amp);
+  // else
+  //   pubFeedback->publish(std_msgs::msg::Float32());
 }

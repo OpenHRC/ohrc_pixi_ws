@@ -4,7 +4,7 @@
 namespace ohrc_control {
 enum class SolverType { Trac_IK, KDL, MyIK, None };
 enum class ControllerType { Position, Velocity, Torque, None };
-enum class PublisherType { Position, Velocity, Torque, Trajectory, TrajectoryAction, None };
+enum class PublisherType { Position, Velocity, Torque, Trajectory, TrajectoryAction, JointState, None };
 
 enum class FeedbackMode { PositionFeedback, HybridFeedback, Admittance, None };
 

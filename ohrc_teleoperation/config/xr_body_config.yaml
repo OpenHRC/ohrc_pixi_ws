@@ -1,3 +1,9 @@
 /**:
   ros__parameters:
-    body_part: "EITHER_HANDS"
+    topic_name: "/body_state"
+    frame_id: "user_frame"
+
+/**:
+  ros__parameters:
+    torobo2_right/body_part: "RIGHT_HAND"
+    torobo2_left/body_part: "LEFT_HAND"

@@ -1,0 +1,31 @@
+/**:
+  ros__parameters:
+    torobo2_left:
+      chain_start: "/torso_link_tip" # base frame of commands
+      chain_end: "left_hand_palm_link" #"link7" # target eff frame
+
+
+      publisher: "JointState" # "Position" or "Velocity" or "Trajectory" or "TrajectoryAction"
+      topic_namespace: "/joint_command"
+
+
+      initIKAngle: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+      # initial_pose_frame: test # default frame is same as chain_start
+      # initial_pose: [0.4, 0.0, 0.3, 0.0, 3.141592, 0]
+      initial_pose: [0.5, 0.3, 0.0, 3.141592, 1.57, 0.0]
+
+    torobo2_right:
+      chain_start: "/torso_link_tip" # base frame of commands
+      chain_end: "right_hand_palm_link" #"link7" # target eff frame
+
+
+      publisher: "JointState" # "Position" or "Velocity" or "Trajectory" or "TrajectoryAction"
+      topic_namespace: "/joint_command"
+
+
+      initIKAngle: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+      # initial_pose_frame: test # default frame is same as chain_start
+      # initial_pose: [0.4, 0.0, 0.3, 0.0, 3.141592, 0]
+      initial_pose: [0.5, -0.3, 0.0, 3.141592, 1.57, 0.0]
