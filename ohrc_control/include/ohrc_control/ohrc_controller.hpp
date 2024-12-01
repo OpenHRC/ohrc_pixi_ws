@@ -1,5 +1,5 @@
-#ifndef MULTI_CART_COTNROLLER_HPP
-#define MULTI_CART_COTNROLLER_HPP
+#ifndef OHRC_COTNROLLER_HPP
+#define OHRC_COTNROLLER_HPP
 
 #include <chrono>
 #include <numeric>
@@ -17,7 +17,7 @@ using namespace std::placeholders;
 using namespace ohrc_control;
 using namespace std::chrono_literals;
 
-class Controller : public rclcpp::Node {
+class OhrcController : public rclcpp::Node {
   rclcpp::executors::MultiThreadedExecutor exec;
   std::vector<rclcpp::Node::SharedPtr> nodes;
   rclcpp::Node::SharedPtr node;
@@ -131,9 +131,9 @@ public:
   // rclcpp::executors::MultiThreadedExecutor exec;
   // std::vector<rclcpp::Node::SharedPtr> nodes;
   // rclcpp::Node::SharedPtr node;
-  Controller();
-  ~Controller();
+  OhrcController();
+  ~OhrcController();
   void control();
 };
 
-#endif  // MULTI_CART_COTNROLLER_HPP
+#endif  // OHRC_COTNROLLER_HPP

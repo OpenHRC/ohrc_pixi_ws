@@ -1,25 +1,13 @@
-#include "ohrc_control/multi_cart_controller.hpp"
+#include "ohrc_control/ohrc_controller.hpp"
 
-Controller::Controller() : Node("ohrc_controller") {
-  // std::cout << "Controller started??" << std::endl;
-  // this->node = std::shared_ptr<rclcpp::Node>(this);
-
-  // std::vector<std::string> robots, hw_configs;
-  // if (!this->getRosParams(robots, hw_configs)) {
-  //   RCLCPP_FATAL_STREAM(this->get_logger(), "Failed to get the initial parameters. Shutting down...");
-  //   rclcpp::shutdown();
-  // }
-
-  // this->initMenbers(robots, hw_configs);
-
-  // control_timer = this->create_wall_timer(std::chrono::milliseconds(int(dt * 1000)), std::bind(&Controller::controlLoop, this));
+OhrcController::OhrcController() : Node("ohrc_controller") {
 }
 
-Controller::~Controller() {
+OhrcController::~OhrcController() {
   this->stopping();
 }
 
-bool Controller::getRosParams(std::vector<std::string>& robots, std::vector<std::string>& hw_configs) {
+bool OhrcController::getRosParams(std::vector<std::string>& robots, std::vector<std::string>& hw_configs) {
   std::vector<std::string> _hw_configs;
   if (!RclcppUtility::declare_and_get_parameter(this->node, "follower.hw", std::vector<std::string>(), _hw_configs, false) || _hw_configs.empty() ||
       std::all_of(_hw_configs.begin(), _hw_configs.end(), [](std::string x) { return x == ""; })) {
@@ -79,7 +67,7 @@ bool Controller::getRosParams(std::vector<std::string>& robots, std::vector<std:
   return true;
 }
 
-void Controller::initMenbers(const std::vector<std::string> robots, const std::vector<std::string> hw_configs) {
+void OhrcController::initMenbers(const std::vector<std::string> robots, const std::vector<std::string> hw_configs) {
   nRobot = robots.size();
   this->dt = 1.0 / this->freq;
 
@@ -99,10 +87,7 @@ void Controller::initMenbers(const std::vector<std::string> robots, const std::v
 
   multimyik_solver_ptr = std::make_unique<MyIK::MyIK>(node, base_link, tip_link, T_base_root, myik_ptr);
 
-  // service = nh.advertiseService("/reset", &Controller::resetService, this);
-  service = this->create_service<std_srvs::srv::Empty>("/reset", std::bind(&Controller::resetService, this, _1, _2));
-
-  // TODO: condifure this priority setting
+  service = this->create_service<std_srvs::srv::Empty>("/reset", std::bind(&OhrcController::resetService, this, _1, _2));
 
   for (int i = 0; i < nRobot; i = i + 2)
     manualInd.push_back(i);
@@ -131,10 +116,10 @@ void Controller::initMenbers(const std::vector<std::string> robots, const std::v
 
   this->defineInterface();
 
-  control_timer = this->create_wall_timer(std::chrono::milliseconds(int(dt * 1000)), std::bind(&Controller::controlLoop, this));
+  control_timer = this->create_wall_timer(std::chrono::milliseconds(int(dt * 1000)), std::bind(&OhrcController::controlLoop, this));
 }
 
-void Controller::resetService(const std::shared_ptr<std_srvs::srv::Empty::Request> req, const std::shared_ptr<std_srvs::srv::Empty::Response>& res) {
+void OhrcController::resetService(const std::shared_ptr<std_srvs::srv::Empty::Request> req, const std::shared_ptr<std_srvs::srv::Empty::Response>& res) {
   // ROS_INFO_STREAM("Resetting...");
   RCLCPP_INFO_STREAM(this->get_logger(), "Resetting...");
   for (int i = 0; i < nRobot; i++) {
@@ -147,12 +132,12 @@ void Controller::resetService(const std::shared_ptr<std_srvs::srv::Empty::Reques
   // return true;
 }
 
-void Controller::setPriority(int i) {
+void OhrcController::setPriority(int i) {
   multimyik_solver_ptr->resetRobotWeight();  // make all robot priority equal.
   multimyik_solver_ptr->setRobotWeight(i, 100.);
 }
 
-void Controller::setLowPriority(int i) {
+void OhrcController::setLowPriority(int i) {
   multimyik_solver_ptr->resetRobotWeight();  // make all robot priority equal.
   // for (int j = 0; j++; j < nRobot)
   //   if (j != i)
@@ -160,7 +145,7 @@ void Controller::setLowPriority(int i) {
   multimyik_solver_ptr->setRobotWeight(i, 0.1);
 }
 
-void Controller::setPriority(std::vector<int> idx) {
+void OhrcController::setPriority(std::vector<int> idx) {
   multimyik_solver_ptr->resetRobotWeight();  // make all robot priority equal.
 
   double gain = pow(10.0, idx.size() - 1);
@@ -170,7 +155,7 @@ void Controller::setPriority(std::vector<int> idx) {
   }
 }
 
-void Controller::setPriority(PriorityType priority) {
+void OhrcController::setPriority(PriorityType priority) {
   std::vector<int> priorityInd;
   if (priority == PriorityType::Automation)
     priorityInd = autoInd;
@@ -182,21 +167,18 @@ void Controller::setPriority(PriorityType priority) {
     multimyik_solver_ptr->setRobotWeight(ind, 100.);
 }
 
-void Controller::setHightLowPriority(int high, int low) {
+void OhrcController::setHightLowPriority(int high, int low) {
   multimyik_solver_ptr->resetRobotWeight();  // make all robot priority equal.
   multimyik_solver_ptr->setRobotWeight(high, 100.);
   multimyik_solver_ptr->setRobotWeight(low, 0.1);
 }
 
-void Controller::starting() {
+void OhrcController::starting() {
   for (int i = 0; i < nRobot; i++) {
     cartControllers[i]->starting(this->get_clock()->now());
     exec.add_node(nodes[i]);
   }
   exec.add_node(this->node);
-
-  // rclcpp::Duration(3.0).sleep();
-  // rclcpp::sleep_for(3s);
 
   for (int i = 0; i < nRobot; i++)
     initInterface(cartControllers[i]);
@@ -208,12 +190,12 @@ void Controller::starting() {
 
   // cartControllers[i]->enableOperation();
   // }
-  // ROS_INFO_STREAM("Controller started!");
+
   RCLCPP_INFO_STREAM(this->get_logger(), "Controller started!");
   this->t0 = this->get_clock()->now();
 }
 
-void Controller::stopping() {
+void OhrcController::stopping() {
   for (int i = 0; i < nRobot; i++)                           // {
     cartControllers[i]->stopping(this->get_clock()->now());  // TODO: Make sure that this works correctly.
   // cartControllers[i]->enableOperation();
@@ -224,8 +206,8 @@ void Controller::stopping() {
   rclcpp::shutdown();
 }
 
-void Controller::publishState(const rclcpp::Time& time, const std::vector<KDL::Frame> curPose, const std::vector<KDL::Twist> curVel, const std::vector<KDL::Frame> desPose,
-                              const std::vector<KDL::Twist> desVel) {
+void OhrcController::publishState(const rclcpp::Time& time, const std::vector<KDL::Frame> curPose, const std::vector<KDL::Twist> curVel, const std::vector<KDL::Frame> desPose,
+                                  const std::vector<KDL::Twist> desVel) {
   static rclcpp::Time prev = time;
   if ((time - prev).nanoseconds() * 1.0e-9 > 0.05) {
     for (int i = 0; i < nRobot; i++) {
@@ -236,7 +218,7 @@ void Controller::publishState(const rclcpp::Time& time, const std::vector<KDL::F
   }
 }
 
-void Controller::update(const rclcpp::Time& time, const rclcpp::Duration& period) {
+void OhrcController::update(const rclcpp::Time& time, const rclcpp::Duration& period) {
   static std::vector<KDL::JntArray> q_des(nRobot), dq_des(nRobot), q_cur(nRobot), dq_cur(nRobot);
   std::vector<KDL::Frame> curPose(nRobot);
   std::vector<KDL::Twist> curVel(nRobot);
@@ -299,7 +281,7 @@ void Controller::update(const rclcpp::Time& time, const rclcpp::Duration& period
     feedback(desPose[i], desVel[i], cartControllers[i]);
 }
 
-void Controller::updateDesired() {
+void OhrcController::updateDesired() {
   for (int i = 0; i < nRobot; i++) {
     cartControllers[i]->updateCurState();
 
@@ -316,7 +298,7 @@ void Controller::updateDesired() {
   preInterfaceProcess(interfaces);
 }
 
-void Controller::controlLoop() {
+void OhrcController::controlLoop() {
   rclcpp::Time t = this->get_clock()->now();
   rclcpp::Duration dur(0, dt * 1.0e9);
   // begin = std::chrono::high_resolution_clock::now();
@@ -346,7 +328,7 @@ void Controller::controlLoop() {
   // ROS_INFO_STREAM("IK time: " << t.count() * 1.0e-3 << "[ms]");
 }
 
-void Controller::control() {
+void OhrcController::control() {
   this->node = this->shared_from_this();
 
   std::vector<std::string> robots, hw_configs;

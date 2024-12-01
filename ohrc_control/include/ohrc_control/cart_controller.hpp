@@ -387,6 +387,7 @@ public:
   // template <typename MsgType>
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr jntCmdPublisher;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr jntStateCmdPublisher;
+  rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr jntTrjCmdPublisher;
   rclcpp::Publisher<ohrc_msgs::msg::State>::SharedPtr desStatePublisher, curStatePublisher;
   // rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr markerPublisher;
 
