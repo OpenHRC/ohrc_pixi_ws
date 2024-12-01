@@ -1,10 +1,10 @@
 #ifndef SINGLE_INTERFACE_H
 #define SINGLE_INTERFACE_H
 
-#include "ohrc_control/multi_cart_controller.hpp"
+#include "ohrc_control/ohrc_controller.hpp"
 
 template <class T>
-class SingleInterface : public Controller {
+class SingleInterface : public OhrcController {
 protected:
   void defineInterface() override {
     for (int i = 0; i < this->getNRobot(); i++)

@@ -1,9 +1,9 @@
 
-#include "ohrc_control/multi_cart_controller.hpp"
+#include "ohrc_control/ohrc_controller.hpp"
 #include "ohrc_teleoperation/marker_interface.hpp"
 #include "ohrc_teleoperation/twist_topic_interface.hpp"
 
-class MultiInterface : virtual public Controller {
+class MultiInterface : virtual public OhrcController {
 public:
   MultiInterface() {
     interfaces[0] = std::make_shared<MarkerInterface>(cartControllers[0]);

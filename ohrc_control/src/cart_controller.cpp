@@ -129,10 +129,12 @@ void CartController::init(std::string robot, std::string hw_config) {
   // else
   // jntCmdPublisher = nh.advertise<std_msgs::msg::Float64MultiArray>("/" + robot_ns + publisherTopicName + "/command", 2);
 
-  if (publisher == PublisherType::JointState)
+  if (publisher == PublisherType::Trajectory) {
+    jntTrjCmdPublisher = node->create_publisher<trajectory_msgs::msg::JointTrajectory>("/" + robot_ns + publisherTopicName + "/joint_trajectory", rclcpp::QoS(1));
+  } else if (publisher == PublisherType::JointState)
     jntStateCmdPublisher = node->create_publisher<sensor_msgs::msg::JointState>(publisherTopicName, rclcpp::QoS(10));
   else
-    jntCmdPublisher = node->create_publisher<std_msgs::msg::Float64MultiArray>("/" + robot_ns + publisherTopicName + "/commands", rclcpp::QoS(10));
+    jntCmdPublisher = node->create_publisher<std_msgs::msg::Float64MultiArray>("/" + robot_ns + publisherTopicName + "/commands", rclcpp::QoS(1));
 
   desStatePublisher = node->create_publisher<ohrc_msgs::msg::State>("/" + robot_ns + "state/desired", rclcpp::QoS(100));
   curStatePublisher = node->create_publisher<ohrc_msgs::msg::State>("/" + robot_ns + "state/current", rclcpp::QoS(100));
@@ -490,7 +492,9 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
       RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "Torque controller is still not implemented...");
       break;
     case PublisherType::Trajectory:
-      sendTrajectoryCmd(s_moveInitPos.q_des.data, T * (1.0 - s));
+      sendTrajectoryCmd(s_moveInitPos.q_des.data, T);
+      rclcpp::Duration(0, u_int32_t(T * 1e9));
+      lastLoop = true;
       break;
     case PublisherType::TrajectoryAction:
       sendTrajectoryActionCmd(s_moveInitPos.q_des.data, T * (1.0 - s));
@@ -543,38 +547,35 @@ void CartController::sendVelocityCmd(const VectorXd& q_des, const VectorXd& dq_d
 void CartController::getTrajectoryCmd(const VectorXd& q_des, const double& T, trajectory_msgs::msg::JointTrajectory& cmd_trj) {
   cmd_trj.header.stamp = node->get_clock()->now();
   cmd_trj.points.resize(1);
-  cmd_trj.points[0].time_from_start = rclcpp::Duration(T, 0);  //??
+  cmd_trj.points[0].time_from_start = rclcpp::Duration(0, T * 1.0e9);  //??
 
   for (int i = 0; i < nJnt; i++) {
     cmd_trj.joint_names.push_back(nameJnt[i]);
     cmd_trj.points[0].positions.push_back(q_des[i]);
-    cmd_trj.points[0].velocities.push_back(0.0);
-    cmd_trj.points[0].accelerations.push_back(0.0);
   }
 }
 
 void CartController::getTrajectoryCmd(const VectorXd& q_des, const VectorXd& dq_des, const double& T, trajectory_msgs::msg::JointTrajectory& cmd_trj) {
   // cmd_trj.header.stamp = rclcpp::Time::now();
   cmd_trj.points.resize(1);
-  cmd_trj.points[0].time_from_start = rclcpp::Duration(T, 0);
+  cmd_trj.points[0].time_from_start = rclcpp::Duration(0, T * 1.0e9);
 
   for (int i = 0; i < nJnt; i++) {
     cmd_trj.joint_names.push_back(nameJnt[i]);
     cmd_trj.points[0].positions.push_back(q_des[i]);
     cmd_trj.points[0].velocities.push_back(dq_des[i]);
-    cmd_trj.points[0].accelerations.push_back(0.0);
   }
 }
 void CartController::sendTrajectoryCmd(const VectorXd& q_des, const double& T) {
-  // trajectory_msgs::msg::JointTrajectory cmd_trj;
-  // getTrajectoryCmd(q_des, T, cmd_trj);
-  // jntCmdPublisher->publish(cmd_trj);
+  trajectory_msgs::msg::JointTrajectory cmd_trj;
+  getTrajectoryCmd(q_des, T, cmd_trj);
+  jntTrjCmdPublisher->publish(cmd_trj);
 }
 
 void CartController::sendTrajectoryCmd(const VectorXd& q_des, const VectorXd& dq_des, const double& T) {
-  // trajectory_msgs::msg::JointTrajectory cmd_trj;
-  // getTrajectoryCmd(q_des, dq_des, T, cmd_trj);
-  // jntCmdPublisher->publish(cmd_trj);
+  trajectory_msgs::msg::JointTrajectory cmd_trj;
+  getTrajectoryCmd(q_des, dq_des, T, cmd_trj);
+  jntTrjCmdPublisher->publish(cmd_trj);
 }
 
 void CartController::sendTrajectoryActionCmd(const VectorXd& q_des, const double& T) {
@@ -682,16 +683,6 @@ void CartController::publishMarker(const KDL::JntArray q_cur) {
  * \param time Current time
  */
 void CartController::starting(const rclcpp::Time& time) {
-  // check Gazebo is ready
-  // if (!gazebo_utility::checkGazeboInit())
-  // return;
-  // std::cout << __FILE__ << " " << __LINE__ << std::endl;
-  // start to subscribe topics
-  // spinner_->start();
-  // spinner->start();
-  // std::cout << __FILE__ << " " << __LINE__ << std::endl;
-  // wait for subscribing registered topics
-
   subscriber_utility::checkSubTopic(node, subFlagPtrs, &mtx, robot_ns);
 
   if (ftFound)
@@ -853,7 +844,6 @@ void CartController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
     rc = myik_solver_ptr->CartToJntVel_qp(q_cur, des_eef_pose, des_eef_vel, dq_des, dt);
 
     if (rc < 0) {
-      // ROS_WARN_STREAM("Failed to solve IK. Skip this control loop");
       RCLCPP_WARN_STREAM(node->get_logger(), "Failed to solve IK. Skip this control loop");
       return;
     }
@@ -883,15 +873,14 @@ void CartController::sendPosCmd(const KDL::JntArray& q_des, const KDL::JntArray&
     case PublisherType::Trajectory:
       sendTrajectoryCmd(q_des.data, dt);
       break;
-    case PublisherType::TrajectoryAction:
-      sendTrajectoryActionCmd(q_des.data, dt);
-      break;
+    // case PublisherType::TrajectoryAction:
+    //   sendTrajectoryActionCmd(q_des.data, dt);
+    //   break;
     case PublisherType::JointState:
       sendJointStateCmd(q_des.data, dq_des.data);
       break;
     default:
-      // ROS_ERROR_STREAM_ONCE("This controller is not implemented...");
-      RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "This controller is not implemented...");
+      RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "This publisher type is not implemented...");
       break;
   }
 }
@@ -907,15 +896,14 @@ void CartController::sendVelCmd(const KDL::JntArray& q_des, const KDL::JntArray&
     case PublisherType::Trajectory:
       sendTrajectoryCmd(q_des.data, dq_des.data, dt);
       break;
-    case PublisherType::TrajectoryAction:
-      sendTrajectoryActionCmd(q_des.data, dq_des.data, dt);
-      break;
+    // case PublisherType::TrajectoryAction:
+    //   sendTrajectoryActionCmd(q_des.data, dq_des.data, dt);
+    //   break;
     case PublisherType::JointState:
       sendJointStateCmd(q_des.data, dq_des.data);
       break;
     default:
-      // ROS_ERROR_STREAM_ONCE("This controller is not implemented...");
-      RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "This controller is not implemented...");
+      RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "This publisher type is not implemented...");
       break;
   }
 }

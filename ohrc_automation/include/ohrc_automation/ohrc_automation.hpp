@@ -1,10 +1,10 @@
 #ifndef OHRC_AUTOMATION_HPP
 #define OHRC_AUTOMATION_HPP
 
-#include "ohrc_control/multi_cart_controller.hpp"
+#include "ohrc_control/ohrc_controller.hpp"
 
 class OhrcAutomation {
-    ros::Subscriber subTarget;
+  ros::Subscriber subTarget;
 
   enum struct TaskState {
     OnGoing,
@@ -13,4 +13,4 @@ class OhrcAutomation {
   };
 }
 
-#endif // OHRC_AUTOMATION_HPP
+#endif  // OHRC_AUTOMATION_HPP

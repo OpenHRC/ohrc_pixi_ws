@@ -24,9 +24,8 @@ find_package(OsqpEigen REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME}  SHARED src/my_ik.cpp
-                              # src/multi_my_ik.cpp 
                               src/cart_controller.cpp 
-                              src/multi_cart_controller.cpp 
+                              src/ohrc_controller.cpp 
                               # src/forwarding_controller.cpp
                               src/admittance_controller.cpp
                               src/position_feedback_controller.cpp
