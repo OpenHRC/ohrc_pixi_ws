@@ -300,7 +300,7 @@ void OhrcController::updateDesired() {
 
 void OhrcController::controlLoop() {
   rclcpp::Time t = this->get_clock()->now();
-  rclcpp::Duration dur(0, dt * 1.0e9);
+  rclcpp::Duration dur = rclcpp::Duration::from_seconds(dt);
   // begin = std::chrono::high_resolution_clock::now();
 
   if (!std::all_of(cartControllers.begin(), cartControllers.end(), [](auto& c) { return c->isInitialized(); }))
