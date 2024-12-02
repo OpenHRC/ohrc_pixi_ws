@@ -11,14 +11,33 @@ OpenHRC includes some tools for HRC like a robot controller for multiple robots 
 
 ## Requirements
 OpenHRC has been developed and tested in the following environments:
-- Development Environment: Ubuntu 20.04 (ROS2 Humble)
+- Development Environment: Ubuntu 22.04 (ROS2 Humble)
 
-Note: Imigration of OpenHRC to ROS2 is under developemnt. If you want to use ROS1 version, please checkout the `master` branch.
+**If you want to use ROS1 version, please checkout the `noetic` branch, which is no longer maintained.**
 
 
-## Installation
 
-In the following instruction, the catkin workspace directory is assumed to be `~/ros2_ws` on host.
+
+## Quick Start with Docker
+You can quickly test UR5e + marker teleoperation on docker environment.
+We use [rocker](https://github.com/rocker-org/rocker) here to simply run the docker container with GUI support.
+
+```bash
+$ git clone https://github.com/Automation-Research-Team/OpenHRC.git -b ros2
+$ cd OpenHRC/docker
+$ docker build -t openhrc:ros2 .
+$ sudo apt install python3-rocker # if you don't have rocker. You can also use "pip install rocker".
+$ rocker --x11 openhrc:humble get_started 
+```
+
+Now you can control the end-effector of UR5e with an interactive marker.
+
+
+## Native Installation
+
+Step-by-step instructions for installing OpenHRC on your local machine.
+In the following instruction, the ros2 workspace directory is assumed to be `~/ros2_ws` on host.
+
 
 ### Clone the Source Code
 ```bash
@@ -29,7 +48,6 @@ $ git clone https://github.com/Automation-Research-Team/OpenHRC.git -b ros2 --re
 
 ### Resolve Dependencies
 ```bash
-### Install dependency packages
 $ rosdep update
 $ rosdep install -i -y --from-paths ./ 
 ```
@@ -66,6 +84,9 @@ Then, run the following command to start the teleoperation node on another termi
 $ source ~/ros2_ws/install/setup.bash
 $ ros2 launch ohrc_teleoperation marker_teleoperation.launch.py
 ```
+
+
+
 
 
 ## Tutorials
