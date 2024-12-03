@@ -1,6 +1,6 @@
 /**:
   ros__parameters:
     topic_name: "cmd_vel"
-    frame_id: "world"
+    frame_id: "user_frame"
 
     diable_pose_feedback: true

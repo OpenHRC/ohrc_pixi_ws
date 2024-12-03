@@ -14,7 +14,6 @@ class TwistTopicInterface : virtual public Interface {
 protected:
   bool _flagTopic = false;
 
-
   Affine3d T;
   Matrix3d R;
   bool isFirst = true;
@@ -30,7 +29,7 @@ protected:
 
 public:
   using Interface::Interface;
-  void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) override;
+  virtual void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) override;
   void initInterface() override;
   void resetInterface() override;
 };
