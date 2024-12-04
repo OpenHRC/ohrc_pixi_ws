@@ -22,15 +22,24 @@ OpenHRC has been developed and tested in the following environments:
 You can quickly test UR5e + marker teleoperation on docker environment.
 We use [rocker](https://github.com/rocker-org/rocker) here to simply run the docker container with GUI support.
 
+### Build
 ```bash
 $ git clone https://github.com/Automation-Research-Team/OpenHRC.git -b ros2
-$ cd OpenHRC/docker
-$ docker build -t openhrc:ros2 .
+$ docker build -t openhrc:ros2 docker/.
+
 $ sudo apt install python3-rocker # if you don't have rocker. You can also use "pip install rocker".
-$ rocker --x11 openhrc:humble get_started 
 ```
 
+### Run
 Now you can control the end-effector of UR5e with an interactive marker.
+```bash
+$ rocker --x11 openhrc:humble marker_teleoperation_ur5e 
+```
+
+<!-- If you have 3D mouse (spacenav), you can also use it for teleoperation.
+```bash
+$ rocker --x11 openhrc:humble joy_topic_teleoperation_ur5e
+``` -->
 
 
 ## Native Installation
@@ -39,18 +48,14 @@ Step-by-step instructions for installing OpenHRC on your local machine.
 In the following instruction, the ros2 workspace directory is assumed to be `~/ros2_ws` on host.
 
 
-### Clone the Source Code
+### Clone the Source Code and install dependencies
 ```bash
 $ mkdir -p ~/ros2_ws/src
 $ cd ~/ros2_ws/src
 $ git clone https://github.com/Automation-Research-Team/OpenHRC.git -b ros2 --recursive
+$ rosdep update && rosdep install -i -y --from-paths ./ 
 ```
 
-### Resolve Dependencies
-```bash
-$ rosdep update
-$ rosdep install -i -y --from-paths ./ 
-```
 
 ### Build
 
@@ -69,6 +74,8 @@ Open a terminal and run:
 ```bash
 $ cd ~/ros2_ws/src
 $ git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation.git -b humble
+$ rosdep update && rosdep install -i -y --from-paths ./ 
+
 $ cd ~/ros2_ws
 $ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 ```
@@ -86,7 +93,12 @@ $ ros2 launch ohrc_teleoperation marker_teleoperation.launch.py
 ```
 
 
-
+If you have a 3D mouse (spacenav), you can also use it for teleoperation instead of interactive marker.
+```bash
+$ source ~/ros2_ws/install/setup.bash
+$ sudo apt install ros-humble-spacenav # if you don't have spacenav package
+$ ros2 launch ohrc_teleoperation joy_topic_teleoperation.launch.py
+```
 
 
 ## Tutorials

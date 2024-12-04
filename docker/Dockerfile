@@ -8,7 +8,7 @@ RUN apt update -q && \
 RUN mkdir -p ${ROS_WORKSPACE}/src
 
 WORKDIR ${ROS_WORKSPACE}/src
-RUN git clone https://github.com/Automation-Research-Team/OpenHRC.git -b ros2-dev/clean_controller --recursive && \
+RUN git clone https://github.com/Automation-Research-Team/OpenHRC.git -b ros2 --recursive && \
     git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation.git -b humble
 
 RUN . /opt/ros/humble/setup.sh && \
