@@ -142,11 +142,11 @@ void CartController::init(std::string robot, std::string hw_config) {
   T_init = T_init_base * T_init;
 
   for (int i = 0; i < 6; i++) {
-    posFilter.push_back(butterworth(2, freq / 10.0, freq));
-    velFilter.push_back(butterworth(2, freq / 20.0, freq));
+    posFilter.push_back(butterworth(2, freq / 4.0, freq));
+    velFilter.push_back(butterworth(2, freq / 4.0, freq));
   }
   for (int i = 0; i < nJnt; i++)
-    jntFilter.push_back(butterworth(2, freq / 50.0, freq));
+    jntFilter.push_back(butterworth(2, freq / 4.0, freq));
 }
 
 bool CartController::getRosParams() {

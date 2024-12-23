@@ -67,4 +67,9 @@ public:
   }
 };
 
+class NoFeedbackController : public Interface {
+public:
+  using Interface::Interface;
+};
+
 #endif  // INTERFACE_HPP

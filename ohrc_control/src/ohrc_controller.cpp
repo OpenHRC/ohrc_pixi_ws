@@ -110,6 +110,8 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
       baseControllers[i] = std::make_shared<PositionFeedbackController>(cartControllers[i]);
     else if (feedbackMode == FeedbackMode::HybridFeedback)
       baseControllers[i] = std::make_shared<HybridFeedbackController>(cartControllers[i]);
+    else if (feedbackMode == FeedbackMode::NoFeedback)
+      baseControllers[i] = std::make_shared<NoFeedbackController>(cartControllers[i]);  
 
     cartControllers[i]->disablePoseFeedback();  // TODO: Pose feedback would be always enable. original feedback code can be removed.
   }

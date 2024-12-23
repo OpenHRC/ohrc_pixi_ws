@@ -13,7 +13,7 @@ def generate_launch_description():
         DeclareLaunchArgument('robot', default_value='ur5e'),
         DeclareLaunchArgument('controller', default_value='vel'),
         DeclareLaunchArgument(
-            'feedback_mode', default_value='PositionFeedback'),
+            'feedback_mode', default_value='NoFeedback'),
         DeclareLaunchArgument('use_rviz', default_value='true'),
         DeclareLaunchArgument('user_frame_viewpoint', default_value='back'),
 

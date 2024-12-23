@@ -6,7 +6,7 @@ enum class SolverType { Trac_IK, KDL, MyIK, None };
 enum class ControllerType { Position, Velocity, Torque, None };
 enum class PublisherType { Position, Velocity, Torque, Trajectory, TrajectoryAction, JointState, None };
 
-enum class FeedbackMode { PositionFeedback, HybridFeedback, Admittance, None };
+enum class FeedbackMode { PositionFeedback, HybridFeedback, Admittance, NoFeedback, None };
 
 enum class TaskState {
   Initial,
