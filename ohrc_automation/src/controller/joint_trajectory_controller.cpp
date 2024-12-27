@@ -14,7 +14,7 @@ void JointTrajectoryController::cbJointTrajectory(const moveit_msgs::MoveGroupAc
   _cartTrj.points.resize(_jointTrj.points.size());
 
   std::vector<std::string> name = controller->getNameJnt();
-  for (int i = 0; i < _jointTrj.points.size(); i++) {
+  for (size_t i = 0; i < _jointTrj.points.size(); i++) {
     int j;
     std_utility::exist_in(name, _jointTrj.joint_names[i], j);
 

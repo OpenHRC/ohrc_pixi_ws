@@ -7,12 +7,12 @@ template <class T>
 class SingleInterface : public OhrcController {
 protected:
   void defineInterface() override {
-    for (int i = 0; i < this->getNRobot(); i++)
+    for (size_t i = 0; i < this->getNRobot(); i++)
       this->interfaces[i] = std::make_shared<T>(cartControllers[i]);
   }
   // public:
   //   SingleInterface() {
-  //     for (int i = 0; i < this->getNRobot(); i++)
+  //     for (size_t i = 0; i < this->getNRobot(); i++)
   //       this->interfaces[i] = std::make_shared<T>(cartControllers[i]);
   //   }
 };

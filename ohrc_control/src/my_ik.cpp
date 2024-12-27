@@ -33,7 +33,7 @@ MyIK::MyIK(const rclcpp::Node::SharedPtr& node, const std::vector<std::string>& 
   : node(node), nRobot(base_link.size()), eps(_eps), solvetype(_type), myIKs(myik_ptr) {
   // get number of elements of the state vector and indeces corresponding to start of joint vector of each robot
   iJnt.resize(nRobot + 1, 0);
-  for (int i = 0; i < nRobot; i++) {
+  for (size_t i = 0; i < nRobot; i++) {
     nState += myIKs[i]->getNJnt();
     iJnt[i + 1] = iJnt[i] + myIKs[i]->getNJnt();
   }
@@ -48,7 +48,7 @@ MyIK::MyIK(const rclcpp::Node::SharedPtr& node, const std::vector<std::string>& 
 
   // check all robots have been initialized
   int initializedRobot = 0;
-  for (int i = 0; i < nRobot; i++)
+  for (size_t i = 0; i < nRobot; i++)
     initializedRobot += (int)myIKs[i]->getInitialized();
 
   if (initializedRobot == nRobot)
@@ -82,7 +82,7 @@ void MyIK::initializeSingleRobot() {  // this cannot be used in constructor due 
   myIKs.push_back(this->shared_from_this());
 
   iJnt.resize(nRobot + 1, 0);
-  for (int i = 0; i < nRobot; i++) {
+  for (size_t i = 0; i < nRobot; i++) {
     nState += myIKs[i]->getNJnt();
     iJnt[i + 1] = iJnt[i] + myIKs[i]->getNJnt();
   }
@@ -165,7 +165,7 @@ VectorXd MyIK::getRandomJnt(const double& dt) {
   getUpdatedJntLimit(q, lower_limits, upper_limits, dt);
 
   VectorXd q_(nJnt);
-  for (int i = 0; i < nJnt; i++) {
+  for (size_t i = 0; i < nJnt; i++) {
     std::mt19937 mt{ std::random_device{}() };
 
     std::uniform_real_distribution<> dist(lower_limits[i], upper_limits[i]);
@@ -181,7 +181,7 @@ VectorXd MyIK::getRandomJntVel(const double& dt) {
   getUpdatedJntVelLimit(q, lower_limits, upper_limits, dt);
 
   VectorXd dq_(nJnt);
-  for (int i = 0; i < nJnt; i++) {
+  for (size_t i = 0; i < nJnt; i++) {
     std::mt19937 mt{ std::random_device{}() };
 
     std::uniform_real_distribution<> dist(lower_limits[i], upper_limits[i]);
@@ -211,7 +211,7 @@ int MyIK::CartToJnt(const std::vector<KDL::JntArray>& q_init, const std::vector<
   std::vector<Affine3d> Ts_d(nRobot), Ts(nRobot);
   std::vector<KDL::JntArray> q(nRobot);
 
-  for (int i = 0; i < nRobot; i++) {
+  for (size_t i = 0; i < nRobot; i++) {
     tf2::transformKDLToEigen(p_in[i], Ts_d[i]);
 
     q[i].resize(myIKs[i]->getNJnt());
@@ -240,7 +240,7 @@ int MyIK::CartToJnt(const std::vector<KDL::JntArray>& q_init, const std::vector<
     if (time_left < 0.)
       break;
 
-    for (int i = 0; i < nRobot; i++) {
+    for (size_t i = 0; i < nRobot; i++) {
       KDL::Frame p;
       KDL::Jacobian jac(myIKs[i]->getNJnt());
       JntToJac(q[i], jac);
@@ -280,7 +280,7 @@ int MyIK::CartToJnt(const std::vector<KDL::JntArray>& q_init, const std::vector<
       break;
   }
 
-  for (int i = 0; i < nRobot; i++)
+  for (size_t i = 0; i < nRobot; i++)
     q_out[i].data = q[i].data;
 
   return 1;
@@ -371,7 +371,7 @@ int MyIK::CartToJntVel_pinv(const KDL::JntArray& q_cur, const KDL::Frame& des_ef
   // check joint velocity limit
   std::vector<double> lower_vel_limits, upper_vel_limits;
   getUpdatedJntVelLimit(q_cur, lower_vel_limits, upper_vel_limits, dt);
-  for (int i = 0; i < dq.size(); i++) {
+  for (size_t i = 0; i < dq.size(); i++) {
     if (std::isnan(dq[i]))
       return -1;
     dq[i] = std::min(std::max(dq[i], lower_vel_limits[i]), upper_vel_limits[i]);
@@ -439,7 +439,7 @@ int MyIK::CartToJntVel_qp(const KDL::JntArray& q_cur, const KDL::Twist& des_eff_
 
   MatrixXd A(nJnt + nCA, nJnt);
   A.block(0, 0, nJnt, nJnt) = MatrixXd::Identity(nJnt, nJnt);
-  for (int i = 0; i < nCA; i++)
+  for (size_t i = 0; i < nCA; i++)
     A.block(nJnt + i, 0, 1, nJnt) = A_ca[i];
   SparseMatrix<double> linearMatrix = A.sparseView();
 
@@ -503,7 +503,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   VectorXd kp = 3.0 * VectorXd::Ones(6);  // TODO: make this p gain as ros param
   kp.tail(3) = kp.tail(3) * 0.5 / M_PI * 0.5;
 
-  for (int i = 0; i < nRobot; i++) {
+  for (size_t i = 0; i < nRobot; i++) {
     KDL::Jacobian jac(myIKs[i]->getNJnt());
 
     myIKs[i]->JntToJac(q_cur[i], jac);
@@ -525,7 +525,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   }
 
   std::vector<MatrixXd> Js_(nRobot);  // augumented Jacobian matrices
-  for (int i = 0; i < nRobot; i++) {
+  for (size_t i = 0; i < nRobot; i++) {
     Js_[i] = MatrixXd::Zero(Js[i].rows(), nState);
     Js_[i].block(0, iJnt[i], Js[i].rows(), Js[i].cols()) = Js[i];
   }
@@ -543,7 +543,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   H[nRobot + 1] = MatrixXd::Identity(nState, nState);
   g[nRobot + 1] = (std_utility::concatenateVectors(q_rest) - std_utility::concatenateVectors(q_cur)).transpose();
 
-  for (int i = 0; i < nRobot; i++) {
+  for (size_t i = 0; i < nRobot; i++) {
     VectorXd w = (VectorXd(6) << 1.0, 1.0, 1.0, 0.5 / M_PI, 0.5 / M_PI, 0.5 / M_PI).finished() * 1.0e2;
     double w_n = 0.0;  // 1.0e-6;  // this leads dq -> 0 witch is conflict with additonal task
     double gamma = 0.5 * es[i].transpose() * w.asDiagonal() * es[i] + w_n;
@@ -558,7 +558,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   VectorXd gradient = -std_utility::weightedSum(w_h, g);
 
   std::vector<std::vector<double>> lower_vel_limits(nRobot), upper_vel_limits(nRobot);
-  for (int i = 0; i < nRobot; i++)
+  for (size_t i = 0; i < nRobot; i++)
     myIKs[i]->getUpdatedJntVelLimit(q_cur[i], lower_vel_limits[i], upper_vel_limits[i], dt);
 
   std::vector<double> lower_vel_limits_, upper_vel_limits_;
@@ -574,7 +574,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   int nCA = 0;
   std::vector<MatrixXd> A_ca;
 
-  // for (int i = 0; i < nRobot; i++)
+  // for (size_t i = 0; i < nRobot; i++)
   // if (enableSelfCollisionAvoidance)
   // nCA = addSelfCollisionAvoidance(q_cur[i], lower_vel_limits_, upper_vel_limits_, A_ca);
 
@@ -586,7 +586,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   Map<VectorXd> upperBound(&upper_vel_limits_[0], upper_vel_limits_.size());
   MatrixXd A(nState + nCA, nState);
   A.block(0, 0, nState, nState) = MatrixXd::Identity(nState, nState);
-  for (int i = 0; i < nCA; i++)
+  for (size_t i = 0; i < nCA; i++)
     A.block(nState + i, 0, 1, nState) = A_ca[i];
   SparseMatrix<double> linearMatrix = A.sparseView();
 
@@ -635,7 +635,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   if (dq_des_.hasNaN())
     return -1;
 
-  for (int i = 0; i < nRobot; i++) {
+  for (size_t i = 0; i < nRobot; i++) {
     dq_des[i].resize(myIKs[i]->getNJnt());
     dq_des[i].data = dq_des_.segment(iJnt[i], myIKs[i]->getNJnt());
   }
@@ -692,7 +692,7 @@ int MyIK::CartToJntVel_qp_manipOpt(const KDL::JntArray& q_cur, const KDL::Frame&
   double e_manip = rotation_util::getRotationMatrixError(U, userManipU).norm();
 
   double delta = 0.01;
-  for (int i = 0; i < nJnt; i++) {
+  for (size_t i = 0; i < nJnt; i++) {
     KDL::JntArray q_cur2 = q_cur;
     q_cur2.data(i) = q_cur2.data(i) + delta;
     KDL::Jacobian jac2(nJnt);
@@ -811,14 +811,14 @@ int MyIK::addSelfCollisionAvoidance(const KDL::JntArray& q_cur, std::vector<doub
   // positon at origin [0] + joints [1 ~ nJnt] +  eef [nJnt+1] (size nJnt+2)
   std::vector<Vector3d> p(nJnt + 2);
   tf2::vectorKDLToEigen(frame[0].p, p[0]);
-  for (int i = 0; i < nJnt; i++)
+  for (size_t i = 0; i < nJnt; i++)
     tf2::vectorKDLToEigen(frame[idxSegJnt[i]].p, p[i + 1]);
   tf2::vectorKDLToEigen(frame.back().p, p[nJnt + 1]);
 
   // Jacobian at origin [0] + joints [1 ~ nJnt] +  eef [nJnt+1] (size nJnt+2)
   std::vector<KDL::Jacobian> J(nJnt + 2, KDL::Jacobian(nJnt));
   jacsolver->JntToJac(q_cur, J[0], 0);
-  for (int i = 0; i < nJnt; i++)
+  for (size_t i = 0; i < nJnt; i++)
     jacsolver->JntToJac(q_cur, J[i + 1], idxSegJnt[i]);
   JntToJac(q_cur, J[nJnt + 1]);
 
@@ -830,7 +830,7 @@ int MyIK::addSelfCollisionAvoidance(const KDL::JntArray& q_cur, std::vector<doub
   for (int j = nJnt + 1; j > 2; j--) {  // set target end position and jacobian
     p_end = p[j];
     J_end = J[j].data;
-    for (int i = 0; i < j - 2; i++) {  // search colliding point
+    for (size_t i = 0; i < j - 2; i++) {  // search colliding point
       Vector3d rp = p[i + 1] - p[i];
       double rp_norm = rp.norm();
       double s = (rp / rp_norm).dot(p_end - p[i]);
@@ -901,7 +901,7 @@ int MyIK::calcCollisionAvoidance(int c0, int c1, const std::vector<std::vector<V
 
   // std::cout << p0.size() << " " << p1.size() << std::endl;
 
-  for (int i = 0; i < p0.size() - 1; i++) {
+  for (size_t i = 0; i < p0.size() - 1; i++) {
     int j_start = 0;
     if (c0 == c1)  // in case of self collision check
       j_start = i + 2;
@@ -947,7 +947,7 @@ int MyIK::addCollisionAvoidance(const std::vector<KDL::JntArray>& q_cur, std::ve
   std::vector<std::vector<Vector3d>> p_all(nRobot);
   std::vector<std::vector<KDL::Jacobian>> J_all(nRobot);
 
-  for (int i = 0; i < nRobot; i++) {
+  for (size_t i = 0; i < nRobot; i++) {
     std::vector<KDL::Frame> frame(myIKs[i]->getNSeg());
     myIKs[i]->JntToCart(q_cur[i], frame);
 
@@ -971,7 +971,7 @@ int MyIK::addCollisionAvoidance(const std::vector<KDL::JntArray>& q_cur, std::ve
     J_all[i] = J;
   }
 
-  for (int i = 0; i < nRobot; i++)
+  for (size_t i = 0; i < nRobot; i++)
     for (int j = 0; j < p_all[i].size(); j++)
       p_all[i][j] = (myIKs[i]->getT_base_world() * (Vector4d() << p_all[i][j], 1.0).finished()).head(3);
 
@@ -982,7 +982,7 @@ int MyIK::addCollisionAvoidance(const std::vector<KDL::JntArray>& q_cur, std::ve
   int nCollision = 0;
 
   // self collision avoidance
-  // for (int i = 0; i < nRobot; i++)
+  // for (size_t i = 0; i < nRobot; i++)
   // nCollision += calcCollisionAvoidance(i, i, p_all, J_all, 0.1, 0.15, eta, lower_vel_limits_, upper_vel_limits_, A_ca);
 
   // collision avoidance against other robots

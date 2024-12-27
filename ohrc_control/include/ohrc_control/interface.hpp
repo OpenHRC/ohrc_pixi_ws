@@ -23,7 +23,9 @@ protected:
 
   inline void reset() {
     controller->resetPose();
-    controller->resetFt();
+
+    if (controller->getFtFound())
+      controller->resetFt();
     resetInterface();
   }
 

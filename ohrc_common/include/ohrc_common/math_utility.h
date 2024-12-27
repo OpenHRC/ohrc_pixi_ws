@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 #include <unordered_map>
 #include <vector>
+#include <kdl/jntarray.hpp>
 
 namespace math_utility {
 
@@ -83,6 +84,22 @@ inline Eigen::VectorXd concatenateVecOfVec(std::vector<Eigen::VectorXd> vecOfVec
   for (size_t i = 0; i < vecOfVec.size(); i++) {
     vec.segment(start, vecOfVec[i].size()) = vecOfVec[i];
     start += vecOfVec[i].size();
+  }
+
+  return vec;
+}
+
+// concate std::vector of KDL::JntArray
+inline Eigen::VectorXd concatenateVecOfVec(std::vector<KDL::JntArray> vecOfVec) {
+  int size = 0;
+  for (size_t i = 0; i < vecOfVec.size(); i++)
+    size += vecOfVec[i].data.size();
+
+  Eigen::VectorXd vec(size);
+  int start = 0;
+  for (size_t i = 0; i < vecOfVec.size(); i++) {
+    vec.segment(start, vecOfVec[i].data.size()) = vecOfVec[i].data;
+    start += vecOfVec[i].data.size();
   }
 
   return vec;

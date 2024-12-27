@@ -78,6 +78,15 @@ class CartController : public rclcpp::Node {
     bool isSentTrj = false;
   } s_moveInitPos;
 
+  struct s_initCmd {
+    VectorXd q_des_t;
+    VectorXd dq_des_t;
+    KDL::JntArray q_cur;
+    bool lastLoop;
+    double T;
+    double s;
+  }initCmd;
+
   std::vector<double> _q_init_expect;
 
   std::string initPoseFrame;
@@ -99,6 +108,7 @@ class CartController : public rclcpp::Node {
   rclcpp::Time prev_time;  // = node->get_clock()->now();
 
   bool ftFound = false;
+  const bool unique_state;
 
 protected:
   SolverType solver;
@@ -195,17 +205,21 @@ protected:
 
 public:
   // CartController();
-  CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const ControllerType controller, const double freq);
-  CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const int index, const ControllerType controller, const double freq);
+  CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const ControllerType controller, const double freq, const bool unique_state = false);
+  CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const int index, const ControllerType controller, const double freq, const bool unique_state = false);
   CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string hw_config, const std::string root_frame, const int index,
-                 const ControllerType controller, const double freq);
+                 const ControllerType controller, const double freq, const bool unique_state = false);
   // ~CartController();
   int control();
+
+  void sendIntJntCmd();
 
   void update();
   void update(const rclcpp::Time& time, const rclcpp::Duration& period);
   void starting(const rclcpp::Time& time);
   void stopping(const rclcpp::Time& time);
+
+  void initFt();
 
   void getIKInput(double dt, KDL::JntArray& q_cur, KDL::Frame& des_eef_pose, KDL::Twist& des_eef_vel);
   void getVelocity(const KDL::Frame& frame, const KDL::Frame& prev_frame, const double& dt, KDL::Twist& twist) const;

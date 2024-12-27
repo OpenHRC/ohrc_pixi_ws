@@ -41,7 +41,7 @@ void MarkerInterface::configMarker() {
   const std::string axis_name[3] = { "x", "y", "z" };
   const Eigen::Quaterniond quat[3] = { Eigen::Quaterniond(1, 1, 0, 0), Eigen::Quaterniond(1, 0, 0, 1), Eigen::Quaterniond(1, 0, 1, 0) };
 
-  for (int i = 0; i < 3; i++) {
+  for (size_t i = 0; i < 3; i++) {
     control.orientation = tf2::toMsg(quat[i].normalized());
     control.name = "rotate_" + axis_name[i];
     control.interaction_mode = visualization_msgs::msg::InteractiveMarkerControl::ROTATE_AXIS;

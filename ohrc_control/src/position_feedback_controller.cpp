@@ -32,7 +32,7 @@ VectorXd PositionFeedbackController::PIControl(const KDL::Frame& frame, const KD
   std::vector<double> gain(3);
 
   const double a = 0.2, b = 2.0;
-  for (int i = 0; i < 3; i++) {
+  for (size_t i = 0; i < 3; i++) {
     gain[i] = a;
   }
 
@@ -47,7 +47,7 @@ VectorXd PositionFeedbackController::PIControl(const VectorXd& e, const KDL::Twi
 
   VectorXd gain(6);
 
-  for (int i = 0; i < 6; i++) {
+  for (size_t i = 0; i < 6; i++) {
     gain[i] = kp;
   }
 

@@ -22,12 +22,12 @@ Wrench::Wrench(paramLPF param_LPF, paramDeadZone param_DeadZone) {
 
 Wrench::~Wrench() {
   // deleted because this vector conteners std::unique_ptr_filter_vec
-  //  for (int i = 0; i < _filter_vec.size(); ++i)
+  //  for (size_t i = 0; i < _filter_vec.size(); ++i)
   //    delete _filter_vec[i];
 }
 
 void Wrench::LPF_initialize(int order, double cutoff_freq, double sampling_freq) {
-  for (int i = 0; i < 2; ++i)
+  for (size_t i = 0; i < 2; ++i)
     _filter_vec.push_back(std::unique_ptr<geometry_msgs_utility::Vector3>(new geometry_msgs_utility::Vector3(order, cutoff_freq, sampling_freq)));
   // for force & torque
 }

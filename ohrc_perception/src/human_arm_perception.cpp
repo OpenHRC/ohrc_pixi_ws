@@ -42,7 +42,7 @@ ArmPerception::ArmPerception() {
 void ArmPerception::cbBodyMarker(const visualization_msgs::MarkerArray::ConstPtr& msg) {
   int nPoint = msg->markers.size();
   std::vector<int> ids(Body::NUM, -1);
-  for (int i = 0; i < nPoint; i++) {
+  for (size_t i = 0; i < nPoint; i++) {
     int id = msg->markers[i].id % 100;
     if (id == K4ABT_JOINT_SHOULDER_RIGHT)
       ids[Body::Shoulder] = i;
@@ -63,7 +63,7 @@ void ArmPerception::cbBodyMarker(const visualization_msgs::MarkerArray::ConstPtr
   static Matrix3d R_shoulder_depth = T_depth_camera.rotation() * AngleAxisd(M_PI, Vector3d::UnitZ());
 
   std::vector<Eigen::Affine3d> T(Body::NUM);
-  for (int i = 0; i < Body::NUM; i++)
+  for (size_t i = 0; i < Body::NUM; i++)
     tf2::fromMsg(msg->markers[ids[i]].pose, T[i]);
 
   // std::cout << "shoulder: " << T[Body::Shoulder].translation().transpose() << ", elbow: " << T[Body::Elbow].translation().transpose() << ", wrist: " << T[Body::Wrist].translation().transpose() << std::endl;
@@ -83,7 +83,7 @@ void ArmPerception::cbBodyMarker(const visualization_msgs::MarkerArray::ConstPtr
 
   std::vector<Eigen::Vector3d> p(2);
   std::vector<double> l(2);
-  for (int i = 0; i < Body::NUM - 1; i++) {
+  for (size_t i = 0; i < Body::NUM - 1; i++) {
     p[i] = R_shoulder_depth.transpose() * (T[i + 1].translation() - T[i].translation());
     l[i] = p[i].norm();
   }
