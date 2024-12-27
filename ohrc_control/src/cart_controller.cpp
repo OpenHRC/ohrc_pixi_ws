@@ -192,8 +192,7 @@ bool CartController::getRosParams() {
 
   RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initial_pose", std::vector<double>{ 0.45, 0.0, 0.85, 0.0, M_PI, -M_PI_2 }, initPose);
 
-std::cout << nJnt << std::endl;
-  RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initIKAngle", std::vector<double>(nJnt, 0.0), _q_init_expect);
+  RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initIKAngle", std::vector<double>(0, 0.0), _q_init_expect);// TODO: use nJnt, which will be initialized in initMembers()
 
   return true;
 }
@@ -490,12 +489,15 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
   VectorXd q_des_t = s_moveInitPos.q_initial.data + (s_moveInitPos.q_des.data - s_moveInitPos.q_initial.data) * (6.0 * s5 - 15.0 * s4 + 10.0 * s3);
   VectorXd dq_des_t = (s_moveInitPos.q_des.data - s_moveInitPos.q_initial.data) * (30.0 * s4 - 60.0 * s3 + 30.0 * s2) / T;
 
-  initCmd.q_des_t = q_des_t;
-  initCmd.dq_des_t = dq_des_t;
-  initCmd.q_cur = q_cur;
-  initCmd.lastLoop = lastLoop;
-  initCmd.T = T;
-  initCmd.s = s;
+  {
+    std::lock_guard<std::mutex> lock(mtx_q);
+    this->initCmd_.q_des_t = q_des_t;
+    this->initCmd_.dq_des_t = dq_des_t;
+    this->initCmd_.q_cur = q_cur;
+    this->initCmd_.lastLoop = lastLoop;
+    this->initCmd_.T = T;
+    this->initCmd_.s = s;
+  }
   // switch (publisher) {
   //   case PublisherType::Position:
   //     sendPositionCmd(q_des_t);
@@ -537,8 +539,19 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
 
 }
 
+void CartController::sendIntJntCmd(VectorXd q_des_t, VectorXd dq_des_t, KDL::JntArray q_cur, bool lastLoop, double T, double s) {
+  CartController::s_initCmd initCmd;
+  initCmd.q_des_t = q_des_t;
+  initCmd.dq_des_t = dq_des_t;
+  initCmd.q_cur = q_cur;
+  initCmd.lastLoop = lastLoop;
+  initCmd.T = T;
+  initCmd.s = s;
 
-void CartController::sendIntJntCmd(){
+  sendIntJntCmd(initCmd);
+}
+
+void CartController::sendIntJntCmd(CartController::s_initCmd initCmd){
   VectorXd q_des_t = initCmd.q_des_t;
   VectorXd dq_des_t = initCmd.dq_des_t;
   KDL::JntArray q_cur = initCmd.q_cur;
@@ -576,6 +589,15 @@ void CartController::sendIntJntCmd(){
       RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "This publisher is not implemented...");
       break;
   }
+}
+
+void CartController::sendIntJntCmd(){
+  CartController::s_initCmd initCmd;
+  {
+    std::lock_guard<std::mutex> lock(mtx_q);
+    initCmd = this->initCmd_;
+  }
+  sendIntJntCmd(initCmd);
 }
 
 void CartController::sendPositionCmd(const VectorXd& q_des) {

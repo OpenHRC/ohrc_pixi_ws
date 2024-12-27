@@ -85,7 +85,7 @@ class CartController : public rclcpp::Node {
     bool lastLoop;
     double T;
     double s;
-  }initCmd;
+  }initCmd_;
 
   std::vector<double> _q_init_expect;
 
@@ -213,6 +213,8 @@ public:
   int control();
 
   void sendIntJntCmd();
+  void sendIntJntCmd(CartController::s_initCmd initCmd);
+  void sendIntJntCmd(VectorXd q_des_t, VectorXd dq_des_t, KDL::JntArray q_cur, bool lastLoop, double T, double s) ;
 
   void update();
   void update(const rclcpp::Time& time, const rclcpp::Duration& period);
@@ -392,6 +394,15 @@ public:
 
   rclcpp::Node::SharedPtr getNode() {
     return node;
+  }
+
+  void getInitCmd(VectorXd& q_des_t, VectorXd& dq_des_t, KDL::JntArray& q_cur, int& lastLoop, double& T, double& s) {
+    q_des_t = initCmd_.q_des_t;
+    dq_des_t = initCmd_.dq_des_t;
+    q_cur = initCmd_.q_cur;
+    lastLoop = int(initCmd_.lastLoop);
+    T = initCmd_.T;
+    s = initCmd_.s;
   }
 
   double dt;

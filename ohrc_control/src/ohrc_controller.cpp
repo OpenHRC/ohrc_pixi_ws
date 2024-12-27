@@ -317,10 +317,33 @@ bool OhrcController::initRobotPose() {
   if (!std::all_of(cartControllers.begin(), cartControllers.end(), [](auto& c) { return c->isInitialized(); })) {
     updateAllCurState();
 
-    for (auto cartController : cartControllers)
-       if (!cartController->isInitialized())
-        cartController->sendIntJntCmd();
-    
+    if (unique_state){
+      std::vector<VectorXd> q_des_t_(nRobot), dq_des_t_(nRobot);
+      std::vector<KDL::JntArray> q_cur_(nRobot);
+      std::vector<double> T_(nRobot), s_(nRobot);
+      std::vector<int> lastLoop_(nRobot);
+
+
+      for (size_t i = 0; i < nRobot; i++)
+        cartControllers[i]->getInitCmd(q_des_t_[i], dq_des_t_[i], q_cur_[i], lastLoop_[i], T_[i], s_[i]);
+      
+      VectorXd q_des_t_all = math_utility::concatenateVecOfVec(q_des_t_);
+      VectorXd dq_des_t_all = math_utility::concatenateVecOfVec(dq_des_t_);
+      KDL::JntArray q_cur_all;
+      q_cur_all.data = math_utility::concatenateVecOfVec(q_cur_);
+      bool lastLoop = std::all_of(lastLoop_.begin(), lastLoop_.end(), [](int x) { return x == 1; });
+      double T = *std::max_element(T_.begin(), T_.end());
+      double s = *std::max_element(s_.begin(), s_.end());
+
+      cartControllers[0]->sendIntJntCmd(q_des_t_all, dq_des_t_all, q_cur_all, lastLoop, T, s);
+
+    }
+    else{
+      for (auto cartController : cartControllers)
+        if (!cartController->isInitialized())
+          cartController->sendIntJntCmd();
+    }
+
     return false;
   }
 
