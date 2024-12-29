@@ -1,25 +1,25 @@
 #include "ohrc_teleoperation/joy_topic_interface.hpp"
 
 void JoyTopicInterface::initInterface() {
-  n.getParam("gain/horizontal", gain_h);
-  n.getParam("gain/rotational", gain_r);
+  RclcppUtility::declare_and_get_parameter(node, "gain/horizontal", 1.0, gain_h);
+  RclcppUtility::declare_and_get_parameter(node, "gain/rotational", 1.0, gain_r);
 
   TwistTopicInterface::initInterface();
 }
 
 void JoyTopicInterface::setSubscriber() {
   getTopicAndFrameName("/spacenav/joy", "user_frame");
-  subJoy = n.subscribe<sensor_msgs::Joy>(stateTopicName, 2, &JoyTopicInterface::cbJoy, this, th);
+  subJoy = node->create_subscription<sensor_msgs::msg::Joy>(stateTopicName, rclcpp::QoS(1), std::bind(&JoyTopicInterface::cbJoy, this, std::placeholders::_1));
 }
 
-void JoyTopicInterface::cbJoy(const sensor_msgs::Joy::ConstPtr& msg) {
+void JoyTopicInterface::cbJoy(const sensor_msgs::msg::Joy::SharedPtr msg) {
   std::lock_guard<std::mutex> lock(mtx_topic);
   _joy = *msg;
   _flagTopic = true;
 }
 
-void JoyTopicInterface::updateTargetPose(KDL::Frame& pos, KDL::Twist& twist) {
-  sensor_msgs::Joy joy;
+void JoyTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos, KDL::Twist& twist) {
+  sensor_msgs::msg::Joy joy;
   {
     std::lock_guard<std::mutex> lock(mtx_topic);
     joy = _joy;

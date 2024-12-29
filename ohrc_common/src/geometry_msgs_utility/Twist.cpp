@@ -36,7 +36,7 @@ geometry_msgs::msg::Twist cropMinMax(geometry_msgs::msg::Twist cmd, geometry_msg
   fromMsg(min, min_v);
   fromMsg(max, max_v);
 
-  for (int i = 0; i < 6; i++) {
+  for (size_t i = 0; i < 6; i++) {
     if (cmd_v(i) < min_v(i))
       cmd_v(i) = min_v(i);
 

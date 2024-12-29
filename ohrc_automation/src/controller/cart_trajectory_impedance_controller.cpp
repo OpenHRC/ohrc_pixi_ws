@@ -22,7 +22,7 @@ bool CartTrajectoryImpedanceController::getTrajectories(const geometry_msgs::Pos
 
   ohrc_msgs::GetTrajectories srv;
   srv.request.targetPoses.poses.resize(targets.size());
-  for (int i = 0; i < targets.size(); i++) {
+  for (size_t i = 0; i < targets.size(); i++) {
     targets[i].translation() = targets[i].translation() - this->restPose.translation();
     srv.request.targetPoses.poses[i] = tf2::toMsg(targets[i]);
   }

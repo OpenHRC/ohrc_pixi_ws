@@ -88,7 +88,7 @@ inline void fromMsg(const geometry_msgs::msg::Twist& msg, KDL::Twist& out) {
 
 inline void fromMsg(const geometry_msgs::msg::PoseArray& msg, std::vector<Affine3d>& Ts) {
   Ts.resize(msg.poses.size());
-  for (int i = 0; i < msg.poses.size(); i++)
+  for (size_t i = 0; i < msg.poses.size(); i++)
     tf2::fromMsg(msg.poses[i], Ts[i]);
 }
 }  // namespace tf2

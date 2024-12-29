@@ -11,18 +11,18 @@ namespace subscriber_utility {
 inline bool checkTopic(rclcpp::Node::SharedPtr node, std::vector<bool *> VecSubFlagPtr, std::mutex *mtx, std::string name) {
   std::vector<bool> VecSubFlag(VecSubFlagPtr.size());
   RCLCPP_INFO_STREAM(node->get_logger(), name << ": Waiting for subscribing " << VecSubFlag.size() << " topics ...");
-  rclcpp::spin_some(node);
+  // rclcpp::spin_some(node);
 
   while (rclcpp::ok()) {
     mtx->lock();
-    for (int i = 0; i < VecSubFlag.size(); ++i)
+    for (size_t i = 0; i < VecSubFlag.size(); ++i)
       VecSubFlag[i] = *VecSubFlagPtr[i];
     mtx->unlock();
 
     // check topics
     if (std::find(VecSubFlag.begin(), VecSubFlag.end(), false) == VecSubFlag.end()) {
       mtx->lock();
-      for (int i = 0; i < VecSubFlag.size(); ++i)
+      for (size_t i = 0; i < VecSubFlag.size(); ++i)
         *VecSubFlagPtr[i] = false;
       mtx->unlock();
 
@@ -30,9 +30,9 @@ inline bool checkTopic(rclcpp::Node::SharedPtr node, std::vector<bool *> VecSubF
       return true;
     }
 
-    rclcpp::spin_some(node);
+    // rclcpp::spin_some(node);
 
-    rclcpp::sleep_for(std::chrono::milliseconds(10));
+    rclcpp::sleep_for(std::chrono::milliseconds(1));
   }
   return false;
 }

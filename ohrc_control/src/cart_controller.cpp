@@ -1,43 +1,31 @@
 #include "ohrc_control/cart_controller.hpp"
 
 CartController::CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string hw_config, const std::string root_frame, const int index,
-                               const ControllerType controller, const double freq)
-  : Node("cart_controller_" + robot), root_frame(root_frame), index(index), controller(controller), freq(freq) {
+                               const ControllerType controller, const double freq, const bool unique_state)
+  : Node("cart_controller_" + robot), root_frame(root_frame), index(index), controller(controller), freq(freq) , unique_state(unique_state) {
   node = std::shared_ptr<rclcpp::Node>(this);  // TODO: relace this with shared_from_this()
-  this->node = node;
   init(robot, hw_config);
 }
 
 CartController::CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const int index, const ControllerType controller,
-                               const double freq)
-  : Node("cart_controller_" + robot), root_frame(root_frame), index(index), controller(controller), freq(freq) {
+                               const double freq, const bool unique_state)
+  : Node("cart_controller_" + robot), root_frame(root_frame), index(index), controller(controller), freq(freq), unique_state(unique_state) {
   node = std::shared_ptr<rclcpp::Node>(this);  // TODO: relace this with shared_from_this()
-  this->node = node;
   init(robot);
 }
 
-CartController::CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const ControllerType controller, const double freq)
-  : Node("cart_controller_" + robot), root_frame(root_frame), controller(controller), freq(freq) {
+CartController::CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const ControllerType controller, const double freq, const bool unique_state)
+  : Node("cart_controller_" + robot), root_frame(root_frame), controller(controller), freq(freq), unique_state(unique_state) {
   node = std::shared_ptr<rclcpp::Node>(this);  // TODO: relace this with shared_from_this()
-  this->node = node;
   init(robot);
 }
-
-// CartController::CartController() : Node("ohrc_cart_controller_" + robot) {
-//   std::string robot;
-//   // nh.param("robot_ns", robot, std::string(""));
-//   this->declare_parameter("robot_ns", "");
-//   robot = this->get_parameter("robot_ns").as_string();
-//   root_frame = "world";
-
-//   init(robot);
-// }
 
 void CartController::init(std::string robot) {
   this->init(robot, robot);
 }
 
 void CartController::init(std::string robot, std::string hw_config) {
+  this->node = std::shared_ptr<rclcpp::Node>(this);
   trans = std::make_unique<TransformUtility>(this->node);
   // this->node = std::shared_ptr<rclcpp::Node>(this);
   // nh_.setCallbackQueue(&queue);
@@ -86,8 +74,14 @@ void CartController::init(std::string robot, std::string hw_config) {
   // this->get_parameter("/" + hw_config_ns + "initIKAngle", _q_init_expect);
 
   // jntStateSubscriber = nh.subscribe("/" + robot_ns + "joint_states", 1, &CartController::cbJntState, this, th);
+
+  options.callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+
   std::string jnt_state_topic = "/" + robot_ns + "joint_states";
-  subJntState = node->create_subscription<sensor_msgs::msg::JointState>(jnt_state_topic, rclcpp::QoS(10), std::bind(&CartController::cbJntState, this, _1));
+  if (unique_state)
+    jnt_state_topic = "/joint_states";
+
+  subJntState = node->create_subscription<sensor_msgs::msg::JointState>(jnt_state_topic, rclcpp::QoS(1), std::bind(&CartController::cbJntState, this, _1), options);
   subFlagPtrs.push_back(&flagJntState);
 
   std::string ft_sensor_link, ft_topic;
@@ -95,11 +89,10 @@ void CartController::init(std::string robot, std::string hw_config) {
   RclcppUtility::declare_and_get_parameter(this->node, robot_ns + "ft_sensor_link", std::string("ft_sensor_link"), ft_sensor_link);
   RclcppUtility::declare_and_get_parameter(this->node, robot_ns + "ft_topic", std::string("ft_sensor/filtered"), ft_topic);
 
-#if 0
   RCLCPP_INFO_STREAM(node->get_logger(), "Looking for force/torque sensor TF: " << ft_sensor_link << ", topic: " << ft_topic);
-  if (trans->canTransform(robot_ns + chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration(1.0, 0))) {
-    this->Tft_eff = trans->getTransform(robot_ns + chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration(1., 0));
-    subForce = node->create_subscription<geometry_msgs::msg::WrenchStamped>(ft_topic, rclcpp::QoS(1), std::bind(&CartController::cbForce, this, _1));
+  if (trans->canTransform(robot_ns + chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1))) {
+    this->Tft_eff = trans->getTransform(robot_ns + chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1));
+    subForce = node->create_subscription<geometry_msgs::msg::WrenchStamped>(ft_topic, rclcpp::QoS(1), std::bind(&CartController::cbForce, this, _1), options);
     pubEefForce = node->create_publisher<geometry_msgs::msg::WrenchStamped>("/" + robot_ns + "eef_force", rclcpp::QoS(1));
     subFlagPtrs.push_back(&flagForce);
     this->ftFound = true;
@@ -108,7 +101,7 @@ void CartController::init(std::string robot, std::string hw_config) {
 
   // client = nh.serviceClient<std_srvs::Empty>("/" + robot_ns + "ft_filter/reset_offset");
   // if (ftFound) {
-  if (false) {
+  if (ftFound) {
     client = node->create_client<std_srvs::srv::Empty>("/" + robot_ns + "ft_filter/reset_offset");
     while (!client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
@@ -119,7 +112,6 @@ void CartController::init(std::string robot, std::string hw_config) {
     }
   }
 
-#endif
   // if (publisher == PublisherType::Trajectory){
   //   // jntCmdPublisher = nh.advertise<trajectory_msgs::JointTrajectory>("/" + robot_ns + publisherTopicName + "/command", 1);
   //   jntCmdPublisher = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("/" + robot_ns + publisherTopicName + "/command", rclcpp::QoS(1));
@@ -129,12 +121,16 @@ void CartController::init(std::string robot, std::string hw_config) {
   // else
   // jntCmdPublisher = nh.advertise<std_msgs::msg::Float64MultiArray>("/" + robot_ns + publisherTopicName + "/command", 2);
 
+  std::string cmd_topic = "/" + robot_ns + publisherTopicName;
+  if (unique_state)
+    cmd_topic = "/" + publisherTopicName;
+
   if (publisher == PublisherType::Trajectory) {
-    jntTrjCmdPublisher = node->create_publisher<trajectory_msgs::msg::JointTrajectory>("/" + robot_ns + publisherTopicName + "/joint_trajectory", rclcpp::QoS(1));
+    jntTrjCmdPublisher = node->create_publisher<trajectory_msgs::msg::JointTrajectory>(cmd_topic + "/joint_trajectory", rclcpp::QoS(1));
   } else if (publisher == PublisherType::JointState)
-    jntStateCmdPublisher = node->create_publisher<sensor_msgs::msg::JointState>(publisherTopicName, rclcpp::QoS(10));
+    jntStateCmdPublisher = node->create_publisher<sensor_msgs::msg::JointState>(publisherTopicName, rclcpp::QoS(1));
   else
-    jntCmdPublisher = node->create_publisher<std_msgs::msg::Float64MultiArray>("/" + robot_ns + publisherTopicName + "/commands", rclcpp::QoS(1));
+    jntCmdPublisher = node->create_publisher<std_msgs::msg::Float64MultiArray>(cmd_topic + "/commands", rclcpp::QoS(1));
 
   desStatePublisher = node->create_publisher<ohrc_msgs::msg::State>("/" + robot_ns + "state/desired", rclcpp::QoS(100));
   curStatePublisher = node->create_publisher<ohrc_msgs::msg::State>("/" + robot_ns + "state/current", rclcpp::QoS(100));
@@ -152,12 +148,12 @@ void CartController::init(std::string robot, std::string hw_config) {
            (AngleAxisd(initPose[3], Vector3d::UnitX()) * AngleAxisd(initPose[4], Vector3d::UnitY()) * AngleAxisd(initPose[5], Vector3d::UnitZ()));
   T_init = T_init_base * T_init;
 
-  for (int i = 0; i < 6; i++) {
-    posFilter.push_back(butterworth(2, freq / 10.0, freq));
-    velFilter.push_back(butterworth(2, freq / 20.0, freq));
+  for (size_t i = 0; i < 6; i++) {
+    posFilter.push_back(butterworth(2, freq / 4.0, freq));
+    velFilter.push_back(butterworth(2, freq / 4.0, freq));
   }
-  for (int i = 0; i < nJnt; i++)
-    jntFilter.push_back(butterworth(2, freq / 50.0, freq));
+  for (size_t i = 0; i < nJnt; i++)
+    jntFilter.push_back(butterworth(2, freq / 4.0, freq));
 }
 
 bool CartController::getRosParams() {
@@ -196,7 +192,7 @@ bool CartController::getRosParams() {
 
   RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initial_pose", std::vector<double>{ 0.45, 0.0, 0.85, 0.0, M_PI, -M_PI_2 }, initPose);
 
-  RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initIKAngle", std::vector<double>(nJnt, 0.0), _q_init_expect);
+  RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initIKAngle", std::vector<double>(0, 0.0), _q_init_expect);// TODO: use nJnt, which will be initialized in initMembers()
 
   return true;
 }
@@ -213,7 +209,16 @@ void CartController::initMembers() {
   if (chain_end_[0] == '/')
     chain_end_.erase(0, 1);
 
-  myik_solver_ptr = std::make_shared<MyIK::MyIK>(this->node, robot_ns, chain_start_, chain_end_, urdf_param, eps, T_base_root);
+  
+  std::string model_ns = robot_ns;
+  if (unique_state){
+    model_ns = "";
+    chain_start_ = robot_ns + chain_start_;
+    chain_end_ = robot_ns + chain_end_;
+  }
+
+
+  myik_solver_ptr = std::make_shared<MyIK::MyIK>(this->node, model_ns, chain_start_, chain_end_, urdf_param, eps, T_base_root);
   myik_solver_ptr->initializeSingleRobot();
   bool valid = myik_solver_ptr->getKDLChain(chain);
   chain_segs = chain.segments;
@@ -237,17 +242,17 @@ void CartController::initMembers() {
 }
 
 void CartController::updatePosFilterCutoff(const double posFreq) {
-  for (int i = 0; i < 6; i++)
+  for (size_t i = 0; i < 6; i++)
     posFilter[i] = butterworth(2, posFreq, freq);
 }
 
 void CartController::updateVelFilterCutoff(const double velFreq) {
-  for (int i = 0; i < 6; i++)
+  for (size_t i = 0; i < 6; i++)
     velFilter[i] = butterworth(2, velFreq, freq);
 }
 
 void CartController::updateJntFilterCutoff(const double jntFreq) {
-  for (int i = 0; i < nJnt; i++)
+  for (size_t i = 0; i < nJnt; i++)
     jntFilter[i] = butterworth(2, jntFreq, freq);
 }
 
@@ -268,20 +273,19 @@ bool CartController::resetService(const std::shared_ptr<std_srvs::srv::Empty::Re
 }
 
 void CartController::resetPose() {
-  // ROS_WARN_STREAM("The robot will moves to the initail pose!");
   RCLCPP_WARN_STREAM(node->get_logger(), "The robot will moves to the initial pose!");
 
   s_cbJntState.isFirst = true;
   initialized = false;
   s_moveInitPos.isFirst = true;
 
-  while (!isInitialized() && rclcpp::ok()) {
-    rclcpp::sleep_for(100ms);
-  }
+  // while (!isInitialized() && rclcpp::ok()) {
+  //   rclcpp::sleep_for(100ms);
+  // }
 }
 
 Affine3d CartController::getTransform_base(std::string target) {
-  return trans->getTransform(chain_start, target, rclcpp::Time(0), rclcpp::Duration(1.0, 0));
+  return trans->getTransform(chain_start, target, rclcpp::Time(0), rclcpp::Duration::from_seconds(1.0));
 }
 
 // void CartController::signal_handler(int signum) {
@@ -292,7 +296,7 @@ Affine3d CartController::getTransform_base(std::string target) {
 //   // std_msgs::Float64MultiArray cmd;
 //   // cmd.data.resize(7, 0.0);
 //   // while (ros::ok()) {  // exerimental
-//   //   for (int i = 0; i < robot_ns.size(); i++) {
+//   //   for (size_t i = 0; i < robot_ns.size(); i++) {
 //   //     for (int j = 0; j < controller.size(); i++) {
 //   //       publisher = nh.advertise<std_msgs::Float64MultiArray>(robot_ns[i] + controller[j] + "/command", 1);
 //   //       publisher.publish(cmd);
@@ -360,8 +364,15 @@ void CartController::cbJntState(const sensor_msgs::msg::JointState::SharedPtr ms
   }
   // std::cout << chain_segs.size() << std::endl;
 
-  if (!allJntFound)
+  if (allJntFound){
+    std::lock_guard<std::mutex> lock(mtx_q);
+    flagJntState = true;
+    _q_cur = q_cur;
+    _dq_cur = dq_cur;
+  }
+  else
     return;
+
 
   if (s_cbJntState.isFirst) {
     if (!initialized) {
@@ -375,18 +386,16 @@ void CartController::cbJntState(const sensor_msgs::msg::JointState::SharedPtr ms
     return;
   }
 
-  std::lock_guard<std::mutex> lock(mtx_q);
 
-  _q_cur = q_cur;
-  _dq_cur = dq_cur;
-  if (!flagJntState)
-    flagJntState = true;
+
+
+
 }
 
 // void CartController::cbArmMarker(const visualization_msgs::msg::MarkerArray::SharedPtr& msg) {
 //   int nMarker = msg->markers.size();
 
-//   for (int i = 0; i < nMarker; i++) {
+//   for (size_t i = 0; i < nMarker; i++) {
 //     if (msg->markers[i].id == ArmMarker::ArmMarkerID::ManipulabilityEllipsoid) {
 //       Quaterniond q;
 //       tf2::fromMsg(msg->markers[i].pose.orientation, q);
@@ -417,8 +426,6 @@ void CartController::initDesWithJnt(const KDL::JntArray& q_cur) {
 }
 
 int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<std::string> nameJnt, std::vector<int> idxSegJnt) {
-  // ROS_INFO_STREAM_ONCE("Moving initial posiiton");
-  RCLCPP_INFO_STREAM_ONCE(node->get_logger(), "Moving initial position");
 
   if (s_moveInitPos.isFirst) {
     this->nameJnt = nameJnt;
@@ -459,6 +466,8 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
     s_moveInitPos.t_s = node->get_clock()->now();
 
     this->q_rest = s_moveInitPos.q_des;
+
+    RCLCPP_INFO_STREAM(node->get_logger(), "The robot (ns: " + robot_ns + ") is moving to the initial pose.");
   }
 
   const double T = 10.0;
@@ -480,6 +489,77 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
   VectorXd q_des_t = s_moveInitPos.q_initial.data + (s_moveInitPos.q_des.data - s_moveInitPos.q_initial.data) * (6.0 * s5 - 15.0 * s4 + 10.0 * s3);
   VectorXd dq_des_t = (s_moveInitPos.q_des.data - s_moveInitPos.q_initial.data) * (30.0 * s4 - 60.0 * s3 + 30.0 * s2) / T;
 
+  {
+    std::lock_guard<std::mutex> lock(mtx_q);
+    this->initCmd_.q_des_t = q_des_t;
+    this->initCmd_.dq_des_t = dq_des_t;
+    this->initCmd_.q_cur = q_cur;
+    this->initCmd_.lastLoop = lastLoop;
+    this->initCmd_.T = T;
+    this->initCmd_.s = s;
+  }
+  // switch (publisher) {
+  //   case PublisherType::Position:
+  //     sendPositionCmd(q_des_t);
+  //     break;
+  //   case PublisherType::Velocity:
+  //     sendVelocityCmd(q_des_t, dq_des_t, q_cur, lastLoop);
+  //     break;
+  //   case PublisherType::Torque:
+  //     RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "Torque publisher is not implemented...");
+  //     break;
+  //   case PublisherType::Trajectory:
+  //     sendTrajectoryCmd(s_moveInitPos.q_des.data, T * (1.0 - s));
+  //     rclcpp::sleep_for(rclcpp::Duration::from_seconds(T).to_chrono<std::chrono::nanoseconds>());
+  //     lastLoop = true;
+  //     break;
+  //   case PublisherType::TrajectoryAction:
+  //     sendTrajectoryActionCmd(s_moveInitPos.q_des.data, T * (1.0 - s));
+  //     // rclcpp::Duration(T).sleep();
+  //     // rclcpp::sleep_for(T.second())
+  //     lastLoop = true;
+  //     break;
+  //   case PublisherType::JointState:
+  //     sendJointStateCmd(q_des_t, dq_des_t);
+  //     break;
+
+  //   default:
+  //     RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "This publisher is not implemented...");
+  //     break;
+  // }
+  // sendIntJntCmd();
+
+
+
+  if (lastLoop && (q_des_t - q_cur.data).norm() < 0.01 && dq_des_t.norm() < 0.01) {
+    RCLCPP_INFO_STREAM(node->get_logger(), "The robot (ns: " +robot_ns + ") has reached the initial pose.");
+    return true;
+  }else
+    return false;
+
+}
+
+void CartController::sendIntJntCmd(VectorXd q_des_t, VectorXd dq_des_t, KDL::JntArray q_cur, bool lastLoop, double T, double s) {
+  CartController::s_initCmd initCmd;
+  initCmd.q_des_t = q_des_t;
+  initCmd.dq_des_t = dq_des_t;
+  initCmd.q_cur = q_cur;
+  initCmd.lastLoop = lastLoop;
+  initCmd.T = T;
+  initCmd.s = s;
+
+  sendIntJntCmd(initCmd);
+}
+
+void CartController::sendIntJntCmd(CartController::s_initCmd initCmd){
+  VectorXd q_des_t = initCmd.q_des_t;
+  VectorXd dq_des_t = initCmd.dq_des_t;
+  KDL::JntArray q_cur = initCmd.q_cur;
+  bool lastLoop = initCmd.lastLoop;
+  double T = initCmd.T;
+  double s = initCmd.s;
+
+
   switch (publisher) {
     case PublisherType::Position:
       sendPositionCmd(q_des_t);
@@ -488,12 +568,11 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
       sendVelocityCmd(q_des_t, dq_des_t, q_cur, lastLoop);
       break;
     case PublisherType::Torque:
-      // ROS_ERROR_STREAM_ONCE("Torque controller is still not implemented...");
-      RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "Torque controller is still not implemented...");
+      RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "Torque publisher is not implemented...");
       break;
     case PublisherType::Trajectory:
-      sendTrajectoryCmd(s_moveInitPos.q_des.data, T);
-      rclcpp::Duration(0, u_int32_t(T * 1e9));
+      sendTrajectoryCmd(s_moveInitPos.q_des.data, T * (1.0 - s));
+      rclcpp::sleep_for(rclcpp::Duration::from_seconds(T).to_chrono<std::chrono::nanoseconds>());
       lastLoop = true;
       break;
     case PublisherType::TrajectoryAction:
@@ -507,15 +586,18 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
       break;
 
     default:
-      // ROS_ERROR_STREAM_ONCE("This publisher is not implemented...");
       RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "This publisher is not implemented...");
       break;
   }
+}
 
-  if (!lastLoop)
-    return false;
-
-  return true;
+void CartController::sendIntJntCmd(){
+  CartController::s_initCmd initCmd;
+  {
+    std::lock_guard<std::mutex> lock(mtx_q);
+    initCmd = this->initCmd_;
+  }
+  sendIntJntCmd(initCmd);
 }
 
 void CartController::sendPositionCmd(const VectorXd& q_des) {
@@ -547,20 +629,22 @@ void CartController::sendVelocityCmd(const VectorXd& q_des, const VectorXd& dq_d
 void CartController::getTrajectoryCmd(const VectorXd& q_des, const double& T, trajectory_msgs::msg::JointTrajectory& cmd_trj) {
   cmd_trj.header.stamp = node->get_clock()->now();
   cmd_trj.points.resize(1);
-  cmd_trj.points[0].time_from_start = rclcpp::Duration(0, T * 1.0e9);  //??
+  cmd_trj.points[0].time_from_start = rclcpp::Duration::from_seconds(T);
 
-  for (int i = 0; i < nJnt; i++) {
+  for (size_t i = 0; i < nJnt; i++) {
     cmd_trj.joint_names.push_back(nameJnt[i]);
     cmd_trj.points[0].positions.push_back(q_des[i]);
+    cmd_trj.points[0].velocities.push_back(0.0);
+    // cmd_trj.points[0].accelerations.push_back(0.0);
   }
 }
 
 void CartController::getTrajectoryCmd(const VectorXd& q_des, const VectorXd& dq_des, const double& T, trajectory_msgs::msg::JointTrajectory& cmd_trj) {
   // cmd_trj.header.stamp = rclcpp::Time::now();
   cmd_trj.points.resize(1);
-  cmd_trj.points[0].time_from_start = rclcpp::Duration(0, T * 1.0e9);
+  cmd_trj.points[0].time_from_start = rclcpp::Duration::from_seconds(T);
 
-  for (int i = 0; i < nJnt; i++) {
+  for (size_t i = 0; i < nJnt; i++) {
     cmd_trj.joint_names.push_back(nameJnt[i]);
     cmd_trj.points[0].positions.push_back(q_des[i]);
     cmd_trj.points[0].velocities.push_back(dq_des[i]);
@@ -631,7 +715,7 @@ void CartController::getDesEffPoseVel(const double& dt, const KDL::JntArray& q_c
 void CartController::filterDesEffPoseVel(KDL::Frame& des_eef_pose, KDL::Twist& des_eef_vel) {
   Matrix<double, 6, 1> vel;
   tf2::twistKDLToEigen(des_eef_vel, vel);
-  for (int i = 0; i < 6; i++)
+  for (size_t i = 0; i < 6; i++)
     vel(i) = velFilter[i].filter(vel(i));
 
   tf2::twistEigenToKDL(vel, des_eef_vel);
@@ -684,6 +768,14 @@ void CartController::publishMarker(const KDL::JntArray q_cur) {
  */
 void CartController::starting(const rclcpp::Time& time) {
   subscriber_utility::checkSubTopic(node, subFlagPtrs, &mtx, robot_ns);
+
+  // if (ftFound)
+  //   this->resetFt();
+
+  updateCurState();
+}
+
+void CartController::initFt() {
 
   if (ftFound)
     this->resetFt();
@@ -776,7 +868,7 @@ void CartController::getDesState(const KDL::Frame& cur_pose, const KDL::Twist& c
  * \param period Time since the last called to update
  */
 void CartController::update() {
-  update(node->get_clock()->now(), rclcpp::Duration(1.0 / freq, 0));
+  update(node->get_clock()->now(), rclcpp::Duration::from_seconds(1.0 / freq));
 }
 void CartController::update(const rclcpp::Time& time, const rclcpp::Duration& period) {
   if ((time - prev_time) < period)
@@ -788,7 +880,6 @@ void CartController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
   // std::cout << robot_ns << std::endl;
   double dt = period.nanoseconds() * 1e-9;
 
-  // ROS_INFO_STREAM_ONCE("Start teleoperation");
   RCLCPP_INFO_STREAM_ONCE(node->get_logger(), "Start teleoperation");
   // while (ros::ok()) {
   {
@@ -909,7 +1000,7 @@ void CartController::sendVelCmd(const KDL::JntArray& q_des, const KDL::JntArray&
 }
 
 void CartController::filterJnt(KDL::JntArray& q) {
-  for (int i = 0; i < nJnt; i++)
+  for (size_t i = 0; i < nJnt; i++)
     q.data(i) = jntFilter[i].filter(q.data(i));
 }
 
@@ -918,7 +1009,7 @@ int CartController::control() {
   rclcpp::sleep_for(3s);
 
   while (rclcpp::ok())
-    update(node->get_clock()->now(), rclcpp::Duration(1.0 / freq, 0));
+    update(node->get_clock()->now(), rclcpp::Duration::from_seconds(1.0 / freq));
 
   stopping(node->get_clock()->now());
 

@@ -75,7 +75,26 @@ foreach(interface ${state_topic_interfaces})
   )
 endforeach(interface)
 
+set(twist_topic_interfaces
+  joy_topic
+)
 
+foreach(interface ${twist_topic_interfaces})
+  add_executable(${interface}_teleoperation src/interface/${interface}_interface.cpp src/interface/twist_topic_interface.cpp src/app/${interface}_teleoperation.cpp)
+
+  ament_target_dependencies(${interface}_teleoperation rclcpp ohrc_control ohrc_msgs ohrc_common interactive_markers visualization_msgs control_msgs geometry_msgs std_srvs tf2_kdl urdf tf2_eigen_kdl urdf)
+  
+  target_include_directories(${interface}_teleoperation
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    )
+  target_link_libraries(${interface}_teleoperation OsqpEigen::OsqpEigen magic_enum::magic_enum )
+
+  install(TARGETS ${interface}_teleoperation
+  DESTINATION lib/${PROJECT_NAME}
+  )
+endforeach(interface)
 
 install(DIRECTORY
   launch

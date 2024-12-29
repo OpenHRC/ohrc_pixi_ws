@@ -216,7 +216,7 @@ bool ImpedanceController::updateImpedanceTarget(const VectorXd& x, VectorXd& xd)
 
   // transform target pose coordinate from world to base
   Affine3d T_base_world_inv = controller->getT_base_world().inverse();
-  for (int i = 0; i < targetPoses.size(); i++)
+  for (size_t i = 0; i < targetPoses.size(); i++)
     targetPoses[i] = T_base_world_inv * targetPoses[i];
 
   // update task state

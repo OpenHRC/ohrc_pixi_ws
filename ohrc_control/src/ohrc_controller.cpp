@@ -29,7 +29,7 @@ bool OhrcController::getRosParams(std::vector<std::string>& robots, std::vector<
     }
   }
 
-  for (int i = 0; i < robots.size(); i++)
+  for (size_t i = 0; i < robots.size(); i++)
     RCLCPP_INFO_STREAM(this->get_logger(), "Configured Robot " << i << ": " << hw_configs[i] << " (ns: " << robots[i] << ")");
 
   if (!RclcppUtility::declare_and_get_parameter(this->node, "root_frame", std::string(""), root_frame))
@@ -37,6 +37,10 @@ bool OhrcController::getRosParams(std::vector<std::string>& robots, std::vector<
 
   if (!RclcppUtility::declare_and_get_parameter(this->node, "control_freq", double(0.0), freq))
     return false;
+
+  if (!RclcppUtility::declare_and_get_parameter(this->node, "unique_state_pub_sub", false, unique_state))
+    return false;
+
 
   if (!RclcppUtility::declare_and_get_parameter_enum(this->node, "controller", ControllerType::Velocity, controller))
     return false;
@@ -75,21 +79,22 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   cartControllers.resize(nRobot);
   nodes.resize(nRobot);
 
-  for (int i = 0; i < nRobot; i++) {
-    cartControllers[i] = std::make_shared<CartController>(nodes[i], robots[i], hw_configs[i], root_frame, i, controller, freq);  // TODO: might can be replaced with sub_node
+  for (size_t i = 0; i < nRobot; i++) {
+    cartControllers[i] = std::make_shared<CartController>(nodes[i], robots[i], hw_configs[i], root_frame, i, controller, freq, unique_state);  // TODO: might can be replaced with sub_node
+    exec.add_node(nodes[i]);
   }
 
   std::vector<std::string> base_link(nRobot), tip_link(nRobot);  // TODO: base_links for all robot shoud be same
   std::vector<Affine3d> T_base_root(nRobot);
   myik_ptr.resize(nRobot);
-  for (int i = 0; i < nRobot; i++)
+  for (size_t i = 0; i < nRobot; i++)
     cartControllers[i]->getInfo(base_link[i], tip_link[i], T_base_root[i], myik_ptr[i]);
 
   multimyik_solver_ptr = std::make_unique<MyIK::MyIK>(node, base_link, tip_link, T_base_root, myik_ptr);
 
   service = this->create_service<std_srvs::srv::Empty>("/reset", std::bind(&OhrcController::resetService, this, _1, _2));
 
-  for (int i = 0; i < nRobot; i = i + 2)
+  for (size_t i = 0; i < nRobot; i = i + 2)
     manualInd.push_back(i);
 
   for (int i = 1; i < nRobot; i = i + 2)
@@ -103,13 +108,15 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   interfaces.resize(nRobot);
 
   baseControllers.resize(nRobot);
-  for (int i = 0; i < nRobot; i++) {
+  for (size_t i = 0; i < nRobot; i++) {
     if (cartControllers[i]->getFtFound() && feedbackMode == FeedbackMode::Admittance)
       baseControllers[i] = std::make_shared<AdmittanceController>(cartControllers[i]);
     else if (feedbackMode == FeedbackMode::PositionFeedback)
       baseControllers[i] = std::make_shared<PositionFeedbackController>(cartControllers[i]);
     else if (feedbackMode == FeedbackMode::HybridFeedback)
       baseControllers[i] = std::make_shared<HybridFeedbackController>(cartControllers[i]);
+    else if (feedbackMode == FeedbackMode::NoFeedback)
+      baseControllers[i] = std::make_shared<NoFeedbackController>(cartControllers[i]);  
 
     cartControllers[i]->disablePoseFeedback();  // TODO: Pose feedback would be always enable. original feedback code can be removed.
   }
@@ -117,19 +124,18 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   this->defineInterface();
 
   control_timer = this->create_wall_timer(std::chrono::milliseconds(int(dt * 1000)), std::bind(&OhrcController::controlLoop, this));
+  // initilize_timer = this->create_wall_timer(std::chrono::milliseconds(int(dt * 1000)), std::bind(&OhrcController::initLoop, this));
+  // initilize_timer->cancel();
+
+  exec.add_node(this->node);
 }
 
 void OhrcController::resetService(const std::shared_ptr<std_srvs::srv::Empty::Request> req, const std::shared_ptr<std_srvs::srv::Empty::Response>& res) {
-  // ROS_INFO_STREAM("Resetting...");
   RCLCPP_INFO_STREAM(this->get_logger(), "Resetting...");
-  for (int i = 0; i < nRobot; i++) {
-    resetInterface(cartControllers[i]);
-    cartControllers[i]->resetPose();
-    cartControllers[i]->resetFt();
-  }
-  // ROS_INFO_STREAM("Restart!");
-  RCLCPP_INFO_STREAM(this->get_logger(), "Restart!");
-  // return true;
+  for (auto cartController : cartControllers)
+    cartController->resetPose();
+
+  isControllerInitialized = false;
 }
 
 void OhrcController::setPriority(int i) {
@@ -174,17 +180,18 @@ void OhrcController::setHightLowPriority(int high, int low) {
 }
 
 void OhrcController::starting() {
-  for (int i = 0; i < nRobot; i++) {
-    cartControllers[i]->starting(this->get_clock()->now());
-    exec.add_node(nodes[i]);
-  }
-  exec.add_node(this->node);
+  for (auto cartController : cartControllers) 
+    cartController->starting(this->get_clock()->now());
+}
 
-  for (int i = 0; i < nRobot; i++)
-    initInterface(cartControllers[i]);
+void OhrcController::initController() {
+  for (auto cartController : cartControllers) {
+    cartController->initFt();
+    initInterface(cartController);
+  }
 
   std::vector<KDL::JntArray> q_rest(nRobot);
-  for (int i = 0; i < nRobot; i++)
+  for (size_t i = 0; i < nRobot; i++)
     q_rest[i] = cartControllers[i]->getqRest();
   multimyik_solver_ptr->setqRest(q_rest);
 
@@ -196,10 +203,8 @@ void OhrcController::starting() {
 }
 
 void OhrcController::stopping() {
-  for (int i = 0; i < nRobot; i++)                           // {
-    cartControllers[i]->stopping(this->get_clock()->now());  // TODO: Make sure that this works correctly.
-  // cartControllers[i]->enableOperation();
-  // }
+  for (auto cartController : cartControllers) 
+    cartController->stopping(this->get_clock()->now());  // TODO: Make sure that this works correctly.
 
   RCLCPP_INFO_STREAM(this->get_logger(), "Controller stopped!");
 
@@ -210,7 +215,7 @@ void OhrcController::publishState(const rclcpp::Time& time, const std::vector<KD
                                   const std::vector<KDL::Twist> desVel) {
   static rclcpp::Time prev = time;
   if ((time - prev).nanoseconds() * 1.0e-9 > 0.05) {
-    for (int i = 0; i < nRobot; i++) {
+    for (size_t i = 0; i < nRobot; i++) {
       cartControllers[i]->publishDesEffPoseVel(desPose[i], desVel[i]);
       cartControllers[i]->publishCurEffPoseVel(curPose[i], curVel[i]);
     }
@@ -223,13 +228,13 @@ void OhrcController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
   std::vector<KDL::Frame> curPose(nRobot);
   std::vector<KDL::Twist> curVel(nRobot);
 
-  for (int i = 0; i < nRobot; i++)
+  for (size_t i = 0; i < nRobot; i++)
     cartControllers[i]->getState(q_cur[i], dq_cur[i], curPose[i], curVel[i]);
 
   this->publishState(time, curPose, curVel, desPose, desVel);
 
   std::vector<KDL::JntArray> q_rest(nRobot);
-  for (int i = 0; i < nRobot; i++)
+  for (size_t i = 0; i < nRobot; i++)
     q_rest[i] = cartControllers[i]->getqRest();
   multimyik_solver_ptr->setqRest(q_rest);
 
@@ -242,21 +247,30 @@ void OhrcController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
     }
 
     // low pass filter
-    for (int i = 0; i < nRobot; i++) {
+    for (size_t i = 0; i < nRobot; i++) {
       cartControllers[i]->filterJnt(dq_des[i]);
       if (q_des[i].data.rows() != dq_des[i].data.rows())
         q_des[i].data = cartControllers[i]->getqRest().data;
       q_des[i].data += dq_des[i].data * dt;
     }
 
-    for (int i = 0; i < nRobot; i++) {
-      if ((time - prev_time[i]).nanoseconds() * 1.0e-9 < 1.0 / cartControllers[i]->freq - 1.0 / this->freq)
-        continue;
+    if(!unique_state){
+      for (size_t i = 0; i < nRobot; i++) {
+        if ((time - prev_time[i]).nanoseconds() * 1.0e-9 < 1.0 / cartControllers[i]->freq - 1.0 / this->freq)
+          continue;
 
-      prev_time[i] = time;
-      // std::cout << q_des[i].data.transpose() << std::endl;
-      // std::cout << dq_des[i].data.transpose() << std::endl;
-      cartControllers[i]->sendVelCmd(q_des[i], dq_des[i], 1.0 / cartControllers[i]->freq);
+        prev_time[i] = time;
+        // std::cout << q_des[i].data.transpose() << std::endl;
+        // std::cout << dq_des[i].data.transpose() << std::endl;
+        cartControllers[i]->sendVelCmd(q_des[i], dq_des[i], 1.0 / cartControllers[i]->freq);
+      }
+    }else{
+      KDL::JntArray q_des_all, dq_des_all;
+      q_des_all.data = math_utility::concatenateVecOfVec(q_des);
+      dq_des_all.data = math_utility::concatenateVecOfVec(dq_des);
+    
+
+      cartControllers[0]->sendVelCmd(q_des_all, dq_des_all, 1.0 / cartControllers[0]->freq);
     }
 
   } else if (controller == ControllerType::Position) {
@@ -268,21 +282,21 @@ void OhrcController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
     }
 
     // low pass filter
-    for (int i = 0; i < nRobot; i++)
+    for (size_t i = 0; i < nRobot; i++)
       cartControllers[i]->filterJnt(q_des[i]);
 
-    for (int i = 0; i < nRobot; i++)
+    for (size_t i = 0; i < nRobot; i++)
       cartControllers[i]->sendPosCmd(q_des[i], dq_des[i], dt);  // TODO: update dq
 
   } else
     RCLCPP_WARN_STREAM(this->get_logger(), "not implemented");
 
-  for (int i = 0; i < nRobot; i++)
+  for (size_t i = 0; i < nRobot; i++)
     feedback(desPose[i], desVel[i], cartControllers[i]);
 }
 
 void OhrcController::updateDesired() {
-  for (int i = 0; i < nRobot; i++) {
+  for (size_t i = 0; i < nRobot; i++) {
     cartControllers[i]->updateCurState();
 
     tf2::transformEigenToKDL(cartControllers[i]->getT_init(), desPose[i]);
@@ -298,24 +312,73 @@ void OhrcController::updateDesired() {
   preInterfaceProcess(interfaces);
 }
 
-void OhrcController::controlLoop() {
-  rclcpp::Time t = this->get_clock()->now();
-  rclcpp::Duration dur(0, dt * 1.0e9);
-  // begin = std::chrono::high_resolution_clock::now();
+bool OhrcController::initRobotPose() {
 
-  if (!std::all_of(cartControllers.begin(), cartControllers.end(), [](auto& c) { return c->isInitialized(); }))
-    return;
+  if (!std::all_of(cartControllers.begin(), cartControllers.end(), [](auto& c) { return c->isInitialized(); })) {
+    updateAllCurState();
+
+    if (unique_state){
+      std::vector<VectorXd> q_des_t_(nRobot), dq_des_t_(nRobot);
+      std::vector<KDL::JntArray> q_cur_(nRobot);
+      std::vector<double> T_(nRobot), s_(nRobot);
+      std::vector<int> lastLoop_(nRobot);
+
+
+      for (size_t i = 0; i < nRobot; i++)
+        cartControllers[i]->getInitCmd(q_des_t_[i], dq_des_t_[i], q_cur_[i], lastLoop_[i], T_[i], s_[i]);
+      
+      VectorXd q_des_t_all = math_utility::concatenateVecOfVec(q_des_t_);
+      VectorXd dq_des_t_all = math_utility::concatenateVecOfVec(dq_des_t_);
+      KDL::JntArray q_cur_all;
+      q_cur_all.data = math_utility::concatenateVecOfVec(q_cur_);
+      bool lastLoop = std::all_of(lastLoop_.begin(), lastLoop_.end(), [](int x) { return x == 1; });
+      double T = *std::max_element(T_.begin(), T_.end());
+      double s = *std::max_element(s_.begin(), s_.end());
+
+      cartControllers[0]->sendIntJntCmd(q_des_t_all, dq_des_t_all, q_cur_all, lastLoop, T, s);
+
+    }
+    else{
+      for (auto cartController : cartControllers)
+        if (!cartController->isInitialized())
+          cartController->sendIntJntCmd();
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+void OhrcController::controlLoop() {
+  if(!isStarted){
+   this->starting();
+    isStarted = true;
+  }
+
+  if (!this->initRobotPose())
+    return; // blocking until all robot is initialized.
+
+  if (!isControllerInitialized) {
+    this->initController();
+    isControllerInitialized = true;
+  }
+
+
+  rclcpp::Time t = this->get_clock()->now();
+  rclcpp::Duration dur = rclcpp::Duration::from_seconds(dt);
+  // begin = std::chrono::high_resolution_clock::now();
 
   this->updateDesired();
 
   if (IKmode == IKMode::Order) {
-    for (int i = 0; i < nRobot; i++)
+    for (size_t i = 0; i < nRobot; i++)
       cartControllers[i]->update(t, dur);
   } else if (IKmode == IKMode::Parallel) {  // parallel IK(multithreading)
     std::vector<std::unique_ptr<std::thread>> workers(nRobot);
     sched_param sch;
     sch.sched_priority = 1;
-    for (int i = 0; i < nRobot; i++) {
+    for (size_t i = 0; i < nRobot; i++) {
       auto c = cartControllers[i];
       workers[i] = std::make_unique<std::thread>([c, t, dur]() { c->update(t, dur); });
       // pthread_setschedparam(workers[i]->native_handle(), SCHED_FIFO, &sch);
@@ -338,8 +401,6 @@ void OhrcController::control() {
   }
 
   this->initMenbers(robots, hw_configs);
-
-  this->starting();
 
   exec.spin();
 }

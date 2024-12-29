@@ -9,7 +9,7 @@
 
 namespace geometry_msgs_utility {
 Vector3::Vector3(int order, double cutoff_freq, double sampling_freq) {
-  for (int i = 0; i < 3; ++i)
+  for (size_t i = 0; i < 3; ++i)
     _filter.push_back(std::unique_ptr<butterworth>(new butterworth(order, cutoff_freq, sampling_freq)));
 
   delta_t = 1.0 / sampling_freq;
@@ -17,7 +17,7 @@ Vector3::Vector3(int order, double cutoff_freq, double sampling_freq) {
 
 Vector3::~Vector3() {
   // deleted because this vector conteners std::unique_ptr_filter_vec
-  //  for (int i = 0; i < 3; ++i)
+  //  for (size_t i = 0; i < 3; ++i)
   //    delete _filter[i];
 }
 

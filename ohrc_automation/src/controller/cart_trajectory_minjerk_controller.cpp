@@ -7,7 +7,7 @@ moveit_msgs::CartesianTrajectory CartTrajectoryMinjerkController::interpolateTra
 
   moveit_msgs::CartesianTrajectory trj_;
   trj_.points.resize(n_t);
-  for (int i = 0; i < n_t; i++) {
+  for (size_t i = 0; i < n_t; i++) {
     double t = i * dt;
     double T = (trj.points[1].time_from_start.toSec() - trj.points[0].time_from_start.toSec());
     double s = t / T;

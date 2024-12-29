@@ -22,6 +22,8 @@ class OhrcController : public rclcpp::Node {
   std::vector<rclcpp::Node::SharedPtr> nodes;
   rclcpp::Node::SharedPtr node;
 
+  bool isStarted = false, isControllerInitialized = false;
+
   std::vector<std::shared_ptr<MyIK::MyIK>> myik_ptr;
 
   rclcpp::TimerBase::SharedPtr control_timer;
@@ -43,12 +45,16 @@ class OhrcController : public rclcpp::Node {
   void stopping();
   void update(const rclcpp::Time& time, const rclcpp::Duration& period);
 
+  bool initRobotPose();
+  void initController();
+
   enum class MFMode { Individual, Parallel, Cooperation, None } MFmode;
   enum class IKMode { Concatenated, Order, Parallel, None } IKmode;
 
   // std::vector<std::string> robots;
   // std::vector<std::string> hw_configs;
   int nRobot = 0;
+  bool unique_state = false;
 
   std::string root_frame;
   double freq = 500.0;
@@ -94,12 +100,19 @@ class OhrcController : public rclcpp::Node {
 
   // virtual void defineInterface() = 0;
 
+  void updateAllCurState() {
+    for (auto cartController : cartControllers)
+      cartController->updateCurState();
+  }
+
   void initInterface(const std::shared_ptr<CartController>& controller) {
+    controller->updateCurState();
     interfaces[controller->getIndex()]->initInterface();
     baseControllers[controller->getIndex()]->initInterface();
   }
 
   void resetInterface(const std::shared_ptr<CartController>& controller) {
+    controller->updateCurState();
     interfaces[controller->getIndex()]->resetInterface();
     baseControllers[controller->getIndex()]->resetInterface();
   }

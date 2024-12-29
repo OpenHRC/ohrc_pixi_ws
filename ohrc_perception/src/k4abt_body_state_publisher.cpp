@@ -50,7 +50,7 @@ ArmPerception::ArmPerception() {
 void ArmPerception::cbBodyMarker(const visualization_msgs::MarkerArray::ConstPtr& msg) {
   int nPoint = msg->markers.size();
 
-  for (int i = 0; i < nPoint; i++) {
+  for (size_t i = 0; i < nPoint; i++) {
     int id = msg->markers[i].id % 100;
     if (id == K4ABT_JOINT_WRIST_RIGHT)
       bodyState.right_hand.pose = msg->markers[i].pose;

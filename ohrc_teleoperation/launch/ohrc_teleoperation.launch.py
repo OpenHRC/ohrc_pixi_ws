@@ -19,6 +19,10 @@ def launch_setup(context, *args, **kwargs):
             return ['--x', '0', '--y', '0', '--z', '0', '--yaw', '1.57079', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
         elif view == 'left':
             return ['--x', '0', '--y', '0', '--z', '0', '--yaw', '-1.57079', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
+        else:
+            print(
+                'Invalid user_frame_viewpoint argument. Valid options are: back, face, right, left')
+            exit(1)
 
     view = LaunchConfiguration('user_frame_viewpoint').perform(context)
 

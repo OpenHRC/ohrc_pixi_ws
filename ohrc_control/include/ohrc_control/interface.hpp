@@ -23,7 +23,9 @@ protected:
 
   inline void reset() {
     controller->resetPose();
-    controller->resetFt();
+
+    if (controller->getFtFound())
+      controller->resetFt();
     resetInterface();
   }
 
@@ -65,6 +67,11 @@ public:
   inline VectorXd getTargetError() {
     return this->e;
   }
+};
+
+class NoFeedbackController : public Interface {
+public:
+  using Interface::Interface;
 };
 
 #endif  // INTERFACE_HPP

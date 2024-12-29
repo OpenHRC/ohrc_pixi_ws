@@ -39,7 +39,7 @@ ForwardingController::ForwardingController() : nh("~"), spinner(0) {
   jntPosCmdPublisher.resize(nJnt);
   jntVelCmdPublisher.resize(nJnt);
 
-  for (int i = 0; i < 2; i++) {
+  for (size_t i = 0; i < 2; i++) {
     jntStateSubscriber[i] = nh.subscribe("/" + robot_ns[i] + "joint_states", 2, cbFunc[i], this, ros::TransportHints().tcpNoDelay());
 
     jntPosCmdPublisher[i] = nh.advertise<std_msgs::Float64MultiArray>("/" + robot_ns[i] + "joint_position_controller/command", 2);
@@ -98,7 +98,7 @@ void ForwardingController::signal_handler(int signum) {
   std_msgs::Float64MultiArray cmd;
   cmd.data.resize(7, 0.0);
   while (ros::ok()) {  // exerimental
-    for (int i = 0; i < robot_ns.size(); i++) {
+    for (size_t i = 0; i < robot_ns.size(); i++) {
       for (int j = 0; j < controller.size(); i++) {
         publisher = nh.advertise<std_msgs::Float64MultiArray>(robot_ns[i] + controller[j] + "/command", 1);
         publisher.publish(cmd);

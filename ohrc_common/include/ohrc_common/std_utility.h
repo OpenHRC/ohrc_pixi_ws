@@ -101,7 +101,7 @@ inline Eigen::VectorXd concatenateVectors(std::vector<Eigen::VectorXd> vecs) {
 
 inline Eigen::VectorXd concatenateVectors(std::vector<KDL::JntArray> vecs) {
   std::vector<Eigen::VectorXd> v(vecs.size());
-  for (int i = 0; i < vecs.size(); i++) {
+  for (size_t i = 0; i < vecs.size(); i++) {
     v[i] = vecs[i].data;
   }
   return concatenateVectors(v);

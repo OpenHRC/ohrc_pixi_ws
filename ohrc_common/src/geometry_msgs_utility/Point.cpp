@@ -14,13 +14,13 @@ Point::Point(int order, double cutoff_freq, double sampling_freq) {
 
 Point::~Point() {
   // deleted because this vector conteners std::unique_ptr
-  //  for (int i = 0; i < 3; ++i)
+  //  for (size_t i = 0; i < 3; ++i)
   //    delete _filter[i];
 }
 
 void Point::initLPF(int order, double cutoff_freq, double sampling_freq) {
   _filter.resize(3);
-  for (int i = 0; i < 3; ++i)
+  for (size_t i = 0; i < 3; ++i)
     _filter[i] = std::make_shared<butterworth>(order, cutoff_freq, sampling_freq);
 
   delta_t = 1.0 / sampling_freq;
@@ -110,7 +110,7 @@ geometry_msgs::msg::Point error(geometry_msgs::msg::Point point1, geometry_msgs:
 
 geometry_msgs::msg::Point sum(std::vector<geometry_msgs::msg::Point> points) {
   geometry_msgs::msg::Point sumPoint;
-  for (int i = 0; i < points.size(); i++) {
+  for (size_t i = 0; i < points.size(); i++) {
     sumPoint.x += points[i].x;
     sumPoint.y += points[i].y;
     sumPoint.z += points[i].z;

@@ -1,9 +1,9 @@
+/**:
+  ros__parameters:
+    gain/horizontal: 0.2
+    gain/rotational: 0.3
 
-gain:
-  horizontal: 0.2
-  rotational: 0.3
+    topic_name: "/spacenav/joy"
+    frame_id: "user_frame"
 
-topic_name: "/spacenav/joy"
-frame_id: "world"
-
-diable_pose_feedback: true
+    diable_pose_feedback: true
