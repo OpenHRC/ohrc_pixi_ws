@@ -33,7 +33,7 @@ $ sudo apt install python3-rocker # if you don't have rocker. You can also use "
 ### Run
 Now you can control the end-effector of UR5e with an interactive marker.
 ```bash
-$ rocker --x11 openhrc:humble marker_teleoperation_ur5e 
+$ rocker --x11 openhrc:ros2 marker_teleoperation_ur5e 
 ```
 
 <!-- If you have 3D mouse (spacenav), you can also use it for teleoperation.
