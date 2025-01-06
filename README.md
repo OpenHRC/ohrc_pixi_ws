@@ -111,7 +111,14 @@ $ ros2 launch ohrc_teleoperation joy_topic_teleoperation.launch.py
 ## Citation
 
 If you use this package in your academic research, we would appreciate it if you could cite the following paper.
->(comming soon)
+```
+@software{openhrc,
+  author = {Shunki Itadera},
+  title = {OpenHRC},
+  url = {https://github.com/Automation-Research-Team/OpenHRC},
+  year = {2024},
+}
+```
 
 
 ## License
