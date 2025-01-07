@@ -41,7 +41,11 @@ void JoyTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos, 
   if (joy.buttons[1] == 1.0)
     this->reset();
 
+  KDL::Frame pos_joy = pos;
+  KDL::Twist twist_joy = twist;
   setPoseFromTwistMsg(twist_msg, pos, twist);
+
+  // twist = twist_joy + twist;
 }
 
 // void JoyTopicInterface::resetInterface() {

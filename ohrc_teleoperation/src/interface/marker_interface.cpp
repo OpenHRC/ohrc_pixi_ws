@@ -82,7 +82,7 @@ void MarkerInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, K
     }
 
     if (count_disable * dt > 0.5) {  // disable operation after 0.5 s
-      controller->disableOperation();
+      // controller->disableOperation();
       if (subFirst)
         pose = prevPoses;
       return;
@@ -90,7 +90,7 @@ void MarkerInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, K
 
     markerPose = _markerPose;
 
-    controller->enableOperation();
+    // controller->enableOperation();
     _flagSubInteractiveMarker = false;
   }
 
@@ -115,5 +115,5 @@ void MarkerInterface::resetInterface() {
 
   _flagSubInteractiveMarker = false;
   count_disable = 0;
-  // controller->enablePoseFeedback();  // tentative
+  controller->enablePoseFeedback();  // tentative
 }

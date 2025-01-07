@@ -5,13 +5,11 @@
 #include <numeric>
 #include <thread>
 
-#include "ohrc_control/admittance_controller.hpp"
+#include "ohrc_control/base_controllers.hpp"
 #include "ohrc_control/cart_controller.hpp"
-#include "ohrc_control/hybrid_feedback_controller.hpp"
 #include "ohrc_control/interface.hpp"
 #include "ohrc_control/my_ik.hpp"
 #include "ohrc_control/ohrc_control.hpp"
-#include "ohrc_control/position_feedback_controller.hpp"
 
 using namespace std::placeholders;
 using namespace ohrc_control;
@@ -87,11 +85,9 @@ class OhrcController : public rclcpp::Node {
 
   virtual void runLoopEnd() {};
 
-  std::vector<std::shared_ptr<Interface>> baseControllers;
-
   void updateTargetPose(KDL::Frame& pose, KDL::Twist& twist, const std::shared_ptr<CartController>& controller) {
-    interfaces[controller->getIndex()]->updateTargetPose(this->get_clock()->now(), pose, twist);
-    baseControllers[controller->getIndex()]->updateTargetPose(this->get_clock()->now(), pose, twist);
+    for (auto& interface : interfaces[controller->getIndex()])
+      interface->updateTargetPose(this->get_clock()->now(), pose, twist);
   }
 
   // void applyBaseControl(KDL::Frame& pose, KDL::Twist& twist, std::shared_ptr<CartController> controller) {
@@ -107,21 +103,22 @@ class OhrcController : public rclcpp::Node {
 
   void initInterface(const std::shared_ptr<CartController>& controller) {
     controller->updateCurState();
-    interfaces[controller->getIndex()]->initInterface();
-    baseControllers[controller->getIndex()]->initInterface();
+    for (auto& interface : interfaces[controller->getIndex()])
+      interface->initInterface();
   }
 
   void resetInterface(const std::shared_ptr<CartController>& controller) {
     controller->updateCurState();
-    interfaces[controller->getIndex()]->resetInterface();
-    baseControllers[controller->getIndex()]->resetInterface();
+    for (auto& interface : interfaces[controller->getIndex()])
+      interface->resetInterface();
   }
 
   void feedback(KDL::Frame& pose, KDL::Twist& twist, const std::shared_ptr<CartController>& controller) {
-    interfaces[controller->getIndex()]->feedback(pose, twist);
+    for (auto& interface : interfaces[controller->getIndex()])
+      interface->feedback(pose, twist);
   }
 
-  virtual void preInterfaceProcess(std::vector<std::shared_ptr<Interface>> interfaces) {};
+  // virtual void preInterfaceProcess(std::vector<std::shared_ptr<Interface>> interfaces) {};
 
   virtual void updateManualTargetPose(KDL::Frame& pose, KDL::Twist& twist, const std::shared_ptr<CartController>& controller) {
     updateTargetPose(pose, twist, controller);
@@ -134,16 +131,18 @@ class OhrcController : public rclcpp::Node {
 
 protected:
   virtual void defineInterface() {};
-  std::vector<std::shared_ptr<Interface>> interfaces;
+
+  std::vector<std::vector<std::shared_ptr<Interface>>> interfaces;
   std::vector<std::shared_ptr<CartController>> cartControllers;
+
+  // virtual std::shared_ptr<Interface> selectInterface(std::shared_ptr<CartController> cartController) {
+  // }
+
   int getNRobot() {
     return nRobot;
   }
 
 public:
-  // rclcpp::executors::MultiThreadedExecutor exec;
-  // std::vector<rclcpp::Node::SharedPtr> nodes;
-  // rclcpp::Node::SharedPtr node;
   OhrcController();
   ~OhrcController();
   void control();

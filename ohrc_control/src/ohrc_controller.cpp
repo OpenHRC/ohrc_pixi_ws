@@ -41,7 +41,6 @@ bool OhrcController::getRosParams(std::vector<std::string>& robots, std::vector<
   if (!RclcppUtility::declare_and_get_parameter(this->node, "unique_state_pub_sub", false, unique_state))
     return false;
 
-
   if (!RclcppUtility::declare_and_get_parameter_enum(this->node, "controller", ControllerType::Velocity, controller))
     return false;
 
@@ -80,7 +79,8 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   nodes.resize(nRobot);
 
   for (size_t i = 0; i < nRobot; i++) {
-    cartControllers[i] = std::make_shared<CartController>(nodes[i], robots[i], hw_configs[i], root_frame, i, controller, freq, unique_state);  // TODO: might can be replaced with sub_node
+    cartControllers[i] =
+        std::make_shared<CartController>(nodes[i], robots[i], hw_configs[i], root_frame, i, controller, freq, unique_state);  // TODO: might can be replaced with sub_node
     exec.add_node(nodes[i]);
   }
 
@@ -107,21 +107,16 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
 
   interfaces.resize(nRobot);
 
-  baseControllers.resize(nRobot);
-  for (size_t i = 0; i < nRobot; i++) {
-    if (cartControllers[i]->getFtFound() && feedbackMode == FeedbackMode::Admittance)
-      baseControllers[i] = std::make_shared<AdmittanceController>(cartControllers[i]);
-    else if (feedbackMode == FeedbackMode::PositionFeedback)
-      baseControllers[i] = std::make_shared<PositionFeedbackController>(cartControllers[i]);
-    else if (feedbackMode == FeedbackMode::HybridFeedback)
-      baseControllers[i] = std::make_shared<HybridFeedbackController>(cartControllers[i]);
-    else if (feedbackMode == FeedbackMode::NoFeedback)
-      baseControllers[i] = std::make_shared<NoFeedbackController>(cartControllers[i]);  
+  this->defineInterface();
 
+  // for (size_t i = 0; i < nRobot; i++) {
+  //   // interfaces[i].push_back(selectInterface(cartControllers[i]));
+  // }
+
+  for (size_t i = 0; i < nRobot; i++) {
+    interfaces[i].push_back(ohrc_control::selectBaseController(feedbackMode, cartControllers[i]));
     cartControllers[i]->disablePoseFeedback();  // TODO: Pose feedback would be always enable. original feedback code can be removed.
   }
-
-  this->defineInterface();
 
   control_timer = this->create_wall_timer(std::chrono::milliseconds(int(dt * 1000)), std::bind(&OhrcController::controlLoop, this));
   // initilize_timer = this->create_wall_timer(std::chrono::milliseconds(int(dt * 1000)), std::bind(&OhrcController::initLoop, this));
@@ -180,7 +175,7 @@ void OhrcController::setHightLowPriority(int high, int low) {
 }
 
 void OhrcController::starting() {
-  for (auto cartController : cartControllers) 
+  for (auto cartController : cartControllers)
     cartController->starting(this->get_clock()->now());
 }
 
@@ -203,7 +198,7 @@ void OhrcController::initController() {
 }
 
 void OhrcController::stopping() {
-  for (auto cartController : cartControllers) 
+  for (auto cartController : cartControllers)
     cartController->stopping(this->get_clock()->now());  // TODO: Make sure that this works correctly.
 
   RCLCPP_INFO_STREAM(this->get_logger(), "Controller stopped!");
@@ -254,7 +249,7 @@ void OhrcController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
       q_des[i].data += dq_des[i].data * dt;
     }
 
-    if(!unique_state){
+    if (!unique_state) {
       for (size_t i = 0; i < nRobot; i++) {
         if ((time - prev_time[i]).nanoseconds() * 1.0e-9 < 1.0 / cartControllers[i]->freq - 1.0 / this->freq)
           continue;
@@ -264,11 +259,10 @@ void OhrcController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
         // std::cout << dq_des[i].data.transpose() << std::endl;
         cartControllers[i]->sendVelCmd(q_des[i], dq_des[i], 1.0 / cartControllers[i]->freq);
       }
-    }else{
+    } else {
       KDL::JntArray q_des_all, dq_des_all;
       q_des_all.data = math_utility::concatenateVecOfVec(q_des);
       dq_des_all.data = math_utility::concatenateVecOfVec(dq_des);
-    
 
       cartControllers[0]->sendVelCmd(q_des_all, dq_des_all, 1.0 / cartControllers[0]->freq);
     }
@@ -309,24 +303,22 @@ void OhrcController::updateDesired() {
     cartControllers[i]->setDesired(desPose[i], desVel[i]);
   }
 
-  preInterfaceProcess(interfaces);
+  // preInterfaceProcess(interfaces);
 }
 
 bool OhrcController::initRobotPose() {
-
   if (!std::all_of(cartControllers.begin(), cartControllers.end(), [](auto& c) { return c->isInitialized(); })) {
     updateAllCurState();
 
-    if (unique_state){
+    if (unique_state) {
       std::vector<VectorXd> q_des_t_(nRobot), dq_des_t_(nRobot);
       std::vector<KDL::JntArray> q_cur_(nRobot);
       std::vector<double> T_(nRobot), s_(nRobot);
       std::vector<int> lastLoop_(nRobot);
 
-
       for (size_t i = 0; i < nRobot; i++)
         cartControllers[i]->getInitCmd(q_des_t_[i], dq_des_t_[i], q_cur_[i], lastLoop_[i], T_[i], s_[i]);
-      
+
       VectorXd q_des_t_all = math_utility::concatenateVecOfVec(q_des_t_);
       VectorXd dq_des_t_all = math_utility::concatenateVecOfVec(dq_des_t_);
       KDL::JntArray q_cur_all;
@@ -337,8 +329,7 @@ bool OhrcController::initRobotPose() {
 
       cartControllers[0]->sendIntJntCmd(q_des_t_all, dq_des_t_all, q_cur_all, lastLoop, T, s);
 
-    }
-    else{
+    } else {
       for (auto cartController : cartControllers)
         if (!cartController->isInitialized())
           cartController->sendIntJntCmd();
@@ -351,19 +342,18 @@ bool OhrcController::initRobotPose() {
 }
 
 void OhrcController::controlLoop() {
-  if(!isStarted){
-   this->starting();
+  if (!isStarted) {
+    this->starting();
     isStarted = true;
   }
 
   if (!this->initRobotPose())
-    return; // blocking until all robot is initialized.
+    return;  // blocking until all robot is initialized.
 
   if (!isControllerInitialized) {
     this->initController();
     isControllerInitialized = true;
   }
-
 
   rclcpp::Time t = this->get_clock()->now();
   rclcpp::Duration dur = rclcpp::Duration::from_seconds(dt);

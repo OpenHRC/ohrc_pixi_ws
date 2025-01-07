@@ -35,13 +35,14 @@ void TwistTopicInterface::cbTwist(const geometry_msgs::msg::Twist::SharedPtr msg
 
 void TwistTopicInterface::setPoseFromTwistMsg(const geometry_msgs::msg::Twist& twist_msg, KDL::Frame& pos, KDL::Twist& twist) {
   if (isFirst) {
-    state.pose = tf2::toMsg(controller->getT_init());
+    state.pose = tf2::toMsg(pos);  // tf2::toMsg(controller->getT_init());
     isFirst = false;
 
     controller->startOperation();
   }
 
   ohrc_msgs::msg::State state = this->state;
+  this->state.pose = tf2::toMsg(pos);
   state.enabled = true;
   state.twist = twist_msg;
   state.pose.position.x += state.twist.linear.x * dt;
