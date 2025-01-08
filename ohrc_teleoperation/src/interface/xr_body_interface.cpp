@@ -1,6 +1,7 @@
 #include "ohrc_teleoperation/xr_body_interface.hpp"
 
 void XrBodyInterface::initInterface() {
+  inaterfaceName = "XrBodyInterface";
   StateTopicInterface::initInterface();
 
   RclcppUtility::declare_and_get_parameter_enum(node, controller->getRobotNs() + "body_part", BodyPart::RIGHT_HAND, bodyPart);
@@ -21,7 +22,7 @@ void XrBodyInterface::setSubscriber() {
 }
 
 void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {
-  std::lock_guard<std::mutex> lock(mtx_state);
+  std::lock_guard<std::mutex> lock(mtx);
   _body = *msg;
   _flagTopic = true;
 }
@@ -36,7 +37,7 @@ bool XrBodyInterface::getEnableFlag(const ohrc_msgs::msg::BodyPartState& handSta
 void XrBodyInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) {
   ohrc_msgs::msg::BodyState body;
   {
-    std::lock_guard<std::mutex> lock(mtx_state);
+    std::lock_guard<std::mutex> lock(mtx);
     body = _body;
     if (!_flagTopic)
       return;

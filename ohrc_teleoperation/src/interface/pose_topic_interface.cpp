@@ -1,6 +1,7 @@
 #include "ohrc_teleoperation/pose_topic_interface.hpp"
 
 void PoseTopicInterface::initInterface() {
+  inaterfaceName = "PoseTopicInterface";
   setSubscriber();
 
   Affine3d T_state_base = controller->getTransform_base(this->stateFrameId);
@@ -26,7 +27,7 @@ void PoseTopicInterface::setSubscriber() {
 }
 
 void PoseTopicInterface::cbPose(const geometry_msgs::msg::Pose::SharedPtr msg) {
-  std::lock_guard<std::mutex> lock(mtx_topic);
+  std::lock_guard<std::mutex> lock(mtx);
   _pose = *msg;
   _flagTopic = true;
 }
@@ -35,7 +36,7 @@ void PoseTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose
   geometry_msgs::msg::Pose markerPose;
   double markerDt;
   {
-    std::lock_guard<std::mutex> lock(mtx_topic);
+    std::lock_guard<std::mutex> lock(mtx);
     if (!_flagTopic) {
       return;
     }

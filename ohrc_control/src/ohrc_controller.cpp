@@ -114,7 +114,8 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   // }
 
   for (size_t i = 0; i < nRobot; i++) {
-    interfaces[i].push_back(ohrc_control::selectBaseController(feedbackMode, cartControllers[i]));
+    interfaces[i].interfaces.push_back(ohrc_control::selectBaseController(feedbackMode, cartControllers[i]));
+    interfaces[i].isEnables.resize(interfaces[i].interfaces.size(), false);
     cartControllers[i]->disablePoseFeedback();  // TODO: Pose feedback would be always enable. original feedback code can be removed.
   }
 
@@ -123,6 +124,66 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   // initilize_timer->cancel();
 
   exec.add_node(this->node);
+}
+
+void OhrcController::selectInterface(std::vector<bool> isEnable) {
+  if (std::all_of(isEnable.begin(), isEnable.end(), [](bool x) { return x == false; }))
+    _isEnable = isEnable;
+}
+
+void OhrcController::updateTargetPose(KDL::Frame& pose, KDL::Twist& twist, Interfaces& interfaces_) {
+  interfaces_.updateIsEnables();
+
+  if (this->interfaceIdx == -1) {
+    for (size_t i = 0; i < interfaces_.isEnables.size() - 1; i++)
+      if (interfaces_.isEnables[i]) {
+        this->interfaceIdx = i;
+        break;
+      }
+  } else {
+    if (!interfaces_.isEnables[this->interfaceIdx]) {
+      this->interfaceIdx = -1;
+      for (size_t i = 0; i < interfaces_.isEnables.size() - 1; i++)
+        if (interfaces_.isEnables[i]) {
+          this->interfaceIdx = i;
+          break;
+        }
+    }
+  }
+
+  for (auto& interface : interfaces_.interfaces)
+    interface->updateInterface();
+
+  // apply the selected interface operation
+  if (this->interfaceIdx != -1)
+    interfaces_.interfaces[this->interfaceIdx]->updateTargetPose(this->get_clock()->now(), pose, twist);
+
+  // apply the base controller
+  interfaces_.interfaces[interfaces_.interfaces.size() - 1]->updateTargetPose(this->get_clock()->now(), pose, twist);
+}
+
+// virtual void defineInterface() = 0;
+
+void OhrcController::updateAllCurState() {
+  for (auto cartController : cartControllers)
+    cartController->updateCurState();
+}
+
+void OhrcController::initInterface(const std::vector<std::shared_ptr<Interface>> interfaces_) {
+  for (auto& interface : interfaces_)
+    interface->initInterface();
+
+  _isEnable.resize(interfaces_.size() - 1);
+}
+
+void OhrcController::resetInterface(const std::vector<std::shared_ptr<Interface>> interfaces_) {
+  for (auto& interface : interfaces_)
+    interface->resetInterface();
+}
+
+void OhrcController::feedback(KDL::Frame& pose, KDL::Twist& twist, const std::vector<std::shared_ptr<Interface>> interfaces_) {
+  for (auto& interface : interfaces_)
+    interface->feedback(pose, twist);
 }
 
 void OhrcController::resetService(const std::shared_ptr<std_srvs::srv::Empty::Request> req, const std::shared_ptr<std_srvs::srv::Empty::Response>& res) {
@@ -180,9 +241,10 @@ void OhrcController::starting() {
 }
 
 void OhrcController::initController() {
+  updateAllCurState();
   for (auto cartController : cartControllers) {
     cartController->initFt();
-    initInterface(cartController);
+    initInterface(interfaces[cartController->getIndex()].interfaces);
   }
 
   std::vector<KDL::JntArray> q_rest(nRobot);
@@ -286,17 +348,18 @@ void OhrcController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
     RCLCPP_WARN_STREAM(this->get_logger(), "not implemented");
 
   for (size_t i = 0; i < nRobot; i++)
-    feedback(desPose[i], desVel[i], cartControllers[i]);
+    feedback(desPose[i], desVel[i], interfaces[cartControllers[i]->getIndex()].interfaces);
 }
 
 void OhrcController::updateDesired() {
   for (size_t i = 0; i < nRobot; i++) {
     cartControllers[i]->updateCurState();
 
-    tf2::transformEigenToKDL(cartControllers[i]->getT_init(), desPose[i]);
+    // tf2::transformEigenToKDL(cartControllers[i]->getT_init(), desPose[i]);
+    tf2::transformEigenToKDL(cartControllers[i]->getT_cur(), desPose[i]);
     desVel[i] = KDL::Twist();
 
-    updateTargetPose(desPose[i], desVel[i], cartControllers[i]);
+    updateTargetPose(desPose[i], desVel[i], interfaces[cartControllers[i]->getIndex()]);
 
     // applyBaseControl(desPose[i], desVel[i], cartControllers[i]);
 

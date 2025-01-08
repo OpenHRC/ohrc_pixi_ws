@@ -8,7 +8,7 @@ class SingleInterface : public OhrcController {
 protected:
   void defineInterface() override {
     for (size_t i = 0; i < this->getNRobot(); i++)
-      this->interfaces[i].push_back(std::make_shared<T>(cartControllers[i]));
+      this->interfaces[i].interfaces.push_back(std::make_shared<T>(cartControllers[i]));
   }
 };
 

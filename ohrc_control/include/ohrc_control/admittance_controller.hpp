@@ -3,7 +3,7 @@
 
 #include "ohrc_control/interface.hpp"
 
-class AdmittanceController : public virtual Interface {
+class AdmittanceController : public Interface {
   VectorXd x, xd;
 
   struct ImpParam {

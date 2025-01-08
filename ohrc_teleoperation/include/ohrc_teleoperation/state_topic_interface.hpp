@@ -13,7 +13,6 @@ protected:
   Affine3d T, T_start, T_state_start;
   bool isFirst = true;
 
-  std::mutex mtx_state;
   ohrc_msgs::msg::State _state;
   bool _flagTopic = false;
 

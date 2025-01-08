@@ -5,6 +5,7 @@ void JoyTopicInterface::initInterface() {
   RclcppUtility::declare_and_get_parameter(node, "gain/rotational", 1.0, gain_r);
 
   TwistTopicInterface::initInterface();
+  inaterfaceName = "JoyTopicInterface";
 }
 
 void JoyTopicInterface::setSubscriber() {
@@ -13,7 +14,10 @@ void JoyTopicInterface::setSubscriber() {
 }
 
 void JoyTopicInterface::cbJoy(const sensor_msgs::msg::Joy::SharedPtr msg) {
-  std::lock_guard<std::mutex> lock(mtx_topic);
+  std::lock_guard<std::mutex> lock(mtx);
+  updateIsEnable(Eigen::Map<Eigen::VectorXf>(msg->axes.data(), msg->axes.size()).norm() > 1.0e-2 ||
+                 std::any_of(msg->buttons.begin(), msg->buttons.end(), [](int i) { return i == 1; }));
+
   _joy = *msg;
   _flagTopic = true;
 }
@@ -21,7 +25,7 @@ void JoyTopicInterface::cbJoy(const sensor_msgs::msg::Joy::SharedPtr msg) {
 void JoyTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos, KDL::Twist& twist) {
   sensor_msgs::msg::Joy joy;
   {
-    std::lock_guard<std::mutex> lock(mtx_topic);
+    std::lock_guard<std::mutex> lock(mtx);
     joy = _joy;
     if (!_flagTopic)
       return;
@@ -41,11 +45,7 @@ void JoyTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos, 
   if (joy.buttons[1] == 1.0)
     this->reset();
 
-  KDL::Frame pos_joy = pos;
-  KDL::Twist twist_joy = twist;
   setPoseFromTwistMsg(twist_msg, pos, twist);
-
-  // twist = twist_joy + twist;
 }
 
 // void JoyTopicInterface::resetInterface() {
