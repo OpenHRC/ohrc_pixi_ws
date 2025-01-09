@@ -1,7 +1,9 @@
 #include "ohrc_teleoperation/marker_interface.hpp"
 
 void MarkerInterface::initInterface() {
-  inaterfaceName = "MarkerInterface";
+  interfaceName = "MarkerInterface";
+  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::PositionFeedback, feedbackMode);
+
   server = std::make_unique<interactive_markers::InteractiveMarkerServer>(controller->getRobotNs() + "eef_marker", node);
   configMarker();
 
@@ -9,7 +11,7 @@ void MarkerInterface::initInterface() {
 
   _markerPose = tf2::toMsg(controller->getT_cur());
 
-  th = std::thread(&MarkerInterface::makerThread, this);
+  th = std::thread(&MarkerInterface::markerThread, this);
 }
 
 void MarkerInterface::configMarker() {
@@ -60,7 +62,6 @@ void MarkerInterface::configMarker() {
   // 'commit' changes and send to all clients
   server->applyChanges();
 
-  // ROS_INFO_STREAM("Set interactive marker: " << controller->getRobotNs() << "eef_marker");
   RCLCPP_INFO_STREAM(node->get_logger(), "Set interactive marker: " << controller->getRobotNs() << "eef_marker");
 }
 
@@ -72,7 +73,7 @@ void MarkerInterface::processFeedback(const visualization_msgs::msg::Interactive
 }
 
 // void MarkerInterface::updateInterface() {
-void MarkerInterface::makerThread() {
+void MarkerInterface::markerThread() {
   rclcpp::Rate rate(30);
   while (interfaceRunning && rclcpp::ok()) {
     {
@@ -102,25 +103,8 @@ void MarkerInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, K
   {
     std::lock_guard<std::mutex> lock(mtx);
     if (!_flagSubInteractiveMarker) {
-      //   count_disable++;
-      // } else {
-      //   subFirst = true;
-      //   count_disable = 0;
-      // }
-
-      // if (count_disable * dt > 0.5) {  // disable operation after 0.5 s
-      // controller->disableOperation();
-      //   if (subFirst)
-      //     pose = prevPoses;
-
       return;
     }
-
-    // if (subFirst) {
-    //   subFirst = false;
-    //   server->setPose(int_marker.name, tf2::toMsg(controller->getT_cur()));
-    //   server->applyChanges();
-    // }
 
     markerPose = _markerPose;
 
@@ -129,27 +113,9 @@ void MarkerInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, K
   }
 
   tf2::fromMsg(markerPose, pose);
-
-  // if (prevPoses.p.data[0] == 0.0 && prevPoses.p.data[1] == 0.0 && prevPoses.p.data[2] == 0.0)  // initilize
-  //   prevPoses = pose;
-
-  // // controller->getVelocity(pose, prevPoses, dt, twist);  // TODO: get this velocity in periodic loop using Kalman filter
-
-  // prevPoses = pose;
 }
 
 void MarkerInterface::resetInterface() {
-  // controller->disableOperation();
-
-  // RCLCPP_WARN_STREAM(node->get_logger(), "Reset marker position");
-
-  // _markerPose = tf2::toMsg(controller->getT_cur());
-  // server->setPose(int_marker.name, _markerPose);
-  // server->applyChanges();
-
-  // _flagSubInteractiveMarker = false;
-  // count_disable = 0;
-  // controller->enablePoseFeedback();  // tentativ
   server->setPose(int_marker.name, tf2::toMsg(controller->getT_cur()));
   server->applyChanges();
 }

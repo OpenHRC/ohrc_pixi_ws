@@ -40,19 +40,21 @@ protected:
 
   bool isEnable = false;
 
-  std::string inaterfaceName = "";
+  std::string interfaceName = "";
   bool updateIsEnable(bool condition) {
     if (condition && !isEnable) {
-      RCLCPP_INFO_STREAM(node->get_logger(), "[" + inaterfaceName + "] Enabled");
+      RCLCPP_INFO_STREAM(node->get_logger(), "[" + interfaceName + "] Enabled");
       resetInterface();
     } else if (!condition && isEnable)
-      RCLCPP_INFO_STREAM(node->get_logger(), "[" + inaterfaceName + "] Disabled");
+      RCLCPP_INFO_STREAM(node->get_logger(), "[" + interfaceName + "] Disabled");
 
     isEnable = condition;
     return condition;
   }
 
   bool interfaceRunning = false;
+
+  FeedbackMode feedbackMode;
 
 public:
   Interface(const std::shared_ptr<CartController>& controller) : node(controller->getNode()), dt(controller->dt) {
@@ -98,6 +100,10 @@ public:
 
   inline void setIsEnable(bool isEnable) {
     this->isEnable = isEnable;
+  }
+
+  inline FeedbackMode getFeedbackMode() {
+    return this->feedbackMode;
   }
 };
 

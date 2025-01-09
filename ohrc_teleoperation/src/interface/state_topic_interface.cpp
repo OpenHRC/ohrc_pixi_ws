@@ -1,10 +1,12 @@
 #include "ohrc_teleoperation/state_topic_interface.hpp"
 
 void StateTopicInterface::initInterface() {
-  inaterfaceName = "StateTopicInterface";
+  interfaceName = "StateTopicInterface";
+  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::PositionFeedback, feedbackMode);
+
   // n.param("trans_ratio", k_trans, 1.0);
   // ROS_INFO_STREAM("translation ratio: " << k_trans);
-  RclcppUtility::declare_and_get_parameter(node, "trans_ratio", 1.0, k_trans);
+  RclcppUtility::declare_and_get_parameter(node, interfaceName + ".trans_ratio", 1.0, k_trans);
 
   setSubscriber();
 

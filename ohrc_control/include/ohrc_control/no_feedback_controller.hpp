@@ -4,6 +4,7 @@
 #include "ohrc_control/interface.hpp"
 
 class NoFeedbackController : public Interface {
+  
 public:
   using Interface::Interface;
 };

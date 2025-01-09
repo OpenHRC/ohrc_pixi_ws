@@ -1,6 +1,9 @@
 /**:
   ros__parameters:
-    topic_name: "cmd_pose"
-    frame_id: "user_frame"
+    PoseTopicInterface:
+      feedback_mode: "PositionFeedback" 
 
-    diable_pose_feedback: false # if this true, the robot does not move to the target pose
+      topic_name: "cmd_pose"
+      frame_id: "user_frame"
+
+      diable_pose_feedback: false # if this true, the robot does not move to the target pose

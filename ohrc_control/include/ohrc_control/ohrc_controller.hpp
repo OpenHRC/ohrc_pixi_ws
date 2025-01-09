@@ -81,7 +81,7 @@ class OhrcController : public rclcpp::Node {
   // enum class AdaptationOption { Default, None } adaptationOption;
   std::string adaptationOption_;
 
-  FeedbackMode feedbackMode;
+  // FeedbackMode feedbackMode;
 
   virtual void runLoopEnd() {};
 
@@ -125,6 +125,10 @@ public:
   OhrcController();
   ~OhrcController();
   void control();
+
+  rclcpp::executors::MultiThreadedExecutor::SharedPtr getExecutor() {
+    return exec.make_shared();
+  }
 };
 
 #endif  // OHRC_COTNROLLER_HPP

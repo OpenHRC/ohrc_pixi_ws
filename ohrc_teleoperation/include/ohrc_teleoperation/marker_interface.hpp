@@ -29,7 +29,7 @@ class MarkerInterface : public Interface {
 
   visualization_msgs::msg::InteractiveMarkerFeedback _feedback;
   std::thread th;
-  void makerThread();
+  void markerThread();
 
 public:
   using Interface::Interface;

@@ -1,7 +1,9 @@
 #include "ohrc_teleoperation/pose_topic_interface.hpp"
 
 void PoseTopicInterface::initInterface() {
-  inaterfaceName = "PoseTopicInterface";
+  interfaceName = "PoseTopicInterface";
+  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::PositionFeedback, feedbackMode);
+
   setSubscriber();
 
   Affine3d T_state_base = controller->getTransform_base(this->stateFrameId);

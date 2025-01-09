@@ -1,7 +1,9 @@
 #include "ohrc_teleoperation/xr_body_interface.hpp"
 
 void XrBodyInterface::initInterface() {
-  inaterfaceName = "XrBodyInterface";
+  interfaceName = "XrBodyInterface";
+  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::HybridFeedback, feedbackMode);
+
   StateTopicInterface::initInterface();
 
   RclcppUtility::declare_and_get_parameter_enum(node, controller->getRobotNs() + "body_part", BodyPart::RIGHT_HAND, bodyPart);
