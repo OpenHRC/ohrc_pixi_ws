@@ -19,7 +19,7 @@ std::shared_ptr<Interface> selectBaseController(FeedbackMode feedbackMode, std::
   else if (feedbackMode == FeedbackMode::NoFeedback)
     baseController = std::make_shared<NoFeedbackController>(cartController);
   else {
-    RCLCPP_WARN_STREAM(cartController->get_logger(), "Any feedback controller was not selected. Using NoFeedbackController");
+    RCLCPP_WARN_STREAM(cartController->get_logger(), "Feedback controller was not selected. Using NoFeedbackController");
     baseController = std::make_shared<NoFeedbackController>(cartController);
   }
   return baseController;

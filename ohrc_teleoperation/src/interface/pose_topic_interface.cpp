@@ -32,6 +32,8 @@ void PoseTopicInterface::cbPose(const geometry_msgs::msg::Pose::SharedPtr msg) {
   std::lock_guard<std::mutex> lock(mtx);
   _pose = *msg;
   _flagTopic = true;
+
+  isEnable = true;  // tentative
 }
 
 void PoseTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) {

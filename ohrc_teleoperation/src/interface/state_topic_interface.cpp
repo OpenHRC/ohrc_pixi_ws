@@ -21,6 +21,7 @@ void StateTopicInterface::setSubscriber() {
 void StateTopicInterface::cbState(const ohrc_msgs::msg::State::SharedPtr msg) {
   std::lock_guard<std::mutex> lock(mtx);
   _state = *msg;
+  isEnable = _state.enabled;
 }
 
 void StateTopicInterface::getTargetState(const ohrc_msgs::msg::State& state, KDL::Frame& pos, KDL::Twist& twist) {

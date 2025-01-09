@@ -12,7 +12,7 @@ class XrBodyInterface : virtual public StateTopicInterface {
 
   virtual void feedback(const KDL::Frame& targetPos, const KDL::Twist& targetTwist) override;
 
-  ohrc_msgs::msg::State state;
+  ohrc_msgs::msg::State _state;
 
   ohrc_msgs::msg::BodyState _body;
   enum class BodyPart { RIGHT_HAND, LEFT_HAND, HEAD, EITHER_HANDS, None } bodyPart;
