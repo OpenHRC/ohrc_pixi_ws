@@ -28,14 +28,21 @@ class MarkerInterface : public Interface {
   int updateCount = 0;
 
   visualization_msgs::msg::InteractiveMarkerFeedback _feedback;
+  std::thread th;
+  void makerThread();
 
 public:
   using Interface::Interface;
+  ~MarkerInterface() {
+    interfaceRunning = false;
+    if (th.joinable())
+      th.join();
+  }
   virtual void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) override;
 
   virtual void initInterface() override;
   virtual void resetInterface() override;
-  virtual void updateInterface() override;
+  // virtual void updateInterface() override;
 };
 
 #endif  // MARKER_INTERFACE_HPP

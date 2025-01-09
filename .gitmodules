@@ -9,7 +9,7 @@
 	url = https://github.com/itadera/magic_enum.git
 [submodule "3rd_party/ros-tcp-endpoint"]
 	path = 3rd_party/ros-tcp-endpoint
-	url = https://github.com/Unity-Technologies/ROS-TCP-Endpoint.git
+	url = https://github.com/itadera/ROS-TCP-Endpoint.git
 [submodule "3rd_party/trac_ik"]
 	path = 3rd_party/trac_ik
 	url = https://bitbucket.org/traclabs/trac_ik.git

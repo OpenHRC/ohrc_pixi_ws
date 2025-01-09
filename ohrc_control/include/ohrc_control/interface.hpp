@@ -52,10 +52,17 @@ protected:
     return condition;
   }
 
+  bool interfaceRunning = false;
+
 public:
   Interface(const std::shared_ptr<CartController>& controller) : node(controller->getNode()), dt(controller->dt) {
     this->controller = controller;
+    this->interfaceRunning = true;
     // trans = std::make_shared<TransformUtility>(node);
+  }
+
+  ~Interface() {
+    this->interfaceRunning = false;
   }
 
   std::mutex mtx;
