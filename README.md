@@ -20,7 +20,7 @@ OpenHRC has been developed and tested in the following environments:
 
 ## Quick Start with Docker
 You can quickly test UR5e + marker teleoperation on docker environment.
-We use [rocker](https://github.com/rocker-org/rocker) here to simply run the docker container with GUI support.
+We use [rocker](https://github.com/osrf/rocker) here to simply run the docker container with GUI support.
 
 ### Build
 ```bash
