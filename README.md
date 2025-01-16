@@ -69,8 +69,7 @@ $ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 ## Getting Started
 You can first try the teleoperation node with interactive markers for UR5e.
 
-If you don't install UR5e simulation, please install it.
-Open a terminal and run:
+If you have not installed UR5e simulation yet, open a terminal and run:
 ```bash
 $ cd ~/ros2_ws/src
 $ git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation.git -b humble
