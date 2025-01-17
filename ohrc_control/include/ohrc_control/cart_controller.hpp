@@ -41,7 +41,7 @@ class CartController : public rclcpp::Node {
   rclcpp::Node::SharedPtr node;
 
   rclcpp::SubscriptionOptions options;
-  // rclcpp::CallbackGroup::SharedPtr 
+  // rclcpp::CallbackGroup::SharedPtr
 
   std::string header;
 
@@ -85,7 +85,8 @@ class CartController : public rclcpp::Node {
     bool lastLoop;
     double T;
     double s;
-  }initCmd_;
+    bool flag = false;
+  } initCmd_;
 
   std::vector<double> _q_init_expect;
 
@@ -205,8 +206,10 @@ protected:
 
 public:
   // CartController();
-  CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const ControllerType controller, const double freq, const bool unique_state = false);
-  CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const int index, const ControllerType controller, const double freq, const bool unique_state = false);
+  CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const ControllerType controller, const double freq,
+                 const bool unique_state = false);
+  CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const int index, const ControllerType controller, const double freq,
+                 const bool unique_state = false);
   CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string hw_config, const std::string root_frame, const int index,
                  const ControllerType controller, const double freq, const bool unique_state = false);
   // ~CartController();
@@ -214,7 +217,7 @@ public:
 
   void sendIntJntCmd();
   void sendIntJntCmd(CartController::s_initCmd initCmd);
-  void sendIntJntCmd(VectorXd q_des_t, VectorXd dq_des_t, KDL::JntArray q_cur, bool lastLoop, double T, double s) ;
+  void sendIntJntCmd(VectorXd q_des_t, VectorXd dq_des_t, KDL::JntArray q_cur, bool lastLoop, double T, double s);
 
   void update();
   void update(const rclcpp::Time& time, const rclcpp::Duration& period);
