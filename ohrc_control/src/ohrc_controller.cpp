@@ -197,6 +197,10 @@ void OhrcController::resetService(const std::shared_ptr<std_srvs::srv::Empty::Re
     cartController->resetPose();
 
   isControllerInitialized = false;
+
+  // while (!isControllerInitialized && rclcpp::ok()) {
+  // rclcpp::sleep_for(std::chrono::milliseconds(100));
+  // }
 }
 
 void OhrcController::setPriority(int i) {

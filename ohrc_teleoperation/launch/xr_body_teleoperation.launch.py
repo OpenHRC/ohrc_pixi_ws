@@ -36,11 +36,11 @@ def generate_launch_description():
                 'ros_tcp_endpoint'), '/launch/endpoint.py']),
         ),
 
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='temp_frame_broadcaster',
-            arguments=['--x', '0', '--y', '0', '--z', '0', '--yaw', '0', '--pitch', '0',
-                       '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'torso_link_tip'],
-        ),
+        # Node(
+        #     package='tf2_ros',
+        #     executable='static_transform_publisher',
+        #     name='temp_frame_broadcaster',
+        #     arguments=['--x', '0', '--y', '0', '--z', '0', '--yaw', '0', '--pitch', '0',
+        #                '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'torso_link_tip'],
+        # ),
     ])

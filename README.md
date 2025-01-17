@@ -20,7 +20,7 @@ OpenHRC has been developed and tested in the following environments:
 
 ## Quick Start with Docker
 You can quickly test UR5e + marker teleoperation on docker environment.
-We use [rocker](https://github.com/rocker-org/rocker) here to simply run the docker container with GUI support.
+We use [rocker](https://github.com/osrf/rocker) here to simply run the docker container with GUI support.
 
 ### Build
 ```bash
@@ -33,7 +33,7 @@ $ sudo apt install python3-rocker # if you don't have rocker. You can also use "
 ### Run
 Now you can control the end-effector of UR5e with an interactive marker.
 ```bash
-$ rocker --x11 openhrc:humble marker_teleoperation_ur5e 
+$ rocker --x11 openhrc:ros2 marker_teleoperation_ur5e 
 ```
 
 <!-- If you have 3D mouse (spacenav), you can also use it for teleoperation.
@@ -69,8 +69,7 @@ $ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 ## Getting Started
 You can first try the teleoperation node with interactive markers for UR5e.
 
-If you don't install UR5e simulation, please install it.
-Open a terminal and run:
+If you have not installed UR5e simulation yet, open a terminal and run:
 ```bash
 $ cd ~/ros2_ws/src
 $ git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation.git -b humble
@@ -111,7 +110,14 @@ $ ros2 launch ohrc_teleoperation joy_topic_teleoperation.launch.py
 ## Citation
 
 If you use this package in your academic research, we would appreciate it if you could cite the following paper.
->(comming soon)
+```
+@software{openhrc,
+  author = {Shunki Itadera},
+  title = {OpenHRC},
+  url = {https://github.com/Automation-Research-Team/OpenHRC},
+  year = {2024},
+}
+```
 
 
 ## License
