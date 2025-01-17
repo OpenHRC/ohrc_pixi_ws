@@ -2,7 +2,7 @@
 
 CartController::CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string hw_config, const std::string root_frame, const int index,
                                const ControllerType controller, const double freq, const bool unique_state)
-  : Node("cart_controller_" + robot), root_frame(root_frame), index(index), controller(controller), freq(freq) , unique_state(unique_state) {
+  : Node("cart_controller_" + robot), root_frame(root_frame), index(index), controller(controller), freq(freq), unique_state(unique_state) {
   node = std::shared_ptr<rclcpp::Node>(this);  // TODO: relace this with shared_from_this()
   init(robot, hw_config);
 }
@@ -14,7 +14,8 @@ CartController::CartController(rclcpp::Node::SharedPtr& node, const std::string 
   init(robot);
 }
 
-CartController::CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const ControllerType controller, const double freq, const bool unique_state)
+CartController::CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const ControllerType controller, const double freq,
+                               const bool unique_state)
   : Node("cart_controller_" + robot), root_frame(root_frame), controller(controller), freq(freq), unique_state(unique_state) {
   node = std::shared_ptr<rclcpp::Node>(this);  // TODO: relace this with shared_from_this()
   init(robot);
@@ -192,7 +193,8 @@ bool CartController::getRosParams() {
 
   RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initial_pose", std::vector<double>{ 0.45, 0.0, 0.85, 0.0, M_PI, -M_PI_2 }, initPose);
 
-  RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initIKAngle", std::vector<double>(0, 0.0), _q_init_expect);// TODO: use nJnt, which will be initialized in initMembers()
+  RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initIKAngle", std::vector<double>(0, 0.0),
+                                           _q_init_expect);  // TODO: use nJnt, which will be initialized in initMembers()
 
   return true;
 }
@@ -209,14 +211,12 @@ void CartController::initMembers() {
   if (chain_end_[0] == '/')
     chain_end_.erase(0, 1);
 
-  
   std::string model_ns = robot_ns;
-  if (unique_state){
+  if (unique_state) {
     model_ns = "";
     chain_start_ = robot_ns + chain_start_;
     chain_end_ = robot_ns + chain_end_;
   }
-
 
   myik_solver_ptr = std::make_shared<MyIK::MyIK>(this->node, model_ns, chain_start_, chain_end_, urdf_param, eps, T_base_root);
   myik_solver_ptr->initializeSingleRobot();
@@ -364,15 +364,13 @@ void CartController::cbJntState(const sensor_msgs::msg::JointState::SharedPtr ms
   }
   // std::cout << chain_segs.size() << std::endl;
 
-  if (allJntFound){
+  if (allJntFound) {
     std::lock_guard<std::mutex> lock(mtx_q);
     flagJntState = true;
     _q_cur = q_cur;
     _dq_cur = dq_cur;
-  }
-  else
+  } else
     return;
-
 
   if (s_cbJntState.isFirst) {
     if (!initialized) {
@@ -385,11 +383,6 @@ void CartController::cbJntState(const sensor_msgs::msg::JointState::SharedPtr ms
     s_cbJntState.isFirst = false;
     return;
   }
-
-
-
-
-
 }
 
 // void CartController::cbArmMarker(const visualization_msgs::msg::MarkerArray::SharedPtr& msg) {
@@ -426,7 +419,6 @@ void CartController::initDesWithJnt(const KDL::JntArray& q_cur) {
 }
 
 int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<std::string> nameJnt, std::vector<int> idxSegJnt) {
-
   if (s_moveInitPos.isFirst) {
     this->nameJnt = nameJnt;
     s_moveInitPos.q_initial = q_cur;
@@ -489,15 +481,16 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
   VectorXd q_des_t = s_moveInitPos.q_initial.data + (s_moveInitPos.q_des.data - s_moveInitPos.q_initial.data) * (6.0 * s5 - 15.0 * s4 + 10.0 * s3);
   VectorXd dq_des_t = (s_moveInitPos.q_des.data - s_moveInitPos.q_initial.data) * (30.0 * s4 - 60.0 * s3 + 30.0 * s2) / T;
 
-  {
-    std::lock_guard<std::mutex> lock(mtx_q);
-    this->initCmd_.q_des_t = q_des_t;
-    this->initCmd_.dq_des_t = dq_des_t;
-    this->initCmd_.q_cur = q_cur;
-    this->initCmd_.lastLoop = lastLoop;
-    this->initCmd_.T = T;
-    this->initCmd_.s = s;
-  }
+  // {
+  std::lock_guard<std::mutex> lock(mtx_q);
+  this->initCmd_.q_des_t = q_des_t;
+  this->initCmd_.dq_des_t = dq_des_t;
+  this->initCmd_.q_cur = q_cur;
+  this->initCmd_.lastLoop = lastLoop;
+  this->initCmd_.T = T;
+  this->initCmd_.s = s;
+  this->initCmd_.flag = true;
+  // }
   // switch (publisher) {
   //   case PublisherType::Position:
   //     sendPositionCmd(q_des_t);
@@ -529,14 +522,13 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
   // }
   // sendIntJntCmd();
 
-
-
-  if (lastLoop && (q_des_t - q_cur.data).norm() < 0.01 && dq_des_t.norm() < 0.01) {
-    RCLCPP_INFO_STREAM(node->get_logger(), "The robot (ns: " +robot_ns + ") has reached the initial pose.");
+  if (lastLoop && (q_des_t - q_cur.data).norm() < 0.1 && dq_des_t.norm() < 0.01) {  // TODO: check these thresholds
+    RCLCPP_INFO_STREAM(node->get_logger(), "The robot (ns: " + robot_ns + ") has reached the initial pose.");
     return true;
-  }else
-    return false;
+  }
 
+  this->initCmd_.lastLoop = false;
+  return false;
 }
 
 void CartController::sendIntJntCmd(VectorXd q_des_t, VectorXd dq_des_t, KDL::JntArray q_cur, bool lastLoop, double T, double s) {
@@ -547,18 +539,21 @@ void CartController::sendIntJntCmd(VectorXd q_des_t, VectorXd dq_des_t, KDL::Jnt
   initCmd.lastLoop = lastLoop;
   initCmd.T = T;
   initCmd.s = s;
+  initCmd.flag = true;
 
   sendIntJntCmd(initCmd);
 }
 
-void CartController::sendIntJntCmd(CartController::s_initCmd initCmd){
+void CartController::sendIntJntCmd(CartController::s_initCmd initCmd) {
+  if (!initCmd.flag)
+    return;
+
   VectorXd q_des_t = initCmd.q_des_t;
   VectorXd dq_des_t = initCmd.dq_des_t;
   KDL::JntArray q_cur = initCmd.q_cur;
   bool lastLoop = initCmd.lastLoop;
   double T = initCmd.T;
   double s = initCmd.s;
-
 
   switch (publisher) {
     case PublisherType::Position:
@@ -591,7 +586,7 @@ void CartController::sendIntJntCmd(CartController::s_initCmd initCmd){
   }
 }
 
-void CartController::sendIntJntCmd(){
+void CartController::sendIntJntCmd() {
   CartController::s_initCmd initCmd;
   {
     std::lock_guard<std::mutex> lock(mtx_q);
@@ -776,7 +771,6 @@ void CartController::starting(const rclcpp::Time& time) {
 }
 
 void CartController::initFt() {
-
   if (ftFound)
     this->resetFt();
 
