@@ -117,6 +117,45 @@ DESTINATION lib/${PROJECT_NAME}
 
 
 
+
+
+
+add_library(${PROJECT_NAME}  SHARED 
+  src/interface/marker_interface.cpp
+  src/interface/state_topic_interface.cpp
+  src/interface/pose_topic_interface.cpp
+  src/interface/twist_topic_interface.cpp
+  src/interface/xr_body_interface.cpp
+)
+
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
+
+
+ament_target_dependencies(${PROJECT_NAME} rclcpp interactive_markers ohrc_control control_msgs tf2_kdl tf2_eigen tf2_eigen_kdl std_msgs std_srvs ohrc_common ohrc_msgs urdf)
+
+target_link_libraries(${PROJECT_NAME} OsqpEigen::OsqpEigen magic_enum::magic_enum)
+
+
+ament_export_libraries(${PROJECT_NAME})
+ament_export_include_directories(include)
+
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+install(TARGETS ${PROJECT_NAME}
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+
 install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}

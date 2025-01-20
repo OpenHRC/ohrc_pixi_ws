@@ -1,0 +1,103 @@
+import os
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, OpaqueFunction
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.actions import Node
+from launch.substitutions import LaunchConfiguration, PythonExpression, TextSubstitution
+from launch.conditions import IfCondition
+from launch_ros.substitutions import FindPackageShare
+
+
+def launch_setup(context, *args, **kwargs):
+
+    def get_user_frame_args(view):
+        if view == 'back':
+            return ['--x', '0', '--y', '0', '--z', '0', '--yaw', '0', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
+        elif view == 'face':
+            return ['--x', '0', '--y', '0', '--z', '0', '--yaw', '3.141592', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
+        elif view == 'right':
+            return ['--x', '0', '--y', '0', '--z', '0', '--yaw', '1.57079', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
+        elif view == 'left':
+            return ['--x', '0', '--y', '0', '--z', '0', '--yaw', '-1.57079', '--pitch', '0', '--roll', '0', '--frame-id', 'world', '--child-frame-id', 'user_frame']
+        else:
+            print(
+                'Invalid user_frame_viewpoint argument. Valid options are: back, face, right, left')
+            exit(1)
+
+    view = LaunchConfiguration('user_frame_viewpoint').perform(context)
+
+    interface = LaunchConfiguration('interface').perform(context)
+    mutiple_interface = False
+    interface_ = LaunchConfiguration('interface').perform(context)
+    if interface_.startswith('[') and interface_.endswith(']'):
+        interface_ = eval(interface_)
+
+    if isinstance(interface_, list):
+        mutiple_interface = True
+        interface = "_".join(interface_)
+    else:
+        interface = interface_
+
+    interface_config = LaunchConfiguration('interface_config').perform(context)
+    if mutiple_interface:
+        interface_config = [os.path.dirname(
+            interface_config) + '/' + interface_[i] + '_config.yaml' for i in range(len(interface_))]
+        interface_config = '[ "' + '", "'.join(interface_config) + '"]'
+
+    node_to_start = [
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                [FindPackageShare('ohrc_control'), '/launch/ohrc_control.launch.py']),
+            launch_arguments={
+                'app': 'imitation',
+                'robot': LaunchConfiguration('robot'),
+                'controller': LaunchConfiguration('controller'),
+                'interface':  interface,
+                # 'interface':  LaunchConfiguration('interface'),
+                # 'feedback_mode': LaunchConfiguration('feedback_mode'),
+                'use_ft_filter': LaunchConfiguration('use_ft_filter'),
+                'hw_config': LaunchConfiguration('hw_config'),
+                'admittance_config': LaunchConfiguration('admittance_config'),
+                'control_config': LaunchConfiguration('control_config'),
+                'interface_config': interface_config,
+                'use_rviz': LaunchConfiguration('use_rviz'),
+                'rviz_config': LaunchConfiguration('rviz_config')
+            }.items()
+        ),
+
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='user_frame_broadcaster',
+            arguments=get_user_frame_args(view),
+        ),
+    ]
+    return node_to_start
+
+
+def generate_launch_description():
+    declared_arguments = [
+        DeclareLaunchArgument('robot', default_value='ur5e'),
+        # vel or vel_trj or vel_pos
+        DeclareLaunchArgument('controller', default_value='vel'),
+        DeclareLaunchArgument('interface', default_value='marker'),
+        # DeclareLaunchArgument(
+        # 'feedback_mode', default_value='PositionFeedback'),
+        DeclareLaunchArgument('use_ft_filter', default_value='true'),
+        DeclareLaunchArgument('user_frame_viewpoint', default_value='back'),
+
+        DeclareLaunchArgument('hw_config', default_value=[FindPackageShare(
+            'ohrc_hw_config'), '/config/', LaunchConfiguration('robot'), '/', LaunchConfiguration('robot'), '_hw_config.yaml']),
+        DeclareLaunchArgument('admittance_config', default_value=[
+            FindPackageShare('ohrc_control'), '/config/admittance_config.yaml']),
+        DeclareLaunchArgument('control_config', default_value=[FindPackageShare('ohrc_hw_config'), '/config/', LaunchConfiguration(
+            'robot'), '/', LaunchConfiguration('robot'), '_control_config_', LaunchConfiguration('controller'), '.yaml']),
+        DeclareLaunchArgument('interface_config', default_value=[FindPackageShare(
+            'ohrc_teleoperation'), '/config/', LaunchConfiguration('interface'), '_config.yaml']),
+
+        DeclareLaunchArgument('use_rviz', default_value='true'),
+        DeclareLaunchArgument('rviz_config', default_value=[FindPackageShare(
+            'ohrc_teleoperation'), '/config/teleoperation.rviz']),
+    ]
+
+    return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

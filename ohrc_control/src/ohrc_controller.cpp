@@ -92,7 +92,8 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
 
   multimyik_solver_ptr = std::make_unique<MyIK::MyIK>(node, base_link, tip_link, T_base_root, myik_ptr);
 
-  service = this->create_service<std_srvs::srv::Empty>("/reset", std::bind(&OhrcController::resetService, this, _1, _2));
+  resetServer = this->create_service<std_srvs::srv::Empty>("/reset", std::bind(&OhrcController::resetService, this, _1, _2));
+  priorityServer = this->create_service<ohrc_msgs::srv::SetPriority>("/set_priority", std::bind(&OhrcController::priorityService, this, _1, _2));
 
   for (size_t i = 0; i < nRobot; i = i + 2)
     manualInd.push_back(i);
@@ -101,6 +102,9 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
     autoInd.push_back(i);
 
   setPriority(priority);
+
+  priorityIdx.resize(nRobot, false);
+  priorityIdx[0] = true;
 
   desPose.resize(nRobot);
   desVel.resize(nRobot);
@@ -124,8 +128,8 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   }
 
   control_timer = this->create_wall_timer(std::chrono::milliseconds(int(dt * 1000)), std::bind(&OhrcController::controlLoop, this));
-  // initilize_timer = this->create_wall_timer(std::chrono::milliseconds(int(dt * 1000)), std::bind(&OhrcController::initLoop, this));
-  // initilize_timer->cancel();
+
+  initControllerAdditional();
 
   exec.add_node(this->node);
 }
@@ -201,6 +205,16 @@ void OhrcController::resetService(const std::shared_ptr<std_srvs::srv::Empty::Re
   // while (!isControllerInitialized && rclcpp::ok()) {
   // rclcpp::sleep_for(std::chrono::milliseconds(100));
   // }
+}
+
+void OhrcController::priorityService(const std::shared_ptr<ohrc_msgs::srv::SetPriority::Request> req, const std::shared_ptr<ohrc_msgs::srv::SetPriority::Response>& res) {
+  for (size_t i = 0; i < nRobot; i++)
+    if (i == req->id)
+      priorityIdx[i] = true;
+    else
+      priorityIdx[i] = false;
+
+  res->success = true;
 }
 
 void OhrcController::setPriority(int i) {
@@ -372,8 +386,13 @@ void OhrcController::updateDesired() {
 
     // applyBaseControl(desPose[i], desVel[i], cartControllers[i]);
 
-    cartControllers[i]->setDesired(desPose[i], desVel[i]);
+    // cartControllers[i]->setDesired(desPose[i], desVel[i]);
   }
+
+  overrideDesired(desPose, desVel);
+
+  for (size_t i = 0; i < nRobot; i++)
+    cartControllers[i]->setDesired(desPose[i], desVel[i]);
 
   // preInterfaceProcess(interfaces);
 }

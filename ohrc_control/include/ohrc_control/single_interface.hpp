@@ -4,7 +4,7 @@
 #include "ohrc_control/ohrc_controller.hpp"
 
 template <class T>
-class SingleInterface : public OhrcController {
+class SingleInterface : virtual public OhrcController {
 protected:
   void defineInterface() override {
     for (size_t i = 0; i < this->getNRobot(); i++)

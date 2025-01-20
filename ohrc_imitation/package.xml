@@ -1,30 +1,16 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ohrc_imitation_learning</name>
+  <name>ohrc_imitation</name>
   <version>0.1.0</version>
-  <description>The ohrc_imitation_learning package</description>
+  <description>The ohrc_imitation package</description>
 
 
   <maintainer email="s.itadera@aist.go.jp">Shunki Itadera</maintainer>
   <license>LGPL</license>
 
-  <!-- Url tags are optional, but multiple are allowed, one per tag -->
-  <!-- Optional attribute type can be: website, bugtracker, or repository -->
-  <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/ohrc_imitation_learning</url> -->
 
-
-  <!-- Author tags are optional, multiple are allowed, one per tag -->
-  <!-- Authors do not have to be maintainers, but could be -->
-  <!-- Example: -->
-  <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
-
-
-  <!-- The *depend tags are used to specify dependencies -->
-  <!-- Dependencies can be catkin packages or system dependencies -->
-  <!-- Examples: -->
   <!-- Use depend as a shortcut for packages that are both build and exec dependencies -->
-    <depend>roscpp</depend>
+    <depend>rclcpp</depend>
   <!--   Note that this is equivalent to the following: -->
   <!--   <build_depend>roscpp</build_depend> -->
     <!-- <exec_depend>roscpp</exec_depend> -->
@@ -42,12 +28,12 @@
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
 
+  <depend>ohrc_control</depend>
   <depend>ohrc_teleoperation</depend>
 
-
-  <!-- The export tag contains other, unspecified, tags -->
+  <exec_depend>ros2launch</exec_depend>
   <export>
-    <!-- Other tools can request additional information be placed here -->
-
+    <build_type>ament_cmake</build_type>
   </export>
+  
 </package>

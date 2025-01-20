@@ -10,6 +10,7 @@
 #include "ohrc_control/interface.hpp"
 #include "ohrc_control/my_ik.hpp"
 #include "ohrc_control/ohrc_control.hpp"
+#include "ohrc_msgs/srv/set_priority.hpp"
 
 using namespace std::placeholders;
 using namespace ohrc_control;
@@ -32,8 +33,11 @@ class OhrcController : public rclcpp::Node {
   std::vector<KDL::Twist> desVel;
 
   // ros::ServiceServer service;
-  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr service;
+  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr resetServer;
+  rclcpp::Service<ohrc_msgs::srv::SetPriority>::SharedPtr priorityServer;
+
   void resetService(const std::shared_ptr<std_srvs::srv::Empty::Request> req, const std::shared_ptr<std_srvs::srv::Empty::Response>& res);
+  void priorityService(const std::shared_ptr<ohrc_msgs::srv::SetPriority::Request> req, const std::shared_ptr<ohrc_msgs::srv::SetPriority::Response>& res);
 
   void publishState(const rclcpp::Time& time, const std::vector<KDL::Frame> curPose, const std::vector<KDL::Twist> curVel, const std::vector<KDL::Frame> desPose,
                     const std::vector<KDL::Twist> desVel);
@@ -110,9 +114,14 @@ class OhrcController : public rclcpp::Node {
 
 protected:
   virtual void defineInterface() {};
+  virtual void initControllerAdditional() {};
+
+  std::vector<bool> priorityIdx;
 
   std::vector<Interfaces> interfaces;
   std::vector<std::shared_ptr<CartController>> cartControllers;
+
+  virtual void overrideDesired(std::vector<KDL::Frame>& desPose, std::vector<KDL::Twist>& desVel) {};
 
   // virtual std::shared_ptr<Interface> selectInterface(std::shared_ptr<CartController> cartController) {
   // }
