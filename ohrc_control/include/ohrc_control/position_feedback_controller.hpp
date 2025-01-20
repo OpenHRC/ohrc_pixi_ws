@@ -3,7 +3,7 @@
 
 #include "ohrc_control/interface.hpp"
 
-class PositionFeedbackController : public virtual Interface {
+class PositionFeedbackController : public Interface {
   VectorXd x, xd;
 
   VectorXd PIControl(const KDL::Frame& frame, const KDL::Frame& pose, const KDL::Twist& twist);

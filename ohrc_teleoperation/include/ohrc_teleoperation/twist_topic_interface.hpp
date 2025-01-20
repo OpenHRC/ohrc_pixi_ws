@@ -5,7 +5,7 @@
 
 #include "ohrc_control/interface.hpp"
 
-class TwistTopicInterface : virtual public Interface {
+class TwistTopicInterface : public Interface {
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subTwist;
   geometry_msgs::msg::Twist _twist;
 
@@ -17,8 +17,6 @@ protected:
   Affine3d T;
   Matrix3d R;
   bool isFirst = true;
-
-  std::mutex mtx_topic;
 
   ohrc_msgs::msg::State state;
 

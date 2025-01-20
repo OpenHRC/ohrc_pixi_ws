@@ -5,13 +5,11 @@
 #include <numeric>
 #include <thread>
 
-#include "ohrc_control/admittance_controller.hpp"
+#include "ohrc_control/base_controllers.hpp"
 #include "ohrc_control/cart_controller.hpp"
-#include "ohrc_control/hybrid_feedback_controller.hpp"
 #include "ohrc_control/interface.hpp"
 #include "ohrc_control/my_ik.hpp"
 #include "ohrc_control/ohrc_control.hpp"
-#include "ohrc_control/position_feedback_controller.hpp"
 
 using namespace std::placeholders;
 using namespace ohrc_control;
@@ -83,70 +81,54 @@ class OhrcController : public rclcpp::Node {
   // enum class AdaptationOption { Default, None } adaptationOption;
   std::string adaptationOption_;
 
-  FeedbackMode feedbackMode;
+  // FeedbackMode feedbackMode;
 
   virtual void runLoopEnd() {};
 
-  std::vector<std::shared_ptr<Interface>> baseControllers;
+  void updateTargetPose(KDL::Frame& pose, KDL::Twist& twist, Interfaces& interfaces_);
+  void updateAllCurState();
 
-  void updateTargetPose(KDL::Frame& pose, KDL::Twist& twist, const std::shared_ptr<CartController>& controller) {
-    interfaces[controller->getIndex()]->updateTargetPose(this->get_clock()->now(), pose, twist);
-    baseControllers[controller->getIndex()]->updateTargetPose(this->get_clock()->now(), pose, twist);
-  }
+  void initInterface(const std::vector<std::shared_ptr<Interface>> interfaces_);
+  void resetInterface(const std::vector<std::shared_ptr<Interface>> interfaces_);
+  void feedback(KDL::Frame& pose, KDL::Twist& twist, const std::vector<std::shared_ptr<Interface>> interfaces_);
 
-  // void applyBaseControl(KDL::Frame& pose, KDL::Twist& twist, std::shared_ptr<CartController> controller) {
-  //   baseControllers[controller->getIndex()]->updateTargetPose(pose, twist);
-  // }
+  std::vector<bool> _isEnable;
+  void selectInterface(std::vector<bool> isEnable);
 
-  // virtual void defineInterface() = 0;
+  // virtual void preInterfaceProcess(std::vector<std::shared_ptr<Interface>> interfaces) {};
 
-  void updateAllCurState() {
-    for (auto cartController : cartControllers)
-      cartController->updateCurState();
-  }
-
-  void initInterface(const std::shared_ptr<CartController>& controller) {
-    controller->updateCurState();
-    interfaces[controller->getIndex()]->initInterface();
-    baseControllers[controller->getIndex()]->initInterface();
-  }
-
-  void resetInterface(const std::shared_ptr<CartController>& controller) {
-    controller->updateCurState();
-    interfaces[controller->getIndex()]->resetInterface();
-    baseControllers[controller->getIndex()]->resetInterface();
-  }
-
-  void feedback(KDL::Frame& pose, KDL::Twist& twist, const std::shared_ptr<CartController>& controller) {
-    interfaces[controller->getIndex()]->feedback(pose, twist);
-  }
-
-  virtual void preInterfaceProcess(std::vector<std::shared_ptr<Interface>> interfaces) {};
-
-  virtual void updateManualTargetPose(KDL::Frame& pose, KDL::Twist& twist, const std::shared_ptr<CartController>& controller) {
-    updateTargetPose(pose, twist, controller);
-  };
-  virtual void updateAutoTargetPose(KDL::Frame& pose, KDL::Twist& twist, const std::shared_ptr<CartController>& controller) {
-    updateTargetPose(pose, twist, controller);
-  };
+  // virtual void updateManualTargetPose(KDL::Frame& pose, KDL::Twist& twist, const std::shared_ptr<CartController>& controller) {
+  //   updateTargetPose(pose, twist, controller);
+  // };
+  // virtual void updateAutoTargetPose(KDL::Frame& pose, KDL::Twist& twist, const std::shared_ptr<CartController>& controller) {
+  //   updateTargetPose(pose, twist, controller);
+  // };
   // virtual void feedbackJnt(const KDL::JntArray& q_cur, const KDL::JntArray& q_des, std::shared_ptr<CartController> controller){};
   // virtual void feedbackCart(const Affine3d& T_cur, const Affine3d& T_des, std::shared_ptr<CartController> controller){};
 
+  int interfaceIdx = -1;
+
 protected:
   virtual void defineInterface() {};
-  std::vector<std::shared_ptr<Interface>> interfaces;
+
+  std::vector<Interfaces> interfaces;
   std::vector<std::shared_ptr<CartController>> cartControllers;
+
+  // virtual std::shared_ptr<Interface> selectInterface(std::shared_ptr<CartController> cartController) {
+  // }
+
   int getNRobot() {
     return nRobot;
   }
 
 public:
-  // rclcpp::executors::MultiThreadedExecutor exec;
-  // std::vector<rclcpp::Node::SharedPtr> nodes;
-  // rclcpp::Node::SharedPtr node;
   OhrcController();
   ~OhrcController();
   void control();
+
+  rclcpp::executors::MultiThreadedExecutor::SharedPtr getExecutor() {
+    return exec.make_shared();
+  }
 };
 
 #endif  // OHRC_COTNROLLER_HPP

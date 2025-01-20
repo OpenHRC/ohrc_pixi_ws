@@ -8,7 +8,7 @@
 
 #include "ohrc_control/interface.hpp"
 
-class MarkerInterface : virtual public Interface {
+class MarkerInterface : public Interface {
   visualization_msgs::msg::InteractiveMarker int_marker;
 
   std::unique_ptr<interactive_markers::InteractiveMarkerServer> server;
@@ -23,17 +23,26 @@ class MarkerInterface : virtual public Interface {
 
   bool subFirst = false;
 
-  std::mutex mtx_marker;
-
   bool _flagSubInteractiveMarker = false;
   int count_disable = 0;
+  int updateCount = 0;
+
+  visualization_msgs::msg::InteractiveMarkerFeedback _feedback;
+  std::thread th;
+  void markerThread();
 
 public:
   using Interface::Interface;
+  ~MarkerInterface() {
+    interfaceRunning = false;
+    if (th.joinable())
+      th.join();
+  }
   virtual void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) override;
 
   virtual void initInterface() override;
   virtual void resetInterface() override;
+  // virtual void updateInterface() override;
 };
 
 #endif  // MARKER_INTERFACE_HPP

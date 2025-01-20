@@ -1,9 +1,12 @@
 #include "ohrc_teleoperation/state_topic_interface.hpp"
 
 void StateTopicInterface::initInterface() {
+  interfaceName = "StateTopicInterface";
+  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::PositionFeedback, feedbackMode);
+
   // n.param("trans_ratio", k_trans, 1.0);
   // ROS_INFO_STREAM("translation ratio: " << k_trans);
-  RclcppUtility::declare_and_get_parameter(node, "trans_ratio", 1.0, k_trans);
+  RclcppUtility::declare_and_get_parameter(node, interfaceName + ".trans_ratio", 1.0, k_trans);
 
   setSubscriber();
 
@@ -16,8 +19,9 @@ void StateTopicInterface::setSubscriber() {
 }
 
 void StateTopicInterface::cbState(const ohrc_msgs::msg::State::SharedPtr msg) {
-  std::lock_guard<std::mutex> lock(mtx_state);
+  std::lock_guard<std::mutex> lock(mtx);
   _state = *msg;
+  isEnable = _state.enabled;
 }
 
 void StateTopicInterface::getTargetState(const ohrc_msgs::msg::State& state, KDL::Frame& pos, KDL::Twist& twist) {
@@ -65,7 +69,7 @@ void StateTopicInterface::getTargetState(const ohrc_msgs::msg::State& state, KDL
 void StateTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos, KDL::Twist& twist) {
   ohrc_msgs::msg::State state;
   {
-    std::lock_guard<std::mutex> lock(mtx_state);
+    std::lock_guard<std::mutex> lock(mtx);
     state = _state;
   }
   modifyTargetState(state);

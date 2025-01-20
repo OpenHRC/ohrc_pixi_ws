@@ -38,15 +38,41 @@ protected:
       stateTopicName = controller->getRobotNs() + stateTopicName;
   }
 
+  bool isEnable = false;
+
+  std::string interfaceName = "";
+  bool updateIsEnable(bool condition) {
+    if (condition && !isEnable) {
+      RCLCPP_INFO_STREAM(node->get_logger(), "[" + interfaceName + "] Enabled");
+      resetInterface();
+    } else if (!condition && isEnable)
+      RCLCPP_INFO_STREAM(node->get_logger(), "[" + interfaceName + "] Disabled");
+
+    isEnable = condition;
+    return condition;
+  }
+
+  bool interfaceRunning = false;
+
+  FeedbackMode feedbackMode;
+
 public:
   Interface(const std::shared_ptr<CartController>& controller) : node(controller->getNode()), dt(controller->dt) {
     this->controller = controller;
+    this->interfaceRunning = true;
     // trans = std::make_shared<TransformUtility>(node);
   }
+
+  ~Interface() {
+    this->interfaceRunning = false;
+  }
+
+  std::mutex mtx;
 
   virtual void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) {};
   virtual void initInterface() {};
   virtual void resetInterface() {};
+  virtual void updateInterface() {};
   virtual void feedback(const KDL::Frame& targetPos, const KDL::Twist& targetTwist) {};
 
   int targetIdx = -1, nCompletedTask = 0;
@@ -67,11 +93,31 @@ public:
   inline VectorXd getTargetError() {
     return this->e;
   }
+
+  inline bool getIsEnable() {
+    return this->isEnable;
+  }
+
+  inline void setIsEnable(bool isEnable) {
+    this->isEnable = isEnable;
+  }
+
+  inline FeedbackMode getFeedbackMode() {
+    return this->feedbackMode;
+  }
 };
 
-class NoFeedbackController : public Interface {
+class Interfaces {
 public:
-  using Interface::Interface;
+  std::vector<std::shared_ptr<Interface>> interfaces;
+  std::vector<bool> isEnables;
+
+  void updateIsEnables() {
+    for (size_t i = 0; i < interfaces.size(); i++) {
+      std::lock_guard<std::mutex> lock(interfaces[i]->mtx);
+      isEnables[i] = interfaces[i]->getIsEnable();
+    }
+  }
 };
 
 #endif  // INTERFACE_HPP

@@ -1,7 +1,10 @@
 #include "ohrc_teleoperation/xr_body_interface.hpp"
 
 void XrBodyInterface::initInterface() {
-  StateTopicInterface::initInterface();
+  interfaceName = "XrBodyInterface";
+  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::HybridFeedback, feedbackMode);
+
+  // StateTopicInterface::initInterface();
 
   RclcppUtility::declare_and_get_parameter_enum(node, controller->getRobotNs() + "body_part", BodyPart::RIGHT_HAND, bodyPart);
 
@@ -21,28 +24,10 @@ void XrBodyInterface::setSubscriber() {
 }
 
 void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {
-  std::lock_guard<std::mutex> lock(mtx_state);
-  _body = *msg;
-  _flagTopic = true;
-}
+  std::lock_guard<std::mutex> lock(mtx);
 
-bool XrBodyInterface::getEnableFlag(const ohrc_msgs::msg::BodyPartState& handState, const ohrc_msgs::msg::BodyPartState& anotherBodyPartState) {
-  if (handState.grip > 0.95)
-    return true;
-  else
-    return false;
-}
-
-void XrBodyInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) {
-  ohrc_msgs::msg::BodyState body;
-  {
-    std::lock_guard<std::mutex> lock(mtx_state);
-    body = _body;
-    if (!_flagTopic)
-      return;
-  }
-
-  ohrc_msgs::msg::State state = this->state;
+  ohrc_msgs::msg::BodyState body = *msg;
+  ohrc_msgs::msg::State state = this->_state;
   state.enabled = false;
   switch (bodyPart) {
     case BodyPart::RIGHT_HAND:
@@ -92,9 +77,31 @@ void XrBodyInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, K
       break;
   }
 
+  isEnable = state.enabled;
+
+  this->_state = state;
+  _flagTopic = true;
+}
+
+bool XrBodyInterface::getEnableFlag(const ohrc_msgs::msg::BodyPartState& handState, const ohrc_msgs::msg::BodyPartState& anotherBodyPartState) {
+  if (handState.grip > 0.95)
+    return true;
+  else
+    return false;
+}
+
+void XrBodyInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) {
+  ohrc_msgs::msg::State state;
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    state = this->_state;
+    if (!_flagTopic)
+      return;
+  }
+
   // ROS_INFO_STREAM(state);
   getTargetState(state, pose, twist);
-  this->state = state;  // TODO: check if this is necessary
+  this->_state = state;  // TODO: check if this is necessary
 }
 
 void XrBodyInterface::resetInterface() {

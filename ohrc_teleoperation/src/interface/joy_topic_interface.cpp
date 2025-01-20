@@ -1,10 +1,18 @@
 #include "ohrc_teleoperation/joy_topic_interface.hpp"
 
 void JoyTopicInterface::initInterface() {
-  RclcppUtility::declare_and_get_parameter(node, "gain/horizontal", 1.0, gain_h);
-  RclcppUtility::declare_and_get_parameter(node, "gain/rotational", 1.0, gain_r);
+  interfaceName = "JoyTopicInterface";
 
-  TwistTopicInterface::initInterface();
+  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::NoFeedback, feedbackMode);
+  RclcppUtility::declare_and_get_parameter(node, interfaceName + ".gain.horizontal", 1.0, gain_h);
+  RclcppUtility::declare_and_get_parameter(node, interfaceName + ".gain.rotational", 1.0, gain_r);
+
+  // TwistTopicInterface::initInterface();
+
+  setSubscriber();
+
+  Affine3d T_state_base = controller->getTransform_base(this->stateFrameId);
+  R = T_state_base.rotation().transpose();
 }
 
 void JoyTopicInterface::setSubscriber() {
@@ -13,7 +21,10 @@ void JoyTopicInterface::setSubscriber() {
 }
 
 void JoyTopicInterface::cbJoy(const sensor_msgs::msg::Joy::SharedPtr msg) {
-  std::lock_guard<std::mutex> lock(mtx_topic);
+  std::lock_guard<std::mutex> lock(mtx);
+  updateIsEnable(Eigen::Map<Eigen::VectorXf>(msg->axes.data(), msg->axes.size()).norm() > 1.0e-2 ||
+                 std::any_of(msg->buttons.begin(), msg->buttons.end(), [](int i) { return i == 1; }));
+
   _joy = *msg;
   _flagTopic = true;
 }
@@ -21,7 +32,7 @@ void JoyTopicInterface::cbJoy(const sensor_msgs::msg::Joy::SharedPtr msg) {
 void JoyTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos, KDL::Twist& twist) {
   sensor_msgs::msg::Joy joy;
   {
-    std::lock_guard<std::mutex> lock(mtx_topic);
+    std::lock_guard<std::mutex> lock(mtx);
     joy = _joy;
     if (!_flagTopic)
       return;

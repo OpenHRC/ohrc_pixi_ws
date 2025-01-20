@@ -4,7 +4,7 @@
 #include "ohrc_teleoperation/twist_topic_interface.hpp"
 #include "sensor_msgs/msg/joy.hpp"
 
-class JoyTopicInterface : virtual public TwistTopicInterface {
+class JoyTopicInterface : public TwistTopicInterface {
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr subJoy;
   sensor_msgs::msg::Joy _joy;
 

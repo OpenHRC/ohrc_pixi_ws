@@ -19,8 +19,6 @@ protected:
   Matrix3d R;
   bool isFirst = true;
 
-  std::mutex mtx_topic;
-
   ohrc_msgs::msg::State state;
   KDL::Frame prevPoses;
 

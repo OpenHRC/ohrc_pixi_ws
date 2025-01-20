@@ -96,6 +96,27 @@ foreach(interface ${twist_topic_interfaces})
   )
 endforeach(interface)
 
+
+
+
+
+add_executable(marker_joy_topic_teleoperation src/interface/twist_topic_interface.cpp  src/interface/joy_topic_interface.cpp src/interface/marker_interface.cpp src/app/marker_joy_topic_teleoperation.cpp)
+
+ament_target_dependencies(marker_joy_topic_teleoperation rclcpp ohrc_control ohrc_msgs ohrc_common interactive_markers visualization_msgs control_msgs geometry_msgs std_srvs tf2_kdl urdf tf2_eigen_kdl urdf)
+
+target_include_directories(marker_joy_topic_teleoperation
+PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
+target_link_libraries(marker_joy_topic_teleoperation OsqpEigen::OsqpEigen magic_enum::magic_enum )
+
+install(TARGETS marker_joy_topic_teleoperation
+DESTINATION lib/${PROJECT_NAME}
+)
+
+
+
 install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}

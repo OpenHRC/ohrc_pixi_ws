@@ -9,13 +9,13 @@ void PositionFeedbackController::updateTargetPose(const rclcpp::Time t, KDL::Fra
   KDL::Twist vel;
   controller->getCartState(frame, vel);
 
-  VectorXd f = controller->getForceEefVec();
+  // VectorXd f = controller->getForceEefVec();
   VectorXd v = VectorXd::Zero(6);
 
   VectorXd e = MyIK::getCartError(frame, pose);
   VectorXd v_pi = this->PIControl(e, twist);
 
-  if (controller->getOperationEnable()) {
+  if (controller->getOperationEnable()) {  // still needed?
     v = v_pi;
   }
 

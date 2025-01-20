@@ -10,8 +10,8 @@ def generate_launch_description():
         # Declare launch arguments
         DeclareLaunchArgument('robot', default_value='ur5e'),
         DeclareLaunchArgument('controller', default_value='vel'),
-        DeclareLaunchArgument(
-            'feedback_mode', default_value='PositionFeedback'),
+        # DeclareLaunchArgument(
+        # 'feedback_mode', default_value='PositionFeedback'),
         DeclareLaunchArgument('use_rviz', default_value='true'),
         DeclareLaunchArgument('user_frame_viewpoint', default_value='back'),
 
@@ -23,7 +23,7 @@ def generate_launch_description():
                 'interface': 'pose_topic',
                 'robot': LaunchConfiguration('robot'),
                 'controller': LaunchConfiguration('controller'),
-                'feedback_mode': LaunchConfiguration('feedback_mode'),
+                # 'feedback_mode': LaunchConfiguration('feedback_mode'),
                 'use_rviz': LaunchConfiguration('use_rviz'),
                 'user_frame_viewpoint': LaunchConfiguration('user_frame_viewpoint'),
             }.items()

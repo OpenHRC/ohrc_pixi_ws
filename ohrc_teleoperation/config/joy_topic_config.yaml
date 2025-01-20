@@ -1,9 +1,13 @@
 /**:
   ros__parameters:
-    gain/horizontal: 0.2
-    gain/rotational: 0.3
+    JoyTopicInterface:
+      feedback_mode: "NoFeedback" 
 
-    topic_name: "/spacenav/joy"
-    frame_id: "user_frame"
+      gain:
+        horizontal: 0.2
+        rotational: 0.3
 
-    diable_pose_feedback: true
+      topic_name: "/spacenav/joy"
+      frame_id: "user_frame"
+
+      diable_pose_feedback: true

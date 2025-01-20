@@ -1,8 +1,11 @@
 #include "ohrc_teleoperation/twist_topic_interface.hpp"
 
 void TwistTopicInterface::initInterface() {
+  interfaceName = "TwistTopicInterface";
+  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::NoFeedback, feedbackMode);
+
   // n.param("trans_ratio", k_trans, 1.0);
-  RclcppUtility::declare_and_get_parameter(node, "trans_ratio", 1.0, k_trans);
+  RclcppUtility::declare_and_get_parameter(node, interfaceName + ".trans_ratio", 1.0, k_trans);
   // RCL("translation ratio: " << k_trans);
 
   setSubscriber();
@@ -28,14 +31,14 @@ void TwistTopicInterface::setSubscriber() {
 }
 
 void TwistTopicInterface::cbTwist(const geometry_msgs::msg::Twist::SharedPtr msg) {
-  std::lock_guard<std::mutex> lock(mtx_topic);
+  std::lock_guard<std::mutex> lock(mtx);
   _twist = *msg;
   _flagTopic = true;
 }
 
 void TwistTopicInterface::setPoseFromTwistMsg(const geometry_msgs::msg::Twist& twist_msg, KDL::Frame& pos, KDL::Twist& twist) {
   if (isFirst) {
-    state.pose = tf2::toMsg(controller->getT_init());
+    state.pose = tf2::toMsg(controller->getT_cur());
     isFirst = false;
 
     controller->startOperation();
@@ -75,7 +78,7 @@ void TwistTopicInterface::setPoseFromTwistMsg(const geometry_msgs::msg::Twist& t
 void TwistTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos, KDL::Twist& twist) {
   geometry_msgs::msg::Twist twist_msg;
   {
-    std::lock_guard<std::mutex> lock(mtx_topic);
+    std::lock_guard<std::mutex> lock(mtx);
     if (!_flagTopic)
       return;
     twist_msg = _twist;
@@ -85,7 +88,7 @@ void TwistTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos
 }
 
 void TwistTopicInterface::resetInterface() {
-  RCLCPP_INFO_STREAM(node->get_logger(), "Reset interface");
-  state = ohrc_msgs::msg::State();
+  // RCLCPP_INFO_STREAM(node->get_logger(), "Reset interface");
+  // state = ohrc_msgs::msg::State();
   isFirst = true;
 }

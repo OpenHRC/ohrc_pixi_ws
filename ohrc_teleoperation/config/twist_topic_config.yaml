@@ -1,6 +1,9 @@
 /**:
   ros__parameters:
-    topic_name: "cmd_vel"
-    frame_id: "user_frame"
+    TwistTopicInterface:
+      feedback_mode: "NoFeedback" 
 
-    diable_pose_feedback: true
+      topic_name: "cmd_vel"
+      frame_id: "user_frame"
+
+      diable_pose_feedback: true

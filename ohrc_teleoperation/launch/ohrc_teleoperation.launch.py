@@ -26,6 +26,24 @@ def launch_setup(context, *args, **kwargs):
 
     view = LaunchConfiguration('user_frame_viewpoint').perform(context)
 
+    interface = LaunchConfiguration('interface').perform(context)
+    mutiple_interface = False
+    interface_ = LaunchConfiguration('interface').perform(context)
+    if interface_.startswith('[') and interface_.endswith(']'):
+        interface_ = eval(interface_)
+
+    if isinstance(interface_, list):
+        mutiple_interface = True
+        interface = "_".join(interface_)
+    else:
+        interface = interface_
+
+    interface_config = LaunchConfiguration('interface_config').perform(context)
+    if mutiple_interface:
+        interface_config = [os.path.dirname(
+            interface_config) + '/' + interface_[i] + '_config.yaml' for i in range(len(interface_))]
+        interface_config = '[ "' + '", "'.join(interface_config) + '"]'
+
     node_to_start = [
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -34,18 +52,18 @@ def launch_setup(context, *args, **kwargs):
                 'app': 'teleoperation',
                 'robot': LaunchConfiguration('robot'),
                 'controller': LaunchConfiguration('controller'),
-                'interface': LaunchConfiguration('interface'),
-                'feedback_mode': LaunchConfiguration('feedback_mode'),
+                'interface':  interface,
+                # 'interface':  LaunchConfiguration('interface'),
+                # 'feedback_mode': LaunchConfiguration('feedback_mode'),
                 'use_ft_filter': LaunchConfiguration('use_ft_filter'),
                 'hw_config': LaunchConfiguration('hw_config'),
                 'admittance_config': LaunchConfiguration('admittance_config'),
                 'control_config': LaunchConfiguration('control_config'),
-                'interface_config': LaunchConfiguration('interface_config'),
+                'interface_config': interface_config,
                 'use_rviz': LaunchConfiguration('use_rviz'),
                 'rviz_config': LaunchConfiguration('rviz_config')
             }.items()
         ),
-
 
         Node(
             package='tf2_ros',
@@ -63,8 +81,8 @@ def generate_launch_description():
         # vel or vel_trj or vel_pos
         DeclareLaunchArgument('controller', default_value='vel'),
         DeclareLaunchArgument('interface', default_value='marker'),
-        DeclareLaunchArgument(
-            'feedback_mode', default_value='PositionFeedback'),
+        # DeclareLaunchArgument(
+        # 'feedback_mode', default_value='PositionFeedback'),
         DeclareLaunchArgument('use_ft_filter', default_value='true'),
         DeclareLaunchArgument('user_frame_viewpoint', default_value='back'),
 
