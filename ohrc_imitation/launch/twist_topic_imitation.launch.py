@@ -21,7 +21,7 @@ def generate_launch_description():
                 'ohrc_teleoperation'), '/launch/ohrc_teleoperation.launch.py']),
             launch_arguments={
                 'app': 'imitation',
-                'interface': 'marker',
+                'interface': 'twist_topic',
                 'robot': LaunchConfiguration('robot'),
                 'controller': LaunchConfiguration('controller'),
                 # 'feedback_mode': LaunchConfiguration('feedback_mode'),

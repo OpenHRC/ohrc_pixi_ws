@@ -29,22 +29,31 @@ find_package(OsqpEigen REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 
 
-add_executable(marker_imitation src/marker_imitation.cpp)
 
-ament_target_dependencies(marker_imitation rclcpp ohrc_control ohrc_msgs ohrc_common ohrc_teleoperation interactive_markers visualization_msgs control_msgs geometry_msgs std_srvs tf2_kdl urdf tf2_eigen_kdl urdf)
-
-target_include_directories(marker_imitation
-PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  )
-target_link_libraries(marker_imitation OsqpEigen::OsqpEigen magic_enum::magic_enum )
-
-install(TARGETS marker_imitation
-DESTINATION lib/${PROJECT_NAME}
+set(interfaces
+  marker
+  state_topic
+  twist_topic
+  pose_topic
 )
 
 
+foreach(interface ${interfaces})
+    add_executable(${interface}_imitation src/${interface}_imitation.cpp)
+
+    ament_target_dependencies(${interface}_imitation rclcpp ohrc_control ohrc_msgs ohrc_common ohrc_teleoperation interactive_markers visualization_msgs control_msgs geometry_msgs std_srvs tf2_kdl urdf tf2_eigen_kdl urdf)
+
+    target_include_directories(${interface}_imitation
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    )
+    target_link_libraries(${interface}_imitation OsqpEigen::OsqpEigen magic_enum::magic_enum )
+
+    install(TARGETS ${interface}_imitation
+    DESTINATION lib/${PROJECT_NAME}
+    )
+endforeach(interface)
 
 install(DIRECTORY
   launch
