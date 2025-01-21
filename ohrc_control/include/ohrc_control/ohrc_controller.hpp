@@ -113,6 +113,8 @@ class OhrcController : public rclcpp::Node {
   int interfaceIdx = -1;
 
 protected:
+  rclcpp::SubscriptionOptions options;
+
   virtual void defineInterface() {};
   virtual void initControllerAdditional() {};
 

@@ -17,7 +17,7 @@ void JoyTopicInterface::initInterface() {
 
 void JoyTopicInterface::setSubscriber() {
   getTopicAndFrameName("/spacenav/joy", "user_frame");
-  subJoy = node->create_subscription<sensor_msgs::msg::Joy>(stateTopicName, rclcpp::QoS(1), std::bind(&JoyTopicInterface::cbJoy, this, std::placeholders::_1));
+  subJoy = node->create_subscription<sensor_msgs::msg::Joy>(stateTopicName, rclcpp::QoS(1), std::bind(&JoyTopicInterface::cbJoy, this, std::placeholders::_1), controller->options);
 }
 
 void JoyTopicInterface::cbJoy(const sensor_msgs::msg::Joy::SharedPtr msg) {

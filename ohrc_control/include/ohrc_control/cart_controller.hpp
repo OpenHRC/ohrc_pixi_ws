@@ -40,7 +40,6 @@ using namespace std::chrono_literals;
 class CartController : public rclcpp::Node {
   rclcpp::Node::SharedPtr node;
 
-  rclcpp::SubscriptionOptions options;
   // rclcpp::CallbackGroup::SharedPtr
 
   std::string header;
@@ -214,6 +213,8 @@ public:
                  const ControllerType controller, const double freq, const bool unique_state = false);
   // ~CartController();
   int control();
+
+  rclcpp::SubscriptionOptions options;
 
   void sendIntJntCmd();
   void sendIntJntCmd(CartController::s_initCmd initCmd);

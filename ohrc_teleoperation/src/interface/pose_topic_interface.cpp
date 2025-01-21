@@ -25,7 +25,8 @@ void PoseTopicInterface::initInterface() {
 void PoseTopicInterface::setSubscriber() {
   getTopicAndFrameName("cmd_pose", "user_frame");
 
-  subPose = node->create_subscription<geometry_msgs::msg::Pose>(stateTopicName, rclcpp::QoS(1), std::bind(&PoseTopicInterface::cbPose, this, std::placeholders::_1));
+  subPose =
+      node->create_subscription<geometry_msgs::msg::Pose>(stateTopicName, rclcpp::QoS(1), std::bind(&PoseTopicInterface::cbPose, this, std::placeholders::_1), controller->options);
 }
 
 void PoseTopicInterface::cbPose(const geometry_msgs::msg::Pose::SharedPtr msg) {

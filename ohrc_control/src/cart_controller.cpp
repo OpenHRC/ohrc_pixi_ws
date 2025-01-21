@@ -76,7 +76,7 @@ void CartController::init(std::string robot, std::string hw_config) {
 
   // jntStateSubscriber = nh.subscribe("/" + robot_ns + "joint_states", 1, &CartController::cbJntState, this, th);
 
-  options.callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  options.callback_group = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
   std::string jnt_state_topic = "/" + robot_ns + "joint_states";
   if (unique_state)
@@ -137,7 +137,8 @@ void CartController::init(std::string robot, std::string hw_config) {
   curStatePublisher = node->create_publisher<ohrc_msgs::msg::State>("/" + robot_ns + "state/current", rclcpp::QoS(100));
 
   if (robot_ns != "")
-    service = node->create_service<std_srvs::srv::Empty>("/" + robot_ns + "reset", std::bind(&CartController::resetService, this, _1, _2));
+    service = node->create_service<std_srvs::srv::Empty>("/" + robot_ns + "reset", std::bind(&CartController::resetService, this, _1, _2), rmw_qos_profile_services_default,
+                                                         options.callback_group);
 
   if (initPoseFrame[0] != '/')
     initPoseFrame = robot_ns + initPoseFrame;

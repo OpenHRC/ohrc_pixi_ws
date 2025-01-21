@@ -27,7 +27,8 @@ void TwistTopicInterface::initInterface() {
 void TwistTopicInterface::setSubscriber() {
   this->getTopicAndFrameName("cmd_vel", "user_frame");
 
-  subTwist = node->create_subscription<geometry_msgs::msg::Twist>(stateTopicName, rclcpp::QoS(1), std::bind(&TwistTopicInterface::cbTwist, this, std::placeholders::_1));
+  subTwist = node->create_subscription<geometry_msgs::msg::Twist>(stateTopicName, rclcpp::QoS(1), std::bind(&TwistTopicInterface::cbTwist, this, std::placeholders::_1),
+                                                                  controller->options);
 }
 
 void TwistTopicInterface::cbTwist(const geometry_msgs::msg::Twist::SharedPtr msg) {

@@ -71,6 +71,8 @@ bool OhrcController::getRosParams(std::vector<std::string>& robots, std::vector<
 }
 
 void OhrcController::initMenbers(const std::vector<std::string> robots, const std::vector<std::string> hw_configs) {
+  options.callback_group = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+
   nRobot = robots.size();
   this->dt = 1.0 / this->freq;
 
@@ -92,8 +94,10 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
 
   multimyik_solver_ptr = std::make_unique<MyIK::MyIK>(node, base_link, tip_link, T_base_root, myik_ptr);
 
-  resetServer = this->create_service<std_srvs::srv::Empty>("/reset", std::bind(&OhrcController::resetService, this, _1, _2));
-  priorityServer = this->create_service<ohrc_msgs::srv::SetPriority>("/set_priority", std::bind(&OhrcController::priorityService, this, _1, _2));
+  resetServer =
+      this->create_service<std_srvs::srv::Empty>("/reset", std::bind(&OhrcController::resetService, this, _1, _2), rmw_qos_profile_services_default, options.callback_group);
+  priorityServer = this->create_service<ohrc_msgs::srv::SetPriority>("/set_priority", std::bind(&OhrcController::priorityService, this, _1, _2), rmw_qos_profile_services_default,
+                                                                     options.callback_group);
 
   for (size_t i = 0; i < nRobot; i = i + 2)
     manualInd.push_back(i);
@@ -127,7 +131,8 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
     cartControllers[i]->disablePoseFeedback();  // TODO: Pose feedback would be always enable. original feedback code can be removed.
   }
 
-  control_timer = this->create_wall_timer(std::chrono::milliseconds(int(dt * 1000)), std::bind(&OhrcController::controlLoop, this));
+  control_timer =
+      this->create_wall_timer(rclcpp::Duration::from_seconds(dt).to_chrono<std::chrono::nanoseconds>(), std::bind(&OhrcController::controlLoop, this), options.callback_group);
 
   initControllerAdditional();
 

@@ -18,9 +18,10 @@ void XrBodyInterface::initInterface() {
 void XrBodyInterface::setSubscriber() {
   getTopicAndFrameName("/body_state", "user_frame");
   // subBody = n.subscribe<ohrc_msgs::BodyState>(stateTopicName, 1, &XrBodyInterface::cbBody, this, th);
-  std::cout << stateTopicName << std::endl;
-  subBody = node->create_subscription<ohrc_msgs::msg::BodyState>(stateTopicName, rclcpp::QoS(10), std::bind(&XrBodyInterface::cbBody, this, std::placeholders::_1));
-  std::cout << "subBody created" << std::endl;
+  // std::cout << stateTopicName << std::endl;
+  subBody =
+      node->create_subscription<ohrc_msgs::msg::BodyState>(stateTopicName, rclcpp::QoS(1), std::bind(&XrBodyInterface::cbBody, this, std::placeholders::_1), controller->options);
+  // std::cout << "subBody created" << std::endl;
 }
 
 void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {

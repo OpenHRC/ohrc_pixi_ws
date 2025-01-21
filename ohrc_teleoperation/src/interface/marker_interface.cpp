@@ -4,7 +4,7 @@ void MarkerInterface::initInterface() {
   interfaceName = "MarkerInterface";
   RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::PositionFeedback, feedbackMode);
 
-  server = std::make_unique<interactive_markers::InteractiveMarkerServer>(controller->getRobotNs() + "eef_marker", node);
+  server = std::make_unique<interactive_markers::InteractiveMarkerServer>(controller->getRobotNs() + "eef_marker", node, rclcpp::QoS(1));
   configMarker();
 
   controller->updatePosFilterCutoff(10.0);
