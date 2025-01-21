@@ -126,7 +126,7 @@ protected:
   // virtual std::shared_ptr<Interface> selectInterface(std::shared_ptr<CartController> cartController) {
   // }
 
-  int getNRobot() {
+  size_t getNRobot() {
     return nRobot;
   }
 
