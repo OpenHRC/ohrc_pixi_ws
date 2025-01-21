@@ -49,7 +49,7 @@ def launch_setup(context, *args, **kwargs):
             PythonLaunchDescriptionSource(
                 [FindPackageShare('ohrc_control'), '/launch/ohrc_control.launch.py']),
             launch_arguments={
-                'app': 'teleoperation',
+                'app': LaunchConfiguration('app'),
                 'robot': LaunchConfiguration('robot'),
                 'controller': LaunchConfiguration('controller'),
                 'interface':  interface,
@@ -77,6 +77,7 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     declared_arguments = [
+        DeclareLaunchArgument('app', default_value='teleoperation'),
         DeclareLaunchArgument('robot', default_value='ur5e'),
         # vel or vel_trj or vel_pos
         DeclareLaunchArgument('controller', default_value='vel'),

@@ -17,6 +17,7 @@ set(msg_files
 )
 set(srv_files
   # "srv/CalcTwoFloats.srv"
+  "srv/SetPriority.srv"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
