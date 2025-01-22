@@ -14,7 +14,8 @@ protected:
 
   void overrideDesired(std::vector<KDL::Frame>& desPose, std::vector<KDL::Twist>& desVel) override {
     // find index of true in the vector
-    int idx = std::distance(priorityIdx.begin(), std::find(priorityIdx.begin(), priorityIdx.end(), true));
+    // int idx = std::distance(priorityIdx.begin(), std::find(priorityIdx.begin(), priorityIdx.end(), true));
+    int idx = priorityIdx;
 
     if (idx > -1 && idx < this->getNRobot())
       for (size_t i = 0; i < this->getNRobot(); i++) {
@@ -22,7 +23,7 @@ protected:
           continue;
 
         imitationDesired(desPose[i], desVel[i], i, desPose[idx], desVel[idx], idx);
-      };
+      }
   }
 };
 

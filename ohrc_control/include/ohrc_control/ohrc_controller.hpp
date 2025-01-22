@@ -29,8 +29,6 @@ class OhrcController : public rclcpp::Node {
   bool getRosParams(std::vector<std::string>& robots, std::vector<std::string>& hw_configs);
   void initMenbers(const std::vector<std::string> robots, const std::vector<std::string> hw_configs);
   void updateDesired();
-  std::vector<KDL::Frame> desPose;
-  std::vector<KDL::Twist> desVel;
 
   // ros::ServiceServer service;
   rclcpp::Service<std_srvs::srv::Empty>::SharedPtr resetServer;
@@ -89,7 +87,9 @@ class OhrcController : public rclcpp::Node {
 
   virtual void runLoopEnd() {};
 
-  void updateTargetPose(KDL::Frame& pose, KDL::Twist& twist, Interfaces& interfaces_);
+  // void updateTargetPose(KDL::Frame& pose, KDL::Twist& twist, Interfaces& interfaces_);
+  void updateTargetPoseInterface(KDL::Frame& pose, KDL::Twist& twist, Interfaces& interfaces_);
+  void updateTargetPoseBase(KDL::Frame& pose, KDL::Twist& twist, Interfaces& interfaces_);
   void updateAllCurState();
 
   void initInterface(const std::vector<std::shared_ptr<Interface>> interfaces_);
@@ -110,7 +110,7 @@ class OhrcController : public rclcpp::Node {
   // virtual void feedbackJnt(const KDL::JntArray& q_cur, const KDL::JntArray& q_des, std::shared_ptr<CartController> controller){};
   // virtual void feedbackCart(const Affine3d& T_cur, const Affine3d& T_des, std::shared_ptr<CartController> controller){};
 
-  int interfaceIdx = -1;
+  // int interfaceIdx = -1;
 
 protected:
   rclcpp::SubscriptionOptions options;
@@ -118,7 +118,8 @@ protected:
   virtual void defineInterface() {};
   virtual void initControllerAdditional() {};
 
-  std::vector<bool> priorityIdx;
+  // std::vector<bool> priorityIdx;
+  int priorityIdx = 0;
 
   std::vector<Interfaces> interfaces;
   std::vector<std::shared_ptr<CartController>> cartControllers;

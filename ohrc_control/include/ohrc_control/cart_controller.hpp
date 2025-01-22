@@ -151,6 +151,8 @@ protected:
   bool _disable = true, _passThrough = false;
 
   KDL::JntArray _q_cur, _dq_cur, _q_cur_t, _dq_cur_t;
+  KDL::Frame _frame_cur;
+  KDL::Twist _twist_cur;
 
   std::vector<butterworth> posFilter, velFilter, jntFilter;
 
@@ -234,6 +236,8 @@ public:
     std::lock_guard<std::mutex> lock(mtx_q);
     this->_q_cur_t = this->_q_cur;
     this->_dq_cur_t = this->_dq_cur;
+
+    JntToCart(_q_cur_t, _dq_cur_t, _frame_cur, _twist_cur);
   }
 
   inline void getState(KDL::JntArray& q_cur, KDL::JntArray& dq_cur) {
@@ -244,17 +248,21 @@ public:
 
   inline void getState(KDL::JntArray& q_cur, KDL::JntArray& dq_cur, KDL::Frame& frame, KDL::Twist& twist) {
     getState(q_cur, dq_cur);
-    JntToCart(q_cur, dq_cur, frame, twist);
+    getCartState(frame, twist);
+    // JntToCart(q_cur, dq_cur, frame, twist);
     // JntToCart(q_cur, frame);
     // JntVelToCartVel(q_cur, dq_cur, twist);
   }
 
   inline void getCartState(KDL::Frame& frame, KDL::Twist& twist) {
-    KDL::JntArray q_cur;
-    KDL::JntArray dq_cur;
-    getState(q_cur, dq_cur, frame, twist);
+    // KDL::JntArray q_cur;
+    // KDL::JntArray dq_cur;
+    // getState(q_cur, dq_cur, frame, twist);
+    frame = this->_frame_cur;
+    twist = this->_twist_cur;
   }
 
+  void publishStates();
   void publishDesEffPoseVel(const KDL::Frame& des_eef_pose, const KDL::Twist& des_eef_vel);
   void publishCurEffPoseVel(const KDL::Frame& cur_eef_pose, const KDL::Twist& cur_eef_vel);
   void getDesState(const KDL::Frame& cur_pose, const KDL::Twist& cur_vel, KDL::Frame& des_pose, KDL::Twist& des_vel);
@@ -369,7 +377,13 @@ public:
     std::lock_guard<std::mutex> lock(mtx);
     this->_des_eef_pose = des_eef_pose;
     this->_des_eef_vel = des_eef_vel;
-    filterDesEffPoseVel(this->_des_eef_pose, this->_des_eef_vel);
+    // filterDesEffPoseVel(this->_des_eef_pose, this->_des_eef_vel);
+  }
+
+  inline void getDesired(KDL::Frame& des_eef_pose, KDL::Twist& des_eef_vel) {
+    std::lock_guard<std::mutex> lock(mtx);
+    des_eef_pose = this->_des_eef_pose;
+    des_eef_vel = this->_des_eef_vel;
   }
 
   inline void enablePoseFeedback() {        // no longer used

@@ -6,7 +6,7 @@ void XrBodyInterface::initInterface() {
 
   // StateTopicInterface::initInterface();
 
-  RclcppUtility::declare_and_get_parameter_enum(node, controller->getRobotNs() + "body_part", BodyPart::RIGHT_HAND, bodyPart);
+  RclcppUtility::declare_and_get_parameter_enum(node, robot_ns + "body_part", BodyPart::RIGHT_HAND, bodyPart);
 
   // controller->updateFilterCutoff(10.0, 10.0);
   controller->disablePoseFeedback();

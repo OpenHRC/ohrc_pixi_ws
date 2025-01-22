@@ -739,6 +739,11 @@ void CartController::publishState(const KDL::Frame& pose, const KDL::Twist& vel,
   publisher->publish(state);
 }
 
+void CartController::publishStates() {
+  std::lock_guard<std::mutex> lock(mtx);
+  publishState(_des_eef_pose, _des_eef_vel, desStatePublisher);
+  publishState(_frame_cur, _twist_cur, _force.wrench, curStatePublisher);
+}
 void CartController::publishDesEffPoseVel(const KDL::Frame& des_eef_pose, const KDL::Twist& des_eef_vel) {
   publishState(des_eef_pose, des_eef_vel, desStatePublisher);
 }
@@ -763,19 +768,20 @@ void CartController::publishMarker(const KDL::JntArray q_cur) {
  * \param time Current time
  */
 void CartController::starting(const rclcpp::Time& time) {
-  subscriber_utility::checkSubTopic(node, subFlagPtrs, &mtx, robot_ns);
+  if (!subscriber_utility::checkSubTopic(node, subFlagPtrs, &mtx, robot_ns))
+    rclcpp::shutdown();
 
   // if (ftFound)
   //   this->resetFt();
 
-  updateCurState();
+  // updateCurState();
 }
 
 void CartController::initFt() {
   if (ftFound)
     this->resetFt();
 
-  updateCurState();
+  // updateCurState();
 }
 
 /**
@@ -871,7 +877,7 @@ void CartController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
 
   prev_time = time;
 
-  updateCurState();
+  // updateCurState();
   // std::cout << robot_ns << std::endl;
   double dt = period.nanoseconds() * 1e-9;
 
