@@ -71,6 +71,8 @@ bool OhrcController::getRosParams(std::vector<std::string>& robots, std::vector<
 }
 
 void OhrcController::initMenbers(const std::vector<std::string> robots, const std::vector<std::string> hw_configs) {
+  options.callback_group = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+
   nRobot = robots.size();
   this->dt = 1.0 / this->freq;
 
@@ -92,8 +94,10 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
 
   multimyik_solver_ptr = std::make_unique<MyIK::MyIK>(node, base_link, tip_link, T_base_root, myik_ptr);
 
-  resetServer = this->create_service<std_srvs::srv::Empty>("/reset", std::bind(&OhrcController::resetService, this, _1, _2));
-  priorityServer = this->create_service<ohrc_msgs::srv::SetPriority>("/set_priority", std::bind(&OhrcController::priorityService, this, _1, _2));
+  resetServer =
+      this->create_service<std_srvs::srv::Empty>("/reset", std::bind(&OhrcController::resetService, this, _1, _2), rmw_qos_profile_services_default, options.callback_group);
+  priorityServer = this->create_service<ohrc_msgs::srv::SetPriority>("/set_priority", std::bind(&OhrcController::priorityService, this, _1, _2), rmw_qos_profile_services_default,
+                                                                     options.callback_group);
 
   for (size_t i = 0; i < nRobot; i = i + 2)
     manualInd.push_back(i);
@@ -103,11 +107,8 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
 
   setPriority(priority);
 
-  priorityIdx.resize(nRobot, false);
-  priorityIdx[0] = true;
-
-  desPose.resize(nRobot);
-  desVel.resize(nRobot);
+  // priorityIdx.resize(nRobot, false);
+  // priorityIdx[0] = true;
 
   interfaces.resize(nRobot);
 
@@ -118,16 +119,18 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   // }
 
   for (size_t i = 0; i < nRobot; i++) {
-    initInterface(interfaces[i].interfaces);
+
     int nInterface = interfaces[i].interfaces.size();
     for (size_t j = 0; j < nInterface; j++) {
       interfaces[i].interfaces.push_back(ohrc_control::selectBaseController(interfaces[i].interfaces[j]->getFeedbackMode(), cartControllers[i]));
     }
+
+    initInterface(interfaces[i].interfaces);
     interfaces[i].isEnables.resize(interfaces[i].interfaces.size(), false);
     cartControllers[i]->disablePoseFeedback();  // TODO: Pose feedback would be always enable. original feedback code can be removed.
   }
 
-  control_timer = this->create_wall_timer(std::chrono::milliseconds(int(dt * 1000)), std::bind(&OhrcController::controlLoop, this));
+  control_timer = this->create_wall_timer(rclcpp::Duration::from_seconds(dt).to_chrono<std::chrono::nanoseconds>(), std::bind(&OhrcController::controlLoop, this));
 
   initControllerAdditional();
 
@@ -139,21 +142,23 @@ void OhrcController::selectInterface(std::vector<bool> isEnable) {
     _isEnable = isEnable;
 }
 
-void OhrcController::updateTargetPose(KDL::Frame& pose, KDL::Twist& twist, Interfaces& interfaces_) {
+void OhrcController::updateTargetPoseInterface(KDL::Frame& pose, KDL::Twist& twist, Interfaces& interfaces_) {
   interfaces_.updateIsEnables();
 
-  if (this->interfaceIdx == -1) {
+  if (interfaces_.interfaceIdx == -1) {
     for (size_t i = 0; i < interfaces_.isEnables.size() - 1; i++)
       if (interfaces_.isEnables[i]) {
-        this->interfaceIdx = i;
+        interfaces_.interfaceIdx = i;
+        interfaces_.interfaces[interfaces_.interfaceIdx]->resetInterface();
         break;
       }
   } else {
-    if (!interfaces_.isEnables[this->interfaceIdx]) {
-      this->interfaceIdx = -1;
+    if (!interfaces_.isEnables[interfaces_.interfaceIdx]) {
+      interfaces_.interfaceIdx = -1;
       for (size_t i = 0; i < interfaces_.isEnables.size() - 1; i++)
         if (interfaces_.isEnables[i]) {
-          this->interfaceIdx = i;
+          interfaces_.interfaceIdx = i;
+          interfaces_.interfaces[interfaces_.interfaceIdx]->resetInterface();
           break;
         }
     }
@@ -162,13 +167,23 @@ void OhrcController::updateTargetPose(KDL::Frame& pose, KDL::Twist& twist, Inter
   for (auto& interface : interfaces_.interfaces)
     interface->updateInterface();
 
-  if (this->interfaceIdx != -1) {
+  if (interfaces_.interfaceIdx != -1) {
     // apply the selected interface operation
-    interfaces_.interfaces[this->interfaceIdx]->updateTargetPose(this->get_clock()->now(), pose, twist);
+    interfaces_.interfaces[interfaces_.interfaceIdx]->updateTargetPose(this->get_clock()->now(), pose, twist);
 
-    // apply the base controller
-    interfaces_.interfaces[interfaces_.interfaces.size() / 2 + interfaceIdx]->updateTargetPose(this->get_clock()->now(), pose, twist);
+    // apply the base controller => move to after overrideDesired
+    // interfaces_.interfaces[interfaces_.interfaces.size() / 2 + this->interfaceIdx]->updateTargetPose(this->get_clock()->now(), pose, twist);
   }
+}
+
+void OhrcController::updateTargetPoseBase(KDL::Frame& pose, KDL::Twist& twist, Interfaces& interfaces_) {
+  int baseControllerIdx = interfaces_.interfaceIdx;
+  if (baseControllerIdx < 0 || baseControllerIdx > nRobot - 1)
+    baseControllerIdx = 0;  // use the first base controller as default
+
+  // std::cout << "baseControllerIdx: " << baseControllerIdx << std::endl;
+
+  interfaces_.interfaces[interfaces_.interfaces.size() / 2 + baseControllerIdx]->updateTargetPose(this->get_clock()->now(), pose, twist);
 }
 
 // virtual void defineInterface() = 0;
@@ -208,12 +223,14 @@ void OhrcController::resetService(const std::shared_ptr<std_srvs::srv::Empty::Re
 }
 
 void OhrcController::priorityService(const std::shared_ptr<ohrc_msgs::srv::SetPriority::Request> req, const std::shared_ptr<ohrc_msgs::srv::SetPriority::Response>& res) {
-  for (size_t i = 0; i < nRobot; i++)
-    if (i == req->id)
-      priorityIdx[i] = true;
-    else
-      priorityIdx[i] = false;
+  // for (size_t i = 0; i < nRobot; i++)
+  //   if (i == req->id)
+  //     priorityIdx[i] = true;
+  //   else
+  //     priorityIdx[i] = false;
 
+  // std::lock_guard<std::mutex> lock(mtx);
+  priorityIdx = req->id;
   res->success = true;
 }
 
@@ -305,13 +322,16 @@ void OhrcController::publishState(const rclcpp::Time& time, const std::vector<KD
 
 void OhrcController::update(const rclcpp::Time& time, const rclcpp::Duration& period) {
   static std::vector<KDL::JntArray> q_des(nRobot), dq_des(nRobot), q_cur(nRobot), dq_cur(nRobot);
-  std::vector<KDL::Frame> curPose(nRobot);
-  std::vector<KDL::Twist> curVel(nRobot);
+  std::vector<KDL::Frame> curPose(nRobot), desPose(nRobot);
+  std::vector<KDL::Twist> curVel(nRobot), desVel(nRobot);
 
-  for (size_t i = 0; i < nRobot; i++)
+  for (size_t i = 0; i < nRobot; i++) {
     cartControllers[i]->getState(q_cur[i], dq_cur[i], curPose[i], curVel[i]);
+    cartControllers[i]->getDesired(desPose[i], desVel[i]);
+    cartControllers[i]->publishStates();
+  }
 
-  this->publishState(time, curPose, curVel, desPose, desVel);
+  // this->publishState(time, curPose, curVel, desPose, desVel);
 
   std::vector<KDL::JntArray> q_rest(nRobot);
   for (size_t i = 0; i < nRobot; i++)
@@ -375,25 +395,23 @@ void OhrcController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
 }
 
 void OhrcController::updateDesired() {
-  for (size_t i = 0; i < nRobot; i++) {
-    cartControllers[i]->updateCurState();
+  std::vector<KDL::Frame> desPose(nRobot);
+  std::vector<KDL::Twist> desVel(nRobot);
 
+  for (size_t i = 0; i < nRobot; i++) {
     // tf2::transformEigenToKDL(cartControllers[i]->getT_init(), desPose[i]);
     tf2::transformEigenToKDL(cartControllers[i]->getT_cur(), desPose[i]);
     desVel[i] = KDL::Twist();
 
-    updateTargetPose(desPose[i], desVel[i], interfaces[cartControllers[i]->getIndex()]);
-
-    // applyBaseControl(desPose[i], desVel[i], cartControllers[i]);
-
-    // cartControllers[i]->setDesired(desPose[i], desVel[i]);
+    updateTargetPoseInterface(desPose[i], desVel[i], interfaces[cartControllers[i]->getIndex()]);
   }
 
   overrideDesired(desPose, desVel);
 
-  for (size_t i = 0; i < nRobot; i++)
+  for (size_t i = 0; i < nRobot; i++) {
+    updateTargetPoseBase(desPose[i], desVel[i], interfaces[cartControllers[i]->getIndex()]);
     cartControllers[i]->setDesired(desPose[i], desVel[i]);
-
+  }
   // preInterfaceProcess(interfaces);
 }
 
@@ -437,6 +455,8 @@ void OhrcController::controlLoop() {
     this->starting();
     isStarted = true;
   }
+
+  this->updateAllCurState();
 
   if (!this->initRobotPose())
     return;  // blocking until all robot is initialized.

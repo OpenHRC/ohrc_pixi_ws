@@ -9,7 +9,11 @@ void HybridFeedbackController::updateTargetPose(const rclcpp::Time t, KDL::Frame
   KDL::Twist vel;
   controller->getCartState(frame, vel);
 
-  VectorXd f = controller->getForceEefVec();
+  VectorXd f;
+  if (controller->getFtFound())
+    f = controller->getForceEefVec();
+  else 
+    f = VectorXd::Zero(6);
   VectorXd v(6);
 
   VectorXd e = MyIK::getCartError(frame, pose);
@@ -17,16 +21,16 @@ void HybridFeedbackController::updateTargetPose(const rclcpp::Time t, KDL::Frame
   VectorXd v_pi = this->PIControl(e, twist);
   VectorXd v_ada_pi = this->adaptivePIControl(t, e, twist);
 
-  if (controller->getOperationEnable()) {
-    for (size_t i = 0; i < 6; i++) {
-      if (std::abs(f[i]) < 1.0)
-        v[i] = v_ada_pi[i];
-      else {
-        v[i] = v_force[i];
-        t0_f[i] = t.seconds();
-      }
+  // if (controller->getOperationEnable()) {
+  for (size_t i = 0; i < 6; i++) {
+    if (std::abs(f[i]) < 1.0)
+      v[i] = v_ada_pi[i];
+    else {
+      v[i] = v_force[i];
+      t0_f[i] = t.seconds();
     }
   }
+  // }
 
   tf2::twistEigenToKDL(v, twist);
 }

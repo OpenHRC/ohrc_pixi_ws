@@ -5,15 +5,12 @@
 
 class Interface {
 protected:
-  // ros::NodeHandle n;
   const double dt;
-  rclcpp::Node::SharedPtr node;
 
-  // std::shared_ptr<TransformUtility> trans;
+  const std::string robot_ns;
 
-  std::shared_ptr<CartController> controller;
-
-  // ros::TransportHints th = ros::TransportHints().tcpNoDelay(true);
+  const std::shared_ptr<CartController> controller;
+  const rclcpp::Node::SharedPtr node;
 
   TaskState taskState = TaskState::Initial;
 
@@ -35,7 +32,7 @@ protected:
     RclcppUtility::declare_and_get_parameter(node, "frame_id", DefaultStateFrameId, this->stateFrameId);
 
     if (stateTopicName[0] != '/')
-      stateTopicName = controller->getRobotNs() + stateTopicName;
+      stateTopicName = robot_ns + stateTopicName;
   }
 
   bool isEnable = false;
@@ -57,10 +54,8 @@ protected:
   FeedbackMode feedbackMode;
 
 public:
-  Interface(const std::shared_ptr<CartController>& controller) : node(controller->getNode()), dt(controller->dt) {
-    this->controller = controller;
+  Interface(const std::shared_ptr<CartController>& controller) : node(controller->getNode()), dt(controller->dt), robot_ns(controller->getRobotNs()), controller(controller) {
     this->interfaceRunning = true;
-    // trans = std::make_shared<TransformUtility>(node);
   }
 
   ~Interface() {
@@ -110,7 +105,9 @@ public:
 class Interfaces {
 public:
   std::vector<std::shared_ptr<Interface>> interfaces;
+  std::vector<std::shared_ptr<Interface>> baseControllers;
   std::vector<bool> isEnables;
+  int interfaceIdx = -1;
 
   void updateIsEnables() {
     for (size_t i = 0; i < interfaces.size(); i++) {

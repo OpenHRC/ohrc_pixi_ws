@@ -4,7 +4,7 @@ void MarkerInterface::initInterface() {
   interfaceName = "MarkerInterface";
   RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::PositionFeedback, feedbackMode);
 
-  server = std::make_unique<interactive_markers::InteractiveMarkerServer>(controller->getRobotNs() + "eef_marker", node);
+  server = std::make_unique<interactive_markers::InteractiveMarkerServer>(robot_ns + "eef_marker", node, rclcpp::QoS(1));
   configMarker();
 
   controller->updatePosFilterCutoff(10.0);
@@ -12,6 +12,8 @@ void MarkerInterface::initInterface() {
   _markerPose = tf2::toMsg(controller->getT_cur());
 
   th = std::thread(&MarkerInterface::markerThread, this);
+
+  controller->enableOperation();
 }
 
 void MarkerInterface::configMarker() {
@@ -20,7 +22,7 @@ void MarkerInterface::configMarker() {
   int_marker.header.stamp = rclcpp::Time(0);
   int_marker.pose = tf2::toMsg(controller->getT_cur());
   int_marker.scale = 0.1;
-  int_marker.name = controller->getRobotNs();
+  int_marker.name = robot_ns;
 
   // insert a box
   visualization_msgs::msg::Marker box_marker;
@@ -62,7 +64,7 @@ void MarkerInterface::configMarker() {
   // 'commit' changes and send to all clients
   server->applyChanges();
 
-  RCLCPP_INFO_STREAM(node->get_logger(), "Set interactive marker: " << controller->getRobotNs() << "eef_marker");
+  RCLCPP_INFO_STREAM(node->get_logger(), "Set interactive marker: " << robot_ns << "eef_marker");
 }
 
 void MarkerInterface::processFeedback(const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr& feedback, rclcpp::Logger logger) {
@@ -108,7 +110,6 @@ void MarkerInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, K
 
     markerPose = _markerPose;
 
-    controller->enableOperation();
     // _flagSubInteractiveMarker = false;
   }
 

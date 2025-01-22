@@ -76,7 +76,7 @@ void CartController::init(std::string robot, std::string hw_config) {
 
   // jntStateSubscriber = nh.subscribe("/" + robot_ns + "joint_states", 1, &CartController::cbJntState, this, th);
 
-  options.callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  options.callback_group = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
   std::string jnt_state_topic = "/" + robot_ns + "joint_states";
   if (unique_state)
@@ -137,7 +137,8 @@ void CartController::init(std::string robot, std::string hw_config) {
   curStatePublisher = node->create_publisher<ohrc_msgs::msg::State>("/" + robot_ns + "state/current", rclcpp::QoS(100));
 
   if (robot_ns != "")
-    service = node->create_service<std_srvs::srv::Empty>("/" + robot_ns + "reset", std::bind(&CartController::resetService, this, _1, _2));
+    service = node->create_service<std_srvs::srv::Empty>("/" + robot_ns + "reset", std::bind(&CartController::resetService, this, _1, _2), rmw_qos_profile_services_default,
+                                                         options.callback_group);
 
   if (initPoseFrame[0] != '/')
     initPoseFrame = robot_ns + initPoseFrame;
@@ -738,6 +739,11 @@ void CartController::publishState(const KDL::Frame& pose, const KDL::Twist& vel,
   publisher->publish(state);
 }
 
+void CartController::publishStates() {
+  std::lock_guard<std::mutex> lock(mtx);
+  publishState(_des_eef_pose, _des_eef_vel, desStatePublisher);
+  publishState(_frame_cur, _twist_cur, _force.wrench, curStatePublisher);
+}
 void CartController::publishDesEffPoseVel(const KDL::Frame& des_eef_pose, const KDL::Twist& des_eef_vel) {
   publishState(des_eef_pose, des_eef_vel, desStatePublisher);
 }
@@ -762,19 +768,20 @@ void CartController::publishMarker(const KDL::JntArray q_cur) {
  * \param time Current time
  */
 void CartController::starting(const rclcpp::Time& time) {
-  subscriber_utility::checkSubTopic(node, subFlagPtrs, &mtx, robot_ns);
+  if (!subscriber_utility::checkSubTopic(node, subFlagPtrs, &mtx, robot_ns))
+    rclcpp::shutdown();
 
   // if (ftFound)
   //   this->resetFt();
 
-  updateCurState();
+  // updateCurState();
 }
 
 void CartController::initFt() {
   if (ftFound)
     this->resetFt();
 
-  updateCurState();
+  // updateCurState();
 }
 
 /**
@@ -870,7 +877,7 @@ void CartController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
 
   prev_time = time;
 
-  updateCurState();
+  // updateCurState();
   // std::cout << robot_ns << std::endl;
   double dt = period.nanoseconds() * 1e-9;
 

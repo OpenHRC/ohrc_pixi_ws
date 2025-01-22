@@ -5,22 +5,24 @@ void XrBodyInterface::initInterface() {
   RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::HybridFeedback, feedbackMode);
 
   // StateTopicInterface::initInterface();
+  setSubscriber();
+  T_state_base = controller->getTransform_base(this->stateFrameId);
 
-  RclcppUtility::declare_and_get_parameter_enum(node, controller->getRobotNs() + "body_part", BodyPart::RIGHT_HAND, bodyPart);
+  RclcppUtility::declare_and_get_parameter_enum(node, robot_ns + "body_part", BodyPart::RIGHT_HAND, bodyPart);
 
   // controller->updateFilterCutoff(10.0, 10.0);
   controller->disablePoseFeedback();
-  controller->updateVelFilterCutoff(70.0);
+  controller->updateFilterCutoff(20.0, 20.0);
 
   // pubFeedback = node->create_publisher<std_msgs::msg::Float32>(std::string("/feedback/") + std::string(magic_enum::enum_name(bodyPart)), rclcpp::QoS(2));
 }
 
 void XrBodyInterface::setSubscriber() {
   getTopicAndFrameName("/body_state", "user_frame");
-  // subBody = n.subscribe<ohrc_msgs::BodyState>(stateTopicName, 1, &XrBodyInterface::cbBody, this, th);
-  std::cout << stateTopicName << std::endl;
-  subBody = node->create_subscription<ohrc_msgs::msg::BodyState>(stateTopicName, rclcpp::QoS(10), std::bind(&XrBodyInterface::cbBody, this, std::placeholders::_1));
-  std::cout << "subBody created" << std::endl;
+
+  subBody =
+      node->create_subscription<ohrc_msgs::msg::BodyState>(stateTopicName, rclcpp::QoS(1), std::bind(&XrBodyInterface::cbBody, this, std::placeholders::_1));
+
 }
 
 void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {
@@ -77,6 +79,9 @@ void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {
       break;
   }
 
+  if(state.reset)
+    this->reset();
+
   isEnable = state.enabled;
 
   this->_state = state;
@@ -104,9 +109,9 @@ void XrBodyInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, K
   this->_state = state;  // TODO: check if this is necessary
 }
 
-void XrBodyInterface::resetInterface() {
-  this->isFirst = true;
-}
+// void XrBodyInterface::resetInterface() {
+//   this->isFirst = true;
+// }
 
 void XrBodyInterface::feedback(const KDL::Frame& targetPos, const KDL::Twist& targetTwist) {
   // std_msgs::msg::Float32 amp;
