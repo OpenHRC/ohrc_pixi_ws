@@ -21,6 +21,7 @@ protected:
 
   virtual void setSubscriber();
   void getTargetState(const ohrc_msgs::msg::State& state, KDL::Frame& pos, KDL::Twist& twist);
+  void resetInterface() override;
 
 public:
   using Interface::Interface;

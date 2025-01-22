@@ -119,11 +119,13 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   // }
 
   for (size_t i = 0; i < nRobot; i++) {
-    initInterface(interfaces[i].interfaces);
+
     int nInterface = interfaces[i].interfaces.size();
     for (size_t j = 0; j < nInterface; j++) {
       interfaces[i].interfaces.push_back(ohrc_control::selectBaseController(interfaces[i].interfaces[j]->getFeedbackMode(), cartControllers[i]));
     }
+
+    initInterface(interfaces[i].interfaces);
     interfaces[i].isEnables.resize(interfaces[i].interfaces.size(), false);
     cartControllers[i]->disablePoseFeedback();  // TODO: Pose feedback would be always enable. original feedback code can be removed.
   }
@@ -147,6 +149,7 @@ void OhrcController::updateTargetPoseInterface(KDL::Frame& pose, KDL::Twist& twi
     for (size_t i = 0; i < interfaces_.isEnables.size() - 1; i++)
       if (interfaces_.isEnables[i]) {
         interfaces_.interfaceIdx = i;
+        interfaces_.interfaces[interfaces_.interfaceIdx]->resetInterface();
         break;
       }
   } else {
@@ -155,6 +158,7 @@ void OhrcController::updateTargetPoseInterface(KDL::Frame& pose, KDL::Twist& twi
       for (size_t i = 0; i < interfaces_.isEnables.size() - 1; i++)
         if (interfaces_.isEnables[i]) {
           interfaces_.interfaceIdx = i;
+          interfaces_.interfaces[interfaces_.interfaceIdx]->resetInterface();
           break;
         }
     }

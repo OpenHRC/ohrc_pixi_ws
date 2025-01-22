@@ -22,9 +22,14 @@ void StateTopicInterface::cbState(const ohrc_msgs::msg::State::SharedPtr msg) {
   std::lock_guard<std::mutex> lock(mtx);
   _state = *msg;
   isEnable = _state.enabled;
+
+  if (_state.reset){
+    this->reset();
+  }
 }
 
 void StateTopicInterface::getTargetState(const ohrc_msgs::msg::State& state, KDL::Frame& pos, KDL::Twist& twist) {
+
   // double k_trans = 2.0;  // position slacing factor
   Matrix3d R = T_state_base.rotation();
   Affine3d T_state_state;
@@ -61,9 +66,12 @@ void StateTopicInterface::getTargetState(const ohrc_msgs::msg::State& state, KDL
   tf2::transformEigenToKDL(T, pos);
   tf2::twistEigenToKDL(v, twist);
 
-  if (state.reset)
-    this->reset();
+
   // update pos and twist
+}
+
+void StateTopicInterface::resetInterface() {
+  isFirst = true;
 }
 
 void StateTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos, KDL::Twist& twist) {

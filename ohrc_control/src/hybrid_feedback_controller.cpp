@@ -9,7 +9,11 @@ void HybridFeedbackController::updateTargetPose(const rclcpp::Time t, KDL::Frame
   KDL::Twist vel;
   controller->getCartState(frame, vel);
 
-  VectorXd f = controller->getForceEefVec();
+  VectorXd f;
+  if (controller->getFtFound())
+    f = controller->getForceEefVec();
+  else 
+    f = VectorXd::Zero(6);
   VectorXd v(6);
 
   VectorXd e = MyIK::getCartError(frame, pose);
