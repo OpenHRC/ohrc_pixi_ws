@@ -11,6 +11,7 @@
 #include "ohrc_control/my_ik.hpp"
 #include "ohrc_control/ohrc_control.hpp"
 #include "ohrc_msgs/srv/set_priority.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 
 using namespace std::placeholders;
 using namespace ohrc_control;
@@ -31,10 +32,10 @@ class OhrcController : public rclcpp::Node {
   void updateDesired();
 
   // ros::ServiceServer service;
-  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr resetServer;
+  rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr resetServer;
   rclcpp::Service<ohrc_msgs::srv::SetPriority>::SharedPtr priorityServer;
 
-  void resetService(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, const std::shared_ptr<std_srvs::srv::Trigger::Response>& res);
+  void resetService(const std::shared_ptr<std_srvs::srv::SetBool::Request> req, const std::shared_ptr<std_srvs::srv::SetBool::Response>& res);
   void priorityService(const std::shared_ptr<ohrc_msgs::srv::SetPriority::Request> req, const std::shared_ptr<ohrc_msgs::srv::SetPriority::Response>& res);
 
   void publishState(const rclcpp::Time& time, const std::vector<KDL::Frame> curPose, const std::vector<KDL::Twist> curVel, const std::vector<KDL::Frame> desPose,

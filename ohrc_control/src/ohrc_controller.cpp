@@ -95,7 +95,7 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   multimyik_solver_ptr = std::make_unique<MyIK::MyIK>(node, base_link, tip_link, T_base_root, myik_ptr);
 
   resetServer =
-      this->create_service<std_srvs::srv::Trigger>("/reset", std::bind(&OhrcController::resetService, this, _1, _2), rmw_qos_profile_services_default, options.callback_group);
+      this->create_service<std_srvs::srv::SetBool>("/reset", std::bind(&OhrcController::resetService, this, _1, _2), rmw_qos_profile_services_default, options.callback_group);
   priorityServer = this->create_service<ohrc_msgs::srv::SetPriority>("/set_priority", std::bind(&OhrcController::priorityService, this, _1, _2), rmw_qos_profile_services_default,
                                                                      options.callback_group);
 
@@ -216,7 +216,7 @@ void OhrcController::feedback(KDL::Frame& pose, KDL::Twist& twist, const std::ve
     interface->feedback(pose, twist);
 }
 
-void OhrcController::resetService(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, const std::shared_ptr<std_srvs::srv::Trigger::Response>& res) {
+void OhrcController::resetService(const std::shared_ptr<std_srvs::srv::SetBool::Request> req, const std::shared_ptr<std_srvs::srv::SetBool::Response>& res) {
   RCLCPP_INFO_STREAM(this->get_logger(), "Resetting...");
   for (auto cartController : cartControllers)
     cartController->resetPose();
