@@ -14,7 +14,7 @@
 #include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
-#include <std_srvs/srv/empty.hpp>
+#include <std_srvs/srv/trigger.hpp>
 #include <tf2_eigen/tf2_eigen.hpp>
 #include <tf2_kdl/tf2_kdl.hpp>
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
@@ -62,7 +62,7 @@ class CartController : public rclcpp::Node {
   Matrix3d userManipU;
   int rc;
   // ros::ServiceClient client
-  rclcpp::Client<std_srvs::srv::Empty>::SharedPtr client;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr client;
 
   struct s_cbJntState {
     bool isFirst = true;
@@ -96,8 +96,8 @@ class CartController : public rclcpp::Node {
   std::string publisherTopicName;
 
   // ros::ServiceServer service;
-  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr service;
-  bool resetService(const std::shared_ptr<std_srvs::srv::Empty::Request> req, const std::shared_ptr<std_srvs::srv::Empty::Response>& res);
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr service;
+  bool resetService(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, const std::shared_ptr<std_srvs::srv::Trigger::Response>& res);
 
   bool initialized = false;
 

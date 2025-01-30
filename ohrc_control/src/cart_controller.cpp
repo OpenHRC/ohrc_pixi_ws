@@ -103,7 +103,7 @@ void CartController::init(std::string robot, std::string hw_config) {
   // client = nh.serviceClient<std_srvs::Empty>("/" + robot_ns + "ft_filter/reset_offset");
   // if (ftFound) {
   if (ftFound) {
-    client = node->create_client<std_srvs::srv::Empty>("/" + robot_ns + "ft_filter/reset_offset");
+    client = node->create_client<std_srvs::srv::Trigger>("/" + robot_ns + "ft_filter/reset_offset");
     while (!client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(this->get_logger(), "Client interrupted while waiting for service");
@@ -137,8 +137,8 @@ void CartController::init(std::string robot, std::string hw_config) {
   curStatePublisher = node->create_publisher<ohrc_msgs::msg::State>("/" + robot_ns + "state/current", rclcpp::QoS(100));
 
   if (robot_ns != "")
-    service = node->create_service<std_srvs::srv::Empty>("/" + robot_ns + "reset", std::bind(&CartController::resetService, this, _1, _2), rmw_qos_profile_services_default,
-                                                         options.callback_group);
+    service = node->create_service<std_srvs::srv::Trigger>("/" + robot_ns + "reset", std::bind(&CartController::resetService, this, _1, _2), rmw_qos_profile_services_default,
+                                                           options.callback_group);
 
   if (initPoseFrame[0] != '/')
     initPoseFrame = robot_ns + initPoseFrame;
@@ -265,11 +265,13 @@ void CartController::updateFilterCutoff(const double velFreq, const double jntFr
 // CartController::~CartController() {
 // }
 
-bool CartController::resetService(const std::shared_ptr<std_srvs::srv::Empty::Request> req, const std::shared_ptr<std_srvs::srv::Empty::Response>& res) {
+bool CartController::resetService(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, const std::shared_ptr<std_srvs::srv::Trigger::Response>& res) {
   this->resetPose();
 
   if (ftFound)
     this->resetFt();
+
+  res->success = true;
   return true;
 }
 
@@ -311,7 +313,7 @@ void CartController::resetFt() {
   RCLCPP_INFO_STREAM(node->get_logger(), "Called reset ft service.");
 
   // std_srvs::srv::Empty srv;
-  auto request = std::make_shared<std_srvs::srv::Empty::Request>();
+  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
   client->async_send_request(request);
 }
 

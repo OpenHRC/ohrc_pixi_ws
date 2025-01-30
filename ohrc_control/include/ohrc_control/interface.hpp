@@ -108,6 +108,9 @@ public:
   std::vector<std::shared_ptr<Interface>> baseControllers;
   std::vector<bool> isEnables;
   int interfaceIdx = -1;
+  int prev_baseControllerIdx = 0;
+
+  bool started = false;
 
   void updateIsEnables() {
     for (size_t i = 0; i < interfaces.size(); i++) {

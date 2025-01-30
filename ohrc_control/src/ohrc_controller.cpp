@@ -95,7 +95,7 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   multimyik_solver_ptr = std::make_unique<MyIK::MyIK>(node, base_link, tip_link, T_base_root, myik_ptr);
 
   resetServer =
-      this->create_service<std_srvs::srv::Empty>("/reset", std::bind(&OhrcController::resetService, this, _1, _2), rmw_qos_profile_services_default, options.callback_group);
+      this->create_service<std_srvs::srv::Trigger>("/reset", std::bind(&OhrcController::resetService, this, _1, _2), rmw_qos_profile_services_default, options.callback_group);
   priorityServer = this->create_service<ohrc_msgs::srv::SetPriority>("/set_priority", std::bind(&OhrcController::priorityService, this, _1, _2), rmw_qos_profile_services_default,
                                                                      options.callback_group);
 
@@ -111,6 +111,9 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   // priorityIdx[0] = true;
 
   interfaces.resize(nRobot);
+  prev_desPose.resize(nRobot);
+  for (size_t i = 0; i < nRobot; i++)
+    tf2::transformEigenToKDL(cartControllers[i]->getT_cur(), prev_desPose[i]);
 
   this->defineInterface();
 
@@ -119,7 +122,6 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   // }
 
   for (size_t i = 0; i < nRobot; i++) {
-
     int nInterface = interfaces[i].interfaces.size();
     for (size_t j = 0; j < nInterface; j++) {
       interfaces[i].interfaces.push_back(ohrc_control::selectBaseController(interfaces[i].interfaces[j]->getFeedbackMode(), cartControllers[i]));
@@ -142,7 +144,7 @@ void OhrcController::selectInterface(std::vector<bool> isEnable) {
     _isEnable = isEnable;
 }
 
-void OhrcController::updateTargetPoseInterface(KDL::Frame& pose, KDL::Twist& twist, Interfaces& interfaces_) {
+void OhrcController::updateTargetPoseInterface(KDL::Frame& pose, KDL::Twist& twist, Interfaces& interfaces_, KDL::Frame& prev_pose) {
   interfaces_.updateIsEnables();
 
   if (interfaces_.interfaceIdx == -1) {
@@ -170,23 +172,27 @@ void OhrcController::updateTargetPoseInterface(KDL::Frame& pose, KDL::Twist& twi
   if (interfaces_.interfaceIdx != -1) {
     // apply the selected interface operation
     interfaces_.interfaces[interfaces_.interfaceIdx]->updateTargetPose(this->get_clock()->now(), pose, twist);
+    prev_pose = pose;
+
+    interfaces_.started = true;
 
     // apply the base controller => move to after overrideDesired
     // interfaces_.interfaces[interfaces_.interfaces.size() / 2 + this->interfaceIdx]->updateTargetPose(this->get_clock()->now(), pose, twist);
+  } else {
+    if (interfaces_.started)
+      pose = prev_pose;  // keep the only previous pose. twist is zero
   }
 }
 
 void OhrcController::updateTargetPoseBase(KDL::Frame& pose, KDL::Twist& twist, Interfaces& interfaces_) {
   int baseControllerIdx = interfaces_.interfaceIdx;
   if (baseControllerIdx < 0 || baseControllerIdx > nRobot - 1)
-    baseControllerIdx = 0;  // use the first base controller as default
-
-  // std::cout << "baseControllerIdx: " << baseControllerIdx << std::endl;
+    baseControllerIdx = interfaces_.prev_baseControllerIdx;  // use the previsouly used base controller
+  else
+    interfaces_.prev_baseControllerIdx = baseControllerIdx;
 
   interfaces_.interfaces[interfaces_.interfaces.size() / 2 + baseControllerIdx]->updateTargetPose(this->get_clock()->now(), pose, twist);
 }
-
-// virtual void defineInterface() = 0;
 
 void OhrcController::updateAllCurState() {
   for (auto cartController : cartControllers)
@@ -210,12 +216,14 @@ void OhrcController::feedback(KDL::Frame& pose, KDL::Twist& twist, const std::ve
     interface->feedback(pose, twist);
 }
 
-void OhrcController::resetService(const std::shared_ptr<std_srvs::srv::Empty::Request> req, const std::shared_ptr<std_srvs::srv::Empty::Response>& res) {
+void OhrcController::resetService(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, const std::shared_ptr<std_srvs::srv::Trigger::Response>& res) {
   RCLCPP_INFO_STREAM(this->get_logger(), "Resetting...");
   for (auto cartController : cartControllers)
     cartController->resetPose();
 
   isControllerInitialized = false;
+
+  res->success = true;
 
   // while (!isControllerInitialized && rclcpp::ok()) {
   // rclcpp::sleep_for(std::chrono::milliseconds(100));
@@ -403,7 +411,7 @@ void OhrcController::updateDesired() {
     tf2::transformEigenToKDL(cartControllers[i]->getT_cur(), desPose[i]);
     desVel[i] = KDL::Twist();
 
-    updateTargetPoseInterface(desPose[i], desVel[i], interfaces[cartControllers[i]->getIndex()]);
+    updateTargetPoseInterface(desPose[i], desVel[i], interfaces[cartControllers[i]->getIndex()], prev_desPose[i]);
   }
 
   overrideDesired(desPose, desVel);
