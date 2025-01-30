@@ -209,14 +209,19 @@ void CartController::initMembers() {
   std::string chain_start_ = chain_start, chain_end_ = chain_end;
   if (chain_start_[0] == '/')
     chain_start_.erase(0, 1);
+  else
+    chain_start_ = robot_ns + chain_start_;
+
   if (chain_end_[0] == '/')
     chain_end_.erase(0, 1);
+  else  
+    chain_end_ = robot_ns + chain_end_;
 
   std::string model_ns = robot_ns;
   if (unique_state) {
     model_ns = "";
-    chain_start_ = robot_ns + chain_start_;
-    chain_end_ = robot_ns + chain_end_;
+    // chain_start_ = robot_ns + chain_start_;
+    // chain_end_ = robot_ns + chain_end_;
   }
 
   myik_solver_ptr = std::make_shared<MyIK::MyIK>(this->node, model_ns, chain_start_, chain_end_, urdf_param, eps, T_base_root);
