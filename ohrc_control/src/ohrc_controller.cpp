@@ -225,9 +225,9 @@ void OhrcController::resetService(const std::shared_ptr<std_srvs::srv::SetBool::
 
   res->success = true;
 
-  // while (!isControllerInitialized && rclcpp::ok()) {
-  // rclcpp::sleep_for(std::chrono::milliseconds(100));
-  // }
+  while (!isControllerInitialized && rclcpp::ok()) {
+    rclcpp::sleep_for(std::chrono::milliseconds(100));
+  }
 }
 
 void OhrcController::priorityService(const std::shared_ptr<ohrc_msgs::srv::SetPriority::Request> req, const std::shared_ptr<ohrc_msgs::srv::SetPriority::Response>& res) {
@@ -293,6 +293,7 @@ void OhrcController::initController() {
   for (auto cartController : cartControllers) {
     cartController->initFt();
     resetInterface(interfaces[cartController->getIndex()].interfaces);
+    interfaces[cartController->getIndex()].started = false;
   }
 
   std::vector<KDL::JntArray> q_rest(nRobot);
@@ -407,8 +408,8 @@ void OhrcController::updateDesired() {
   std::vector<KDL::Twist> desVel(nRobot);
 
   for (size_t i = 0; i < nRobot; i++) {
-    // tf2::transformEigenToKDL(cartControllers[i]->getT_init(), desPose[i]);
-    tf2::transformEigenToKDL(cartControllers[i]->getT_cur(), desPose[i]);
+    tf2::transformEigenToKDL(cartControllers[i]->getT_init(), desPose[i]);
+    // tf2::transformEigenToKDL(cartControllers[i]->getT_cur(), desPose[i]);
     desVel[i] = KDL::Twist();
 
     updateTargetPoseInterface(desPose[i], desVel[i], interfaces[cartControllers[i]->getIndex()], prev_desPose[i]);

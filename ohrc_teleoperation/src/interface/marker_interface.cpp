@@ -119,4 +119,5 @@ void MarkerInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, K
 void MarkerInterface::resetInterface() {
   server->setPose(int_marker.name, tf2::toMsg(controller->getT_cur()));
   server->applyChanges();
+  subFirst = false;
 }

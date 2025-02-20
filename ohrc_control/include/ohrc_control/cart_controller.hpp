@@ -40,6 +40,8 @@ using namespace std::chrono_literals;
 class CartController : public rclcpp::Node {
   rclcpp::Node::SharedPtr node;
 
+  double feedback_gain = 4.0;
+
   // rclcpp::CallbackGroup::SharedPtr
 
   std::string header;
@@ -110,6 +112,8 @@ class CartController : public rclcpp::Node {
   bool ftFound = false;
   const bool unique_state;
 
+  Affine3d T_init;
+
 protected:
   SolverType solver;
   ControllerType controller;
@@ -133,7 +137,6 @@ protected:
 
   double timeout;
 
-  Affine3d T_init;
   Affine3d Tft_eff;
 
   unsigned int nJnt;         // number of robot joint

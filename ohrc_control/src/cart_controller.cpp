@@ -214,7 +214,7 @@ void CartController::initMembers() {
 
   if (chain_end_[0] == '/')
     chain_end_.erase(0, 1);
-  else  
+  else
     chain_end_ = robot_ns + chain_end_;
 
   std::string model_ns = robot_ns;
@@ -529,10 +529,15 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
   //     break;
   // }
   // sendIntJntCmd();
+  // std::cout << (q_des_t - q_cur.data).norm() << std::endl;
 
-  if (lastLoop && (q_des_t - q_cur.data).norm() < 0.1 && dq_des_t.norm() < 0.01) {  // TODO: check these thresholds
-    RCLCPP_INFO_STREAM(node->get_logger(), "The robot (ns: " + robot_ns + ") has reached the initial pose.");
-    return true;
+  if (lastLoop) {
+    if ((q_des_t - q_cur.data).norm() < 0.1 && dq_des_t.norm() < 0.01) {  // TODO: check these thresholds
+      RCLCPP_INFO_STREAM(node->get_logger(), "The robot (ns: " + robot_ns + ") has reached the initial pose.");
+      return true;
+    }
+  } else {
+    feedback_gain += 0.1 / freq;
   }
 
   this->initCmd_.lastLoop = false;
@@ -623,7 +628,7 @@ void CartController::sendVelocityCmd(const VectorXd& dq_des) {
 }
 
 void CartController::sendVelocityCmd(const VectorXd& q_des, const VectorXd& dq_des, const KDL::JntArray& q_cur, const bool& lastLoop) {
-  double kp = 4.0;  // feedback p gain
+  double kp = feedback_gain;  // feedback p gain
   std_msgs::msg::Float64MultiArray cmd;
   VectorXd dq_des_ = dq_des + (1.0 - (double)lastLoop) * kp * (q_des - q_cur.data);
   sendVelocityCmd(dq_des_);
