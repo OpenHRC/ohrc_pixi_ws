@@ -12,14 +12,15 @@ void PoseTopicInterface::initInterface() {
   bool diablePoseFeedback;
   RclcppUtility::declare_and_get_parameter(node, "diable_pose_feedback", false, diablePoseFeedback);
 
-  controller->enablePoseFeedback();  // tentative
-  if (diablePoseFeedback) {
-    // ROS_WARN_STREAM("Pose feedback is disabled");
-    RCLCPP_WARN_STREAM(node->get_logger(), "Pose feedback is disabled");
-    controller->disablePoseFeedback();
-  }
+  // controller->enablePoseFeedback();  // tentative
+  // if (diablePoseFeedback) {
+  //   // ROS_WARN_STREAM("Pose feedback is disabled");
+  //   RCLCPP_WARN_STREAM(node->get_logger(), "Pose feedback is disabled");
+  //   controller->disablePoseFeedback();
+  // }
 
   controller->updatePosFilterCutoff(10.0);
+  controller->enableOperation();
 }
 
 void PoseTopicInterface::setSubscriber() {
@@ -34,10 +35,14 @@ void PoseTopicInterface::cbPose(const geometry_msgs::msg::Pose::SharedPtr msg) {
   _pose = *msg;
   _flagTopic = true;
 
-  isEnable = true;  // tentative
+  // RCLCPP_INFO_STREAM(node->get_logger(), _pose.position.x << ", " << _pose.position.y << ", " << _pose.position.z);
+
+  // isEnable = true;  // tentative
+  updateIsEnable(true);
 }
 
 void PoseTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) {
+
   geometry_msgs::msg::Pose markerPose;
   double markerDt;
   {
@@ -46,7 +51,7 @@ void PoseTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose
       return;
     }
     markerPose = _pose;
-    controller->enableOperation();
+    // controller->enableOperation();
   }
 
   Affine3d T_topic;
@@ -61,14 +66,16 @@ void PoseTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose
   Vector3d pos = T_base.translation() - initT.translation() + controller->getT_init().translation();
 
   tf2::vectorEigenToKDL(pos, pose.p);
-  //   tf::vectorEigenToKDL(controller->getT_init().rotation(), pose.rot);
+
+
+  // tf2::vectorEigenToKDL(controller->getT_init().rotation(), pose);
 
   // controller->getVelocity(pose, prevPoses, dt, twist);  // TODO: get this velocity in periodic loop using Kalman filter
-
+  // std::cout << pos.transpose() << std::endl;
   // prevPoses = pose;
 }
 
 void PoseTopicInterface::resetInterface() {
-  RCLCPP_INFO_STREAM(node->get_logger(), "Reset pose position");
+  // RCLCPP_INFO_STREAM(node->get_logger(), "Reset pose position");
   _flagTopic = false;
 }

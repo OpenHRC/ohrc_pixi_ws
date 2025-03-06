@@ -123,11 +123,14 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
 
   for (size_t i = 0; i < nRobot; i++) {
     int nInterface = interfaces[i].interfaces.size();
+    initInterface(interfaces[i].interfaces);
+
     for (size_t j = 0; j < nInterface; j++) {
       interfaces[i].interfaces.push_back(ohrc_control::selectBaseController(interfaces[i].interfaces[j]->getFeedbackMode(), cartControllers[i]));
+      interfaces[i].interfaces[nInterface+j]->initInterface();
     }
 
-    initInterface(interfaces[i].interfaces);
+
     interfaces[i].isEnables.resize(interfaces[i].interfaces.size(), false);
     cartControllers[i]->disablePoseFeedback();  // TODO: Pose feedback would be always enable. original feedback code can be removed.
   }
@@ -205,6 +208,7 @@ void OhrcController::initInterface(const std::vector<std::shared_ptr<Interface>>
 
   _isEnable.resize(interfaces_.size() - 1);
 }
+
 
 void OhrcController::resetInterface(const std::vector<std::shared_ptr<Interface>> interfaces_) {
   for (auto& interface : interfaces_)
