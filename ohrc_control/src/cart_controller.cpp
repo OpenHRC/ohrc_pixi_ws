@@ -382,7 +382,7 @@ void CartController::cbJntState(const sensor_msgs::msg::JointState::SharedPtr ms
 
   if (s_cbJntState.isFirst) {
     if (!initialized) {
-      initialized = moveInitPos(q_cur, nameJnt, idxSegJnt);
+      initialized = moveInitPos(q_cur, dq_cur, nameJnt, idxSegJnt);
       return;
     }
 
@@ -426,7 +426,7 @@ void CartController::initDesWithJnt(const KDL::JntArray& q_cur) {
   this->_des_eef_vel = KDL::Twist::Zero();
 }
 
-int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<std::string> nameJnt, std::vector<int> idxSegJnt) {
+int CartController::moveInitPos(const KDL::JntArray& q_cur, const KDL::JntArray& dq_cur, const std::vector<std::string> nameJnt, std::vector<int> idxSegJnt) {
   if (s_moveInitPos.isFirst) {
     this->nameJnt = nameJnt;
     s_moveInitPos.q_initial = q_cur;
@@ -476,7 +476,7 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
   bool lastLoop = false;
   double s = 0.0, s2, s3, s4, s5;
   s = (node->get_clock()->now() - s_moveInitPos.t_s).nanoseconds() * 1.0e-9 / T;
-  if (s > 1.0) {
+  if (s > 1.0 || (publisher == PublisherType::Trajectory && s > dt / T)) {
     s = 1.0;
     lastLoop = true;
   }
@@ -498,46 +498,15 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const std::vector<st
   this->initCmd_.T = T;
   this->initCmd_.s = s;
   this->initCmd_.flag = true;
-  // }
-  // switch (publisher) {
-  //   case PublisherType::Position:
-  //     sendPositionCmd(q_des_t);
-  //     break;
-  //   case PublisherType::Velocity:
-  //     sendVelocityCmd(q_des_t, dq_des_t, q_cur, lastLoop);
-  //     break;
-  //   case PublisherType::Torque:
-  //     RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "Torque publisher is not implemented...");
-  //     break;
-  //   case PublisherType::Trajectory:
-  //     sendTrajectoryCmd(s_moveInitPos.q_des.data, T * (1.0 - s));
-  //     rclcpp::sleep_for(rclcpp::Duration::from_seconds(T).to_chrono<std::chrono::nanoseconds>());
-  //     lastLoop = true;
-  //     break;
-  //   case PublisherType::TrajectoryAction:
-  //     sendTrajectoryActionCmd(s_moveInitPos.q_des.data, T * (1.0 - s));
-  //     // rclcpp::Duration(T).sleep();
-  //     // rclcpp::sleep_for(T.second())
-  //     lastLoop = true;
-  //     break;
-  //   case PublisherType::JointState:
-  //     sendJointStateCmd(q_des_t, dq_des_t);
-  //     break;
-
-  //   default:
-  //     RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "This publisher is not implemented...");
-  //     break;
-  // }
-  // sendIntJntCmd();
-  // std::cout << (q_des_t - q_cur.data).norm() << std::endl;
 
   if (lastLoop) {
-    if ((q_des_t - q_cur.data).norm() < 0.1 && dq_des_t.norm() < 0.01) {  // TODO: check these thresholds
+    if ((q_des_t - q_cur.data).norm() < 1.0e-4 && dq_cur.data.norm() < 1.0e-3 && s == 1.0) {  // TODO: check these thresholds
       RCLCPP_INFO_STREAM(node->get_logger(), "The robot (ns: " + robot_ns + ") has reached the initial pose.");
+      reseted = true;
       return true;
     }
-  } else {
-    feedback_gain += 0.1 / freq;
+    // RCLCPP_INFO_STREAM(node->get_logger(), "Reaching error > pos:" << (q_des_t - q_cur.data).norm() << ", vel:" << dq_cur.data.norm());
+    // feedback_gain += 0.1 / freq;
   }
 
   this->initCmd_.lastLoop = false;
@@ -579,15 +548,17 @@ void CartController::sendIntJntCmd(CartController::s_initCmd initCmd) {
       RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "Torque publisher is not implemented...");
       break;
     case PublisherType::Trajectory:
-      sendTrajectoryCmd(s_moveInitPos.q_des.data, T * (1.0 - s));
-      rclcpp::sleep_for(rclcpp::Duration::from_seconds(T).to_chrono<std::chrono::nanoseconds>());
-      lastLoop = true;
+      if (s < 1.0)
+        sendTrajectoryCmd(s_moveInitPos.q_des.data, T);
+
+      // rclcpp::sleep_for(rclcpp::Duration::from_seconds(T).to_chrono<std::chrono::nanoseconds>());
+      // lastLoop = true;
       break;
     case PublisherType::TrajectoryAction:
       sendTrajectoryActionCmd(s_moveInitPos.q_des.data, T * (1.0 - s));
       // rclcpp::Duration(T).sleep();
       // rclcpp::sleep_for(T.second())
-      lastLoop = true;
+      // lastLoop = true;
       break;
     case PublisherType::JointState:
       sendJointStateCmd(q_des_t, dq_des_t);
@@ -954,6 +925,11 @@ void CartController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
 
     // low pass filter
     filterJnt(dq_des);
+    if (reseted) {
+      q_des = q_cur;
+      reseted = false;
+      std::cout << "reseted" << std::endl;
+    }
 
     q_des.data += dq_des.data * dt;
 

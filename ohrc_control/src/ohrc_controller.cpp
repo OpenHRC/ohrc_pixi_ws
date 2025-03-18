@@ -127,9 +127,8 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
 
     for (size_t j = 0; j < nInterface; j++) {
       interfaces[i].interfaces.push_back(ohrc_control::selectBaseController(interfaces[i].interfaces[j]->getFeedbackMode(), cartControllers[i]));
-      interfaces[i].interfaces[nInterface+j]->initInterface();
+      interfaces[i].interfaces[nInterface + j]->initInterface();
     }
-
 
     interfaces[i].isEnables.resize(interfaces[i].interfaces.size(), false);
     cartControllers[i]->disablePoseFeedback();  // TODO: Pose feedback would be always enable. original feedback code can be removed.
@@ -208,7 +207,6 @@ void OhrcController::initInterface(const std::vector<std::shared_ptr<Interface>>
 
   _isEnable.resize(interfaces_.size() - 1);
 }
-
 
 void OhrcController::resetInterface(const std::vector<std::shared_ptr<Interface>> interfaces_) {
   for (auto& interface : interfaces_)
@@ -361,9 +359,16 @@ void OhrcController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
 
     // low pass filter
     for (size_t i = 0; i < nRobot; i++) {
+      if (q_des[i].data.rows() != dq_des[i].data.rows() || cartControllers[i]->getReseted()) {
+        KDL::JntArray dq_des_;
+        cartControllers[i]->getState(q_des[i], dq_des_);
+        dq_des[i].data = VectorXd::Zero(dq_des_.data.rows());
+        cartControllers[i]->setReseted(false);
+      }
+
       cartControllers[i]->filterJnt(dq_des[i]);
-      if (q_des[i].data.rows() != dq_des[i].data.rows())
-        q_des[i].data = cartControllers[i]->getqRest().data;
+      // q_des[i].data = cartControllers[i]->getqRest().data;
+
       q_des[i].data += dq_des[i].data * dt;
     }
 
