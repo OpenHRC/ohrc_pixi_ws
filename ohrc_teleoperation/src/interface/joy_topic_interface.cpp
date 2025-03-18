@@ -1,13 +1,8 @@
 #include "ohrc_teleoperation/joy_topic_interface.hpp"
 
 void JoyTopicInterface::initInterface() {
-  interfaceName = "JoyTopicInterface";
-
-  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::NoFeedback, feedbackMode);
   RclcppUtility::declare_and_get_parameter(node, interfaceName + ".gain.horizontal", 1.0, gain_h);
   RclcppUtility::declare_and_get_parameter(node, interfaceName + ".gain.rotational", 1.0, gain_r);
-
-  // TwistTopicInterface::initInterface();
 
   setSubscriber();
 

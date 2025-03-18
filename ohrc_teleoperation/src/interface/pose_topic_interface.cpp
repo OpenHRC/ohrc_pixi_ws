@@ -1,9 +1,6 @@
 #include "ohrc_teleoperation/pose_topic_interface.hpp"
 
 void PoseTopicInterface::initInterface() {
-  interfaceName = "PoseTopicInterface";
-  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::PositionFeedback, feedbackMode);
-
   setSubscriber();
 
   Affine3d T_state_base = controller->getTransform_base(this->stateFrameId);
@@ -11,13 +8,6 @@ void PoseTopicInterface::initInterface() {
 
   bool diablePoseFeedback;
   RclcppUtility::declare_and_get_parameter(node, "diable_pose_feedback", false, diablePoseFeedback);
-
-  // controller->enablePoseFeedback();  // tentative
-  // if (diablePoseFeedback) {
-  //   // ROS_WARN_STREAM("Pose feedback is disabled");
-  //   RCLCPP_WARN_STREAM(node->get_logger(), "Pose feedback is disabled");
-  //   controller->disablePoseFeedback();
-  // }
 
   controller->updatePosFilterCutoff(10.0);
   controller->enableOperation();
@@ -35,14 +25,10 @@ void PoseTopicInterface::cbPose(const geometry_msgs::msg::Pose::SharedPtr msg) {
   _pose = *msg;
   _flagTopic = true;
 
-  // RCLCPP_INFO_STREAM(node->get_logger(), _pose.position.x << ", " << _pose.position.y << ", " << _pose.position.z);
-
-  // isEnable = true;  // tentative
   updateIsEnable(true);
 }
 
 void PoseTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) {
-
   geometry_msgs::msg::Pose markerPose;
   double markerDt;
   {
@@ -51,7 +37,6 @@ void PoseTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose
       return;
     }
     markerPose = _pose;
-    // controller->enableOperation();
   }
 
   Affine3d T_topic;
@@ -60,19 +45,9 @@ void PoseTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose
 
   static Affine3d initT = T_base;
 
-  // if (prevPoses.p.data[0] == 0.0 && prevPoses.p.data[1] == 0.0 && prevPoses.p.data[2] == 0.0)  // initilize
-  // prevPoses = pose;
-
   Vector3d pos = T_base.translation() - initT.translation() + controller->getT_init().translation();
 
   tf2::vectorEigenToKDL(pos, pose.p);
-
-
-  // tf2::vectorEigenToKDL(controller->getT_init().rotation(), pose);
-
-  // controller->getVelocity(pose, prevPoses, dt, twist);  // TODO: get this velocity in periodic loop using Kalman filter
-  // std::cout << pos.transpose() << std::endl;
-  // prevPoses = pose;
 }
 
 void PoseTopicInterface::resetInterface() {

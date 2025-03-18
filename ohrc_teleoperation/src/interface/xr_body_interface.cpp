@@ -1,10 +1,6 @@
 #include "ohrc_teleoperation/xr_body_interface.hpp"
 
 void XrBodyInterface::initInterface() {
-  interfaceName = "XrBodyInterface";
-  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::HybridFeedback, feedbackMode);
-
-  // StateTopicInterface::initInterface();
   setSubscriber();
   T_state_base = controller->getTransform_base(this->stateFrameId);
 
@@ -20,9 +16,7 @@ void XrBodyInterface::initInterface() {
 void XrBodyInterface::setSubscriber() {
   getTopicAndFrameName("/body_state", "user_frame");
 
-  subBody =
-      node->create_subscription<ohrc_msgs::msg::BodyState>(stateTopicName, rclcpp::QoS(1), std::bind(&XrBodyInterface::cbBody, this, std::placeholders::_1));
-
+  subBody = node->create_subscription<ohrc_msgs::msg::BodyState>(stateTopicName, rclcpp::QoS(1), std::bind(&XrBodyInterface::cbBody, this, std::placeholders::_1));
 }
 
 void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {
@@ -79,7 +73,7 @@ void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {
       break;
   }
 
-  if(state.reset)
+  if (state.reset)
     this->reset();
 
   isEnable = state.enabled;

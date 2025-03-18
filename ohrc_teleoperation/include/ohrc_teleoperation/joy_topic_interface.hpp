@@ -18,6 +18,7 @@ protected:
 
 public:
   using TwistTopicInterface::TwistTopicInterface;
+  JoyTopicInterface(const std::shared_ptr<CartController>& controller): TwistTopicInterface(controller, "JoyTopicInterface", FeedbackMode::NoFeedback) {}
   void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) override;
   void initInterface() override;
   // void resetInterface() override;

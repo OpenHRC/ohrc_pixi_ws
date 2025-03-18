@@ -33,8 +33,10 @@ class MarkerInterface : public Interface {
 
 public:
   using Interface::Interface;
+  MarkerInterface(const std::shared_ptr<CartController>& controller) : Interface(controller, "MarkerInterface", FeedbackMode::PositionFeedback) {
+  }
+
   ~MarkerInterface() {
-    interfaceRunning = false;
     if (th.joinable())
       th.join();
   }

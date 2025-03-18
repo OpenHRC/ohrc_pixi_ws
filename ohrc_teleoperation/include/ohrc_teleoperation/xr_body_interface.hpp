@@ -26,6 +26,7 @@ protected:
 
 public:
   using StateTopicInterface::StateTopicInterface;
+  XrBodyInterface(const std::shared_ptr<CartController>& controller): StateTopicInterface(controller, "XrBodyInterface", FeedbackMode::HybridFeedback) {}
   void initInterface() override;
   // void resetInterface() override;
   void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) override;

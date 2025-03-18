@@ -1,11 +1,6 @@
 #include "ohrc_teleoperation/state_topic_interface.hpp"
 
 void StateTopicInterface::initInterface() {
-  interfaceName = "StateTopicInterface";
-  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::PositionFeedback, feedbackMode);
-
-  // n.param("trans_ratio", k_trans, 1.0);
-  // ROS_INFO_STREAM("translation ratio: " << k_trans);
   RclcppUtility::declare_and_get_parameter(node, interfaceName + ".trans_ratio", 1.0, k_trans);
 
   setSubscriber();
@@ -15,7 +10,8 @@ void StateTopicInterface::initInterface() {
 
 void StateTopicInterface::setSubscriber() {
   getTopicAndFrameName("state", "user_frame");
-  subState = node->create_subscription<ohrc_msgs::msg::State>(stateTopicName, rclcpp::QoS(1), std::bind(&StateTopicInterface::cbState, this, std::placeholders::_1), controller->options);
+  subState =
+      node->create_subscription<ohrc_msgs::msg::State>(stateTopicName, rclcpp::QoS(1), std::bind(&StateTopicInterface::cbState, this, std::placeholders::_1), controller->options);
 }
 
 void StateTopicInterface::cbState(const ohrc_msgs::msg::State::SharedPtr msg) {
@@ -23,13 +19,12 @@ void StateTopicInterface::cbState(const ohrc_msgs::msg::State::SharedPtr msg) {
   _state = *msg;
   isEnable = _state.enabled;
 
-  if (_state.reset){
+  if (_state.reset) {
     this->reset();
   }
 }
 
 void StateTopicInterface::getTargetState(const ohrc_msgs::msg::State& state, KDL::Frame& pos, KDL::Twist& twist) {
-
   // double k_trans = 2.0;  // position slacing factor
   Matrix3d R = T_state_base.rotation();
   Affine3d T_state_state;
@@ -65,9 +60,6 @@ void StateTopicInterface::getTargetState(const ohrc_msgs::msg::State& state, KDL
 
   tf2::transformEigenToKDL(T, pos);
   tf2::twistEigenToKDL(v, twist);
-
-
-  // update pos and twist
 }
 
 void StateTopicInterface::resetInterface() {
