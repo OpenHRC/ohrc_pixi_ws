@@ -29,6 +29,8 @@ protected:
 
 public:
   using Interface::Interface;
+  PoseTopicInterface(const std::shared_ptr<CartController>& controller) : Interface(controller, "PoseTopicInterface", FeedbackMode::PositionFeedback) {
+  }
   void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) override;
   void initInterface() override;
   void resetInterface() override;

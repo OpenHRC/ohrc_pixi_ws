@@ -17,7 +17,7 @@ protected:
   bool _flagTopic = false;
 
   void cbState(const ohrc_msgs::msg::State::SharedPtr msg);
-  virtual void modifyTargetState(ohrc_msgs::msg::State& state) {};
+  virtual void modifyTargetState(ohrc_msgs::msg::State& state){};
 
   virtual void setSubscriber();
   void getTargetState(const ohrc_msgs::msg::State& state, KDL::Frame& pos, KDL::Twist& twist);
@@ -25,6 +25,8 @@ protected:
 
 public:
   using Interface::Interface;
+  StateTopicInterface(const std::shared_ptr<CartController>& controller) : Interface(controller, "StateTopicInterface", FeedbackMode::PositionFeedback) {
+  }
   void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) override;
   void initInterface() override;
 };
