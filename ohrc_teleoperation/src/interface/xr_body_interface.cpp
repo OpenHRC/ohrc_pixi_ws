@@ -14,7 +14,7 @@ void XrBodyInterface::initInterface() {
   controller->disablePoseFeedback();
   controller->updateFilterCutoff(20.0, 20.0);
 
-  // pubFeedback = node->create_publisher<std_msgs::msg::Float32>(std::string("/feedback/") + std::string(magic_enum::enum_name(bodyPart)), rclcpp::QoS(2));
+  pubFeedback = node->create_publisher<std_msgs::msg::Float32>(std::string("/feedback/") + std::string(magic_enum::enum_name(bodyPart)), rclcpp::QoS(2));
 }
 
 void XrBodyInterface::setSubscriber() {
@@ -114,12 +114,12 @@ void XrBodyInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, K
 // }
 
 void XrBodyInterface::feedback(const KDL::Frame& targetPos, const KDL::Twist& targetTwist) {
-  // std_msgs::msg::Float32 amp;
+  std_msgs::msg::Float32 amp;
 
-  // amp.data = std::max(std::min((tf2::fromMsg(controller->getForceEef().wrench).head(3).norm() - 1.0) / 10.0, 1.0), 0.0);
+  amp.data = std::max(std::min((tf2::fromMsg(controller->getForceEef().wrench).head(3).norm() - 1.0) / 10.0, 1.0), 0.0);
 
   // if (controller->getOperationEnable())
-  //   pubFeedback->publish(amp);
+  pubFeedback->publish(amp);
   // else
   //   pubFeedback->publish(std_msgs::msg::Float32());
 }

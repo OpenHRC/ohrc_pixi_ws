@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     XrBodyInterface:
-      feedback_mode: "HybridFeedback" 
+      feedback_mode: "PositionFeedback" 
 
       topic_name: "/body_state"
       frame_id: "user_frame"
