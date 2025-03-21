@@ -500,8 +500,8 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   std::vector<VectorXd> es(nRobot);
   std::vector<Matrix<double, 6, 1>> vs(nRobot);
 
-  VectorXd kp = 3.0 * VectorXd::Ones(6);  // TODO: make this p gain as ros param
-  kp.tail(3) = kp.tail(3) * 0.5 / M_PI * 0.5;
+  // VectorXd kp = 3.0 * VectorXd::Ones(6);  // TODO: make this p gain as ros param <- NO LONGER USED
+  // kp.tail(3) = kp.tail(3) * 0.5 / M_PI * 0.5;
 
   for (size_t i = 0; i < nRobot; i++) {
     KDL::Jacobian jac(myIKs[i]->getNJnt());
@@ -534,7 +534,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   std::vector<VectorXd> g(nRobot + nAddObj);
 
   // additonal objective term in QP (1) for singularity avoidance
-  w_h[nRobot] = 1.0e-0;
+  w_h[nRobot] = 5.0e-0;
   H[nRobot] = MatrixXd::Identity(nState, nState);
   g[nRobot] = VectorXd::Zero(nState);  // this will be updated in the loop below
 
