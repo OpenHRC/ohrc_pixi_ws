@@ -69,19 +69,8 @@ $ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 ## Getting Started
 You can first try the teleoperation node with interactive markers for UR5e.
 
-If you have not installed UR5e simulation yet, open a terminal and run:
+First, run the following command to start the UR5e simulation, which has been installed automatically with OpenHRC:
 ```bash
-$ cd ~/ros2_ws/src
-$ git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation.git -b humble
-$ rosdep update && rosdep install -i -y --from-paths ./ 
-
-$ cd ~/ros2_ws
-$ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
-```
-
-First, run the following command to start the UR5e simulation.:
-```bash
-$ source ~/ros2_ws/install/setup.bash
 $ ros2 launch ur_simulation_gz ur_sim_control.launch.py initial_joint_controller:=forward_velocity_controller launch_rviz:=false
 ```
 
@@ -92,7 +81,7 @@ $ ros2 launch ohrc_teleoperation marker_teleoperation.launch.py
 ```
 
 
-If you have a 3D mouse (spacenav), you can also use it for teleoperation instead of interactive marker.
+If you have a 3D mouse (spacenav), you can also use it for teleoperation instead.
 ```bash
 $ source ~/ros2_ws/install/setup.bash
 $ sudo apt install ros-humble-spacenav # if you don't have spacenav package
@@ -100,10 +89,16 @@ $ ros2 launch ohrc_teleoperation joy_topic_teleoperation.launch.py
 ```
 
 
+## Controller Structure
+*Under development
+
+see [ohrc_control/README.md](./ohrc_control/README.md)
+
+
 ## Tutorials
 *Under development
-1. Teleoperation library: [ohrc_teleoperation](./ohrc_teleoperation)
-2. Imitation Learning library: [ohrc_imitation_learning](./ohrc_imitation_learning)
+1. Teleoperation library: [ohrc_teleoperation/README.md](./ohrc_teleoperation)
+2. Imitation Learning library: [ohrc_imitation_learning/README.md](./ohrc_imitation_learning)
 
 
 
