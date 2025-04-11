@@ -40,6 +40,9 @@ using namespace std::chrono_literals;
 class CartController : public rclcpp::Node {
   rclcpp::Node::SharedPtr node;
 
+  double feedback_gain = 4.0;
+  bool reseted = false;
+
   // rclcpp::CallbackGroup::SharedPtr
 
   std::string header;
@@ -110,6 +113,8 @@ class CartController : public rclcpp::Node {
   bool ftFound = false;
   const bool unique_state;
 
+  Affine3d T_init;
+
   std::string ft_sensor_link, ft_topic;
 
 protected:
@@ -135,7 +140,6 @@ protected:
 
   double timeout;
 
-  Affine3d T_init;
   Affine3d Tft_eff;
 
   unsigned int nJnt;         // number of robot joint
@@ -190,7 +194,7 @@ protected:
   // KDL::Frame& des_eef_pose, KDL::Twist& des_eef_vel);
   void filterDesEffPoseVel(KDL::Frame& des_eef_pose, KDL::Twist& des_eef_vel);
 
-  int moveInitPos(const KDL::JntArray& q_cur, const std::vector<std::string> nameJnt, std::vector<int> idxSegJnt);
+  int moveInitPos(const KDL::JntArray& q_cur, const KDL::JntArray& dq_cur, const std::vector<std::string> nameJnt, std::vector<int> idxSegJnt);
 
   const int index = 0;
   // int moveInitPos();
@@ -449,6 +453,13 @@ public:
 
   void sendPosCmd(const KDL::JntArray& q_des, const KDL::JntArray& dq_des, const double& dt);
   void sendVelCmd(const KDL::JntArray& q_des, const KDL::JntArray& dq_des, const double& dt);
+
+  bool getReseted() {
+    return this->reseted;
+  }
+  void setReseted(bool reseted) {
+    this->reseted = reseted;
+  }
 };
 
 #endif  // CART_CONTROLLER_HPP

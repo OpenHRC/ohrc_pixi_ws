@@ -13,7 +13,7 @@ OpenHRC includes some tools for HRC like a robot controller for multiple robots 
 OpenHRC has been developed and tested in the following environments:
 - Development Environment: Ubuntu 22.04 (ROS2 Humble)
 
-**If you want to use ROS1 version, please checkout the `noetic` branch, which is no longer maintained.**
+**If you want to use ROS1 version, please checkout the [`noetic`](https://github.com/Automation-Research-Team/OpenHRC/tree/noetic) branch, which is no longer maintained.**
 
 
 
@@ -26,13 +26,12 @@ We use [rocker](https://github.com/osrf/rocker) here to simply run the docker co
 ```bash
 $ git clone https://github.com/Automation-Research-Team/OpenHRC.git -b ros2
 $ docker build -t openhrc:ros2 docker/.
-
-$ sudo apt install python3-rocker # if you don't have rocker. You can also use "pip install rocker".
 ```
 
 ### Run
 Now you can control the end-effector of UR5e with an interactive marker.
 ```bash
+$ sudo apt install python3-rocker # if you don't have rocker. You can also use "pip install rocker".
 $ rocker --x11 openhrc:ros2 marker_teleoperation_ur5e 
 ```
 
@@ -50,8 +49,7 @@ In the following instruction, the ros2 workspace directory is assumed to be `~/r
 
 ### Clone the Source Code and install dependencies
 ```bash
-$ mkdir -p ~/ros2_ws/src
-$ cd ~/ros2_ws/src
+$ mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
 $ git clone https://github.com/Automation-Research-Team/OpenHRC.git -b ros2 --recursive
 $ rosdep update && rosdep install -i -y --from-paths ./ 
 ```
@@ -69,19 +67,8 @@ $ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 ## Getting Started
 You can first try the teleoperation node with interactive markers for UR5e.
 
-If you have not installed UR5e simulation yet, open a terminal and run:
+First, run the following command to start the UR5e gazebo simulation, which has been installed automatically with OpenHRC:
 ```bash
-$ cd ~/ros2_ws/src
-$ git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation.git -b humble
-$ rosdep update && rosdep install -i -y --from-paths ./ 
-
-$ cd ~/ros2_ws
-$ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
-```
-
-First, run the following command to start the UR5e simulation.:
-```bash
-$ source ~/ros2_ws/install/setup.bash
 $ ros2 launch ur_simulation_gz ur_sim_control.launch.py initial_joint_controller:=forward_velocity_controller launch_rviz:=false
 ```
 
@@ -92,7 +79,7 @@ $ ros2 launch ohrc_teleoperation marker_teleoperation.launch.py
 ```
 
 
-If you have a 3D mouse (spacenav), you can also use it for teleoperation instead of interactive marker.
+If you have a 3D mouse (spacenav), you can also use it for teleoperation instead.
 ```bash
 $ source ~/ros2_ws/install/setup.bash
 $ sudo apt install ros-humble-spacenav # if you don't have spacenav package
@@ -100,10 +87,16 @@ $ ros2 launch ohrc_teleoperation joy_topic_teleoperation.launch.py
 ```
 
 
+## Controller Structure
+*Under development
+
+see [ohrc_control/README.md](./ohrc_control/README.md)
+
+
 ## Tutorials
 *Under development
-1. Teleoperation library: [ohrc_teleoperation](./ohrc_teleoperation)
-2. Imitation Learning library: [ohrc_imitation_learning](./ohrc_imitation_learning)
+1. Teleoperation library: [ohrc_teleoperation/README.md](./ohrc_teleoperation)
+2. Imitation Learning library: [ohrc_imitation_learning/README.md](./ohrc_imitation_learning)
 
 
 
@@ -125,8 +118,8 @@ This software is released under dual license of LGPL-v2.1 and individual license
 About the individual license, please make a contact to the author.
 
 ## Author
-Shunki Itadera (https://itadera.github.io/) - Researcher at ART, ICPS, AIST
+Shunki Itadera (https://itadera.github.io/) - Researcher at AIST, Japan
 
 We welcome any feedback and contributions. Please feel free to contact us if you have any questions or comments.
 
-Besides, we are looking for research collaborators and students who are interested in Human-Robot Interaction using OpenHRC. If you are interested, please send me an email.
+Besides, we are looking for research collaborators and students who are interested in Human-Robot Interaction using OpenHRC. If you are interested, please send me a message.

@@ -37,7 +37,7 @@ protected:
 
   bool isEnable = false;
 
-  std::string interfaceName = "";
+  const std::string interfaceName = "";
   bool updateIsEnable(bool condition) {
     if (condition && !isEnable) {
       RCLCPP_INFO_STREAM(node->get_logger(), "[" + interfaceName + "] Enabled");
@@ -57,6 +57,11 @@ public:
   Interface(const std::shared_ptr<CartController>& controller) : node(controller->getNode()), dt(controller->dt), robot_ns(controller->getRobotNs()), controller(controller) {
     this->interfaceRunning = true;
   }
+  Interface(const std::shared_ptr<CartController>& controller, const std::string interfaceName, FeedbackMode defaultFeedbackMode)
+    : node(controller->getNode()), dt(controller->dt), robot_ns(controller->getRobotNs()), controller(controller), interfaceName(interfaceName) {
+    this->interfaceRunning = true;
+    RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", defaultFeedbackMode, feedbackMode);
+  }
 
   ~Interface() {
     this->interfaceRunning = false;
@@ -64,11 +69,11 @@ public:
 
   std::mutex mtx;
 
-  virtual void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) {};
-  virtual void initInterface() {};
-  virtual void resetInterface() {};
-  virtual void updateInterface() {};
-  virtual void feedback(const KDL::Frame& targetPos, const KDL::Twist& targetTwist) {};
+  virtual void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist){};
+  virtual void initInterface(){};
+  virtual void resetInterface(){};
+  virtual void updateInterface(){};
+  virtual void feedback(const KDL::Frame& targetPos, const KDL::Twist& targetTwist){};
 
   int targetIdx = -1, nCompletedTask = 0;
   bool blocked = false;

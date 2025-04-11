@@ -1,10 +1,6 @@
 #include "ohrc_teleoperation/xr_body_interface.hpp"
 
 void XrBodyInterface::initInterface() {
-  interfaceName = "XrBodyInterface";
-  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::HybridFeedback, feedbackMode);
-
-  // StateTopicInterface::initInterface();
   setSubscriber();
   T_state_base = controller->getTransform_base(this->stateFrameId);
 

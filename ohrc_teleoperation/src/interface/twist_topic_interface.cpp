@@ -1,9 +1,6 @@
 #include "ohrc_teleoperation/twist_topic_interface.hpp"
 
 void TwistTopicInterface::initInterface() {
-  interfaceName = "TwistTopicInterface";
-  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::NoFeedback, feedbackMode);
-
   // n.param("trans_ratio", k_trans, 1.0);
   RclcppUtility::declare_and_get_parameter(node, interfaceName + ".trans_ratio", 1.0, k_trans);
   // RCL("translation ratio: " << k_trans);
@@ -12,16 +9,6 @@ void TwistTopicInterface::initInterface() {
 
   Affine3d T_state_base = controller->getTransform_base(this->stateFrameId);
   R = T_state_base.rotation().transpose();
-
-  bool diablePoseFeedback;
-  // n.param("diable_pose_feedback", diablePoseFeedback, false);
-  RclcppUtility::declare_and_get_parameter(node, "diable_pose_feedback", false, diablePoseFeedback);
-
-  if (diablePoseFeedback) {
-    // ROS_WARN_STREAM("Pose feedback is disabled");
-    RCLCPP_WARN_STREAM(node->get_logger(), "Pose feedback is disabled");
-    controller->disablePoseFeedback();
-  }
 }
 
 void TwistTopicInterface::setSubscriber() {

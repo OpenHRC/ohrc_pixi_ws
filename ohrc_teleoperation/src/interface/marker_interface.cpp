@@ -1,22 +1,19 @@
 #include "ohrc_teleoperation/marker_interface.hpp"
 
 void MarkerInterface::initInterface() {
-  interfaceName = "MarkerInterface";
-  RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::PositionFeedback, feedbackMode);
-
-  server = std::make_unique<interactive_markers::InteractiveMarkerServer>(robot_ns + "eef_marker", node, rclcpp::QoS(1));
   configMarker();
 
   controller->updatePosFilterCutoff(10.0);
 
-  _markerPose = tf2::toMsg(controller->getT_cur());
+  this->_markerPose = tf2::toMsg(controller->getT_cur());
 
+  // start marker thread to check the activation of the interactive marker
   th = std::thread(&MarkerInterface::markerThread, this);
-
-  controller->enableOperation();
 }
 
 void MarkerInterface::configMarker() {
+  server = std::make_unique<interactive_markers::InteractiveMarkerServer>(robot_ns + "eef_marker", node, rclcpp::QoS(1));
+
   // set initial marker config
   int_marker.header.frame_id = controller->getChainStart();
   int_marker.header.stamp = rclcpp::Time(0);
@@ -71,26 +68,22 @@ void MarkerInterface::processFeedback(const visualization_msgs::msg::Interactive
   std::lock_guard<std::mutex> lock(mtx);
   subFirst = true;
   _feedback = *feedback;
-  // t_prev = this->get_clock()->now();
 }
 
-// void MarkerInterface::updateInterface() {
 void MarkerInterface::markerThread() {
   rclcpp::Rate rate(30);
   while (interfaceRunning && rclcpp::ok()) {
     {
       std::lock_guard<std::mutex> lock(mtx);
       if (subFirst) {
-        // _markerDt = (this->get_clock()->now() - t_prev).toSec();
         if (updateIsEnable(_feedback.event_type != visualization_msgs::msg::InteractiveMarkerFeedback::MOUSE_UP)) {
-          _markerPose = _feedback.pose;
+          this->_markerPose = _feedback.pose;
           count_disable = 1;
           _flagSubInteractiveMarker = true;
         } else {
           _flagSubInteractiveMarker = false;
           server->setPose(int_marker.name, tf2::toMsg(controller->getT_cur()));
           server->applyChanges();
-          // subFirst = true;
         }
       }
     }
@@ -108,9 +101,7 @@ void MarkerInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, K
       return;
     }
 
-    markerPose = _markerPose;
-
-    // _flagSubInteractiveMarker = false;
+    markerPose = this->_markerPose;
   }
 
   tf2::fromMsg(markerPose, pose);
@@ -119,4 +110,5 @@ void MarkerInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, K
 void MarkerInterface::resetInterface() {
   server->setPose(int_marker.name, tf2::toMsg(controller->getT_cur()));
   server->applyChanges();
+  subFirst = false;
 }

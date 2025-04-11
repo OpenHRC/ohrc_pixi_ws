@@ -9,6 +9,7 @@
 
 namespace ohrc_control {
 std::shared_ptr<Interface> selectBaseController(FeedbackMode feedbackMode, std::shared_ptr<CartController> cartController) {
+  // std::cout << magic_enum::enum_name(feedbackMode) << std::endl;
   std::shared_ptr<Interface> baseController;
   if (cartController->getFtFound() && feedbackMode == FeedbackMode::Admittance)
     baseController = std::make_shared<AdmittanceController>(cartController);
