@@ -122,8 +122,6 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
   // }
 
   for (size_t i = 0; i < nRobot; i++) {
-    initInterface(interfaces[i].interfaces);
-
     int nInterface = interfaces[i].interfaces.size();
     initInterface(interfaces[i].interfaces);
 
