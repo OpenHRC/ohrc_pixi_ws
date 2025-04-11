@@ -64,15 +64,10 @@ void CartController::init(std::string robot, std::string hw_config) {
   subJntState = node->create_subscription<sensor_msgs::msg::JointState>(jnt_state_topic, rclcpp::QoS(1), std::bind(&CartController::cbJntState, this, _1), options);
   subFlagPtrs.push_back(&flagJntState);
 
-  std::string ft_sensor_link, ft_topic;
-
-  RclcppUtility::declare_and_get_parameter(this->node, robot_ns + "ft_sensor_link", std::string("ft_sensor_link"), ft_sensor_link);
-  RclcppUtility::declare_and_get_parameter(this->node, robot_ns + "ft_topic", std::string("ft_sensor/filtered"), ft_topic);
-
-  RCLCPP_INFO_STREAM(node->get_logger(), "Looking for force/torque sensor TF: " << ft_sensor_link << ", topic: " << ft_topic);
-  if (trans->canTransform(robot_ns + chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1))) {
-    this->Tft_eff = trans->getTransform(robot_ns + chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1));
-    subForce = node->create_subscription<geometry_msgs::msg::WrenchStamped>(ft_topic, rclcpp::QoS(1), std::bind(&CartController::cbForce, this, _1), options);
+  RCLCPP_INFO_STREAM(node->get_logger(), "Looking for force/torque sensor TF: " << robot_ns + ft_sensor_link << ", topic: " << robot_ns + ft_topic);
+  if (trans->canTransform(chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1))) {
+    this->Tft_eff = trans->getTransform(chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1));
+    subForce = node->create_subscription<geometry_msgs::msg::WrenchStamped>(robot_ns + ft_topic, rclcpp::QoS(1), std::bind(&CartController::cbForce, this, _1), options);
     pubEefForce = node->create_publisher<geometry_msgs::msg::WrenchStamped>("/" + robot_ns + "eef_force", rclcpp::QoS(1));
     subFlagPtrs.push_back(&flagForce);
     this->ftFound = true;
@@ -163,7 +158,11 @@ bool CartController::getRosParams() {
   RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initial_pose", std::vector<double>{ 0.45, 0.0, 0.85, 0.0, M_PI, -M_PI_2 }, initPose);
 
   RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initIKAngle", std::vector<double>(0, 0.0),
-                                           _q_init_expect);  // TODO: use nJnt, which will be initialized in initMembers()
+                                           _q_init_expect);  // TODO: use nJnt, which will be initialized in
+                                                             // initMembers()
+
+  RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "ft_sensor_link", std::string("ft_sensor_link"), ft_sensor_link);
+  RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "ft_topic", std::string("ft_sensor/filtered"), ft_topic);
 
   return true;
 }
@@ -288,7 +287,11 @@ void CartController::resetFt() {
 
   // std_srvs::srv::Empty srv;
   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-  client->async_send_request(request);
+  auto result = client->async_send_request(request);
+
+  // if (rclcpp::spin_until_future_complete(node, result) == rclcpp::FutureReturnCode::SUCCESS) {
+  //   RCLCPP_INFO_STREAM(node->get_logger(), "Reseted ft sensor offset.");
+  // }
 }
 
 void CartController::initWithJnt(const KDL::JntArray& q_init) {
@@ -887,7 +890,6 @@ void CartController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
     sendPosCmd(q_des, dq_des, dt);
 
     q_des_prev = q_des;
-
   } else if (controller == ControllerType::Velocity) {
     rc = myik_solver_ptr->CartToJntVel_qp(q_cur, des_eef_pose, des_eef_vel, dq_des, dt);
 
@@ -907,7 +909,6 @@ void CartController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
     q_des.data += dq_des.data * dt;
 
     sendVelCmd(q_des, dq_des, dt);
-
   } else if (controller == ControllerType::Torque) {
     // torque controller
   } else

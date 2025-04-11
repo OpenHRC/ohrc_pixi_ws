@@ -1,0 +1,16 @@
+/**:
+  ros__parameters:
+    DummyInterface:
+      feedback_mode: "Admittance" 
+
+    AdmittanceController0:
+      imp_ceff_m: [15.0, 15.0, 5.0]
+      # imp_ceff_m: [5.0, .0, 0.0]
+      imp_ceff_d: [100., 100., 100.]
+      imp_ceff_k: [10.0, 10.0, 10.0]
+      # use_admittance: true
+    AdmittanceController1:
+      imp_ceff_m: [15.0, 15.0, 5.0]
+      # imp_ceff_m: [0.0, 0.0, 0.0]
+      imp_ceff_d: [100., 100., 100.]
+      imp_ceff_k: [10.0, 10.0, 10.0]
