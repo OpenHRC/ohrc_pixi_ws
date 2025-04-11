@@ -261,7 +261,7 @@ void CartController::resetPose() {
 }
 
 Affine3d CartController::getTransform_base(std::string target) {
-  std::cout << "chain_start" << chain_start << ", target: " << target << std::endl;
+  // std::cout << "chain_start" << chain_start << ", target: " << target << std::endl;
   return trans->getTransform(chain_start, target, rclcpp::Time(0), rclcpp::Duration::from_seconds(1.0));
 }
 
