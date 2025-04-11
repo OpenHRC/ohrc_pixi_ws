@@ -53,28 +53,7 @@ void CartController::init(std::string robot, std::string hw_config) {
 
   initMembers();
 
-  // tracik_solver_ptr.reset(new TRAC_IK::TRAC_IK(this->shared_from_this(), chain_start, chain_end, urdf_param, dt, eps));
-
   KDL::JntArray ll, ul;  // lower joint limits, upper joint limits
-  // bool valid = tracik_solver_ptr->getKDLLimits(ll, ul);
-
-  // fk_solver_ptr = std::make_unique<KDL::ChainFkSolverPos_recursive>(chain);
-
-  // vik_solver_ptr.reset(new KDL::ChainIkSolverVel_pinv(chain));
-  // kdl_solver_ptr.reset(new KDL::ChainIkSolverPos_NR_JL(chain, ll, ul, *fk_solver_ptr, *vik_solver_ptr, 1, eps));
-
-  // myik_solver_ptr = std::make_shared<MyIK::MyIK>(chain_start, chain_end, urdf_param, eps, T_base_root);
-  // bool valid = myik_solver_ptr->getKDLChain(chain);
-  // chain_segs = chain.segments;
-
-  // nJnt = chain.getNrOfJoints();
-  // _q_cur.resize(nJnt);
-
-  // nh.param("/" + hw_config_ns + "initIKAngle", _q_init_expect, std::vector<double>(nJnt, 0.0));
-  // this->declare_parameter("/" + hw_config_ns + "initIKAngle", std::vector<double>(nJnt, 0.0));
-  // this->get_parameter("/" + hw_config_ns + "initIKAngle", _q_init_expect);
-
-  // jntStateSubscriber = nh.subscribe("/" + robot_ns + "joint_states", 1, &CartController::cbJntState, this, th);
 
   options.callback_group = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
@@ -100,27 +79,16 @@ void CartController::init(std::string robot, std::string hw_config) {
   } else
     RCLCPP_WARN_STREAM(node->get_logger(), "force/torque sensor was not found. Compliance control does not work.");
 
-  // client = nh.serviceClient<std_srvs::Empty>("/" + robot_ns + "ft_filter/reset_offset");
-  // if (ftFound) {
   if (ftFound) {
     client = node->create_client<std_srvs::srv::Trigger>("/" + robot_ns + "ft_filter/reset_offset");
-    while (!client->wait_for_service(1s)) {
-      if (!rclcpp::ok()) {
-        RCLCPP_ERROR(this->get_logger(), "Client interrupted while waiting for service");
-        return;
-      }
-      RCLCPP_INFO_STREAM(this->get_logger(), "waiting for service...: " << robot_ns + "ft_filter/reset_offset");
-    }
+    // while (!client->wait_for_service(1s)) {
+    //   if (!rclcpp::ok()) {
+    //     RCLCPP_ERROR(this->get_logger(), "Client interrupted while waiting for service");
+    //     return;
+    //   }
+    //   RCLCPP_INFO_STREAM(this->get_logger(), "waiting for service...: " << robot_ns + "ft_filter/reset_offset");
+    // }
   }
-
-  // if (publisher == PublisherType::Trajectory){
-  //   // jntCmdPublisher = nh.advertise<trajectory_msgs::JointTrajectory>("/" + robot_ns + publisherTopicName + "/command", 1);
-  //   jntCmdPublisher = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("/" + robot_ns + publisherTopicName + "/command", rclcpp::QoS(1));
-  // }
-  // else if (publisher == PublisherType::TrajectoryAction)
-  //   jntCmdPublisher = nh.advertise<control_msgs::msg::FollowJointTrajectoryActionGoal>("/" + robot_ns + publisherTopicName + "/follow_joint_trajectory/goal", 1);
-  // else
-  // jntCmdPublisher = nh.advertise<std_msgs::msg::Float64MultiArray>("/" + robot_ns + publisherTopicName + "/command", 2);
 
   std::string cmd_topic = "/" + robot_ns + publisherTopicName;
   if (unique_state)
@@ -140,10 +108,10 @@ void CartController::init(std::string robot, std::string hw_config) {
     service = node->create_service<std_srvs::srv::Trigger>("/" + robot_ns + "reset", std::bind(&CartController::resetService, this, _1, _2), rmw_qos_profile_services_default,
                                                            options.callback_group);
 
-  if (initPoseFrame[0] != '/')
-    initPoseFrame = robot_ns + initPoseFrame;
-  else
+  if (initPoseFrame[0] == '/')
     initPoseFrame.erase(0, 1);
+  else
+    initPoseFrame = robot_ns + initPoseFrame;
 
   Affine3d T_init_base = getTransform_base(initPoseFrame);
   T_init = Translation3d(initPose[0], initPose[1], initPose[2]) *
@@ -209,13 +177,13 @@ void CartController::initMembers() {
   std::string chain_start_ = chain_start, chain_end_ = chain_end;
   if (chain_start_[0] == '/')
     chain_start_.erase(0, 1);
-  else
-    chain_start_ = robot_ns + chain_start_;
+  // else
+  //   chain_start_ = robot_ns + chain_start_;
 
   if (chain_end_[0] == '/')
     chain_end_.erase(0, 1);
-  else
-    chain_end_ = robot_ns + chain_end_;
+  // else
+  //   chain_end_ = robot_ns + chain_end_;
 
   std::string model_ns = robot_ns;
   if (unique_state) {
@@ -231,15 +199,15 @@ void CartController::initMembers() {
 
   fk_solver_ptr = std::make_unique<KDL::ChainFkSolverPos_recursive>(chain);
 
-  if (chain_start[0] != '/')
-    chain_start = robot_ns + chain_start;
-  else
+  if (chain_start[0] == '/')
     chain_start = chain_start.erase(0, 1);
-
-  if (chain_end[0] != '/')
-    chain_end = robot_ns + chain_end;
   else
+    chain_start = robot_ns + chain_start;
+
+  if (chain_end[0] == '/')
     chain_end = chain_end.erase(0, 1);
+  else
+    chain_end = robot_ns + chain_end;
 
   this->T_base_root = trans->getTransform(root_frame, chain_start, rclcpp::Time(0), rclcpp::Duration(1, 0));
 
@@ -293,6 +261,7 @@ void CartController::resetPose() {
 }
 
 Affine3d CartController::getTransform_base(std::string target) {
+  // std::cout << "chain_start" << chain_start << ", target: " << target << std::endl;
   return trans->getTransform(chain_start, target, rclcpp::Time(0), rclcpp::Duration::from_seconds(1.0));
 }
 

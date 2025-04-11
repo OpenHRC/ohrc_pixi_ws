@@ -6,7 +6,7 @@ The `ohrc_teleoperation` package provides diverse teleoperation interfaces for O
 
 To launch files, use the following command:
 ```
-roslaunch ohrc_teleoperation (interface)_teleoperation.launch robot:=(robot) controller:=(controller)
+ros2 launch ohrc_teleoperation (interface)_teleoperation.launch robot:=(robot) controller:=(controller)
 ```
 
 The table below lists the currently tested and implemented options for the parameters:
