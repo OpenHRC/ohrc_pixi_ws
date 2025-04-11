@@ -53,7 +53,8 @@ void CartController::init(std::string robot, std::string hw_config) {
 
   initMembers();
 
-  // tracik_solver_ptr.reset(new TRAC_IK::TRAC_IK(this->shared_from_this(), chain_start, chain_end, urdf_param, dt, eps));
+  // tracik_solver_ptr.reset(new TRAC_IK::TRAC_IK(this->shared_from_this(), chain_start, chain_end, urdf_param, dt,
+  // eps));
 
   KDL::JntArray ll, ul;  // lower joint limits, upper joint limits
   // bool valid = tracik_solver_ptr->getKDLLimits(ll, ul);
@@ -85,42 +86,39 @@ void CartController::init(std::string robot, std::string hw_config) {
   subJntState = node->create_subscription<sensor_msgs::msg::JointState>(jnt_state_topic, rclcpp::QoS(1), std::bind(&CartController::cbJntState, this, _1), options);
   subFlagPtrs.push_back(&flagJntState);
 
-  std::string ft_sensor_link, ft_topic;
-
-  RclcppUtility::declare_and_get_parameter(this->node, robot_ns + "ft_sensor_link", std::string("ft_sensor_link"), ft_sensor_link);
-  RclcppUtility::declare_and_get_parameter(this->node, robot_ns + "ft_topic", std::string("ft_sensor/filtered"), ft_topic);
-
-  RCLCPP_INFO_STREAM(node->get_logger(), "Looking for force/torque sensor TF: " << ft_sensor_link << ", topic: " << ft_topic);
-  if (trans->canTransform(robot_ns + chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1))) {
-    this->Tft_eff = trans->getTransform(robot_ns + chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1));
-    subForce = node->create_subscription<geometry_msgs::msg::WrenchStamped>(ft_topic, rclcpp::QoS(1), std::bind(&CartController::cbForce, this, _1), options);
+  RCLCPP_INFO_STREAM(node->get_logger(), "Looking for force/torque sensor TF: " << robot_ns + ft_sensor_link << ", topic: " << robot_ns + ft_topic);
+  if (trans->canTransform(chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1))) {
+    this->Tft_eff = trans->getTransform(chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1));
+    subForce = node->create_subscription<geometry_msgs::msg::WrenchStamped>(robot_ns + ft_topic, rclcpp::QoS(1), std::bind(&CartController::cbForce, this, _1), options);
     pubEefForce = node->create_publisher<geometry_msgs::msg::WrenchStamped>("/" + robot_ns + "eef_force", rclcpp::QoS(1));
     subFlagPtrs.push_back(&flagForce);
     this->ftFound = true;
   } else
     RCLCPP_WARN_STREAM(node->get_logger(), "force/torque sensor was not found. Compliance control does not work.");
 
-  // client = nh.serviceClient<std_srvs::Empty>("/" + robot_ns + "ft_filter/reset_offset");
-  // if (ftFound) {
   if (ftFound) {
-    client = node->create_client<std_srvs::srv::Trigger>("/" + robot_ns + "ft_filter/reset_offset");
+    std::string reset_ft_offset = "/" + robot_ns + "reset_ft_offset";
+    client = node->create_client<std_srvs::srv::Trigger>(reset_ft_offset);
     while (!client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(this->get_logger(), "Client interrupted while waiting for service");
         return;
       }
-      RCLCPP_INFO_STREAM(this->get_logger(), "waiting for service...: " << robot_ns + "ft_filter/reset_offset");
+      RCLCPP_INFO_STREAM(this->get_logger(), "waiting for service...: " << reset_ft_offset);
     }
   }
 
   // if (publisher == PublisherType::Trajectory){
-  //   // jntCmdPublisher = nh.advertise<trajectory_msgs::JointTrajectory>("/" + robot_ns + publisherTopicName + "/command", 1);
-  //   jntCmdPublisher = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("/" + robot_ns + publisherTopicName + "/command", rclcpp::QoS(1));
+  //   // jntCmdPublisher = nh.advertise<trajectory_msgs::JointTrajectory>("/" + robot_ns + publisherTopicName +
+  //   "/command", 1); jntCmdPublisher = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("/" + robot_ns +
+  //   publisherTopicName + "/command", rclcpp::QoS(1));
   // }
   // else if (publisher == PublisherType::TrajectoryAction)
-  //   jntCmdPublisher = nh.advertise<control_msgs::msg::FollowJointTrajectoryActionGoal>("/" + robot_ns + publisherTopicName + "/follow_joint_trajectory/goal", 1);
+  //   jntCmdPublisher = nh.advertise<control_msgs::msg::FollowJointTrajectoryActionGoal>("/" + robot_ns +
+  //   publisherTopicName + "/follow_joint_trajectory/goal", 1);
   // else
-  // jntCmdPublisher = nh.advertise<std_msgs::msg::Float64MultiArray>("/" + robot_ns + publisherTopicName + "/command", 2);
+  // jntCmdPublisher = nh.advertise<std_msgs::msg::Float64MultiArray>("/" + robot_ns + publisherTopicName + "/command",
+  // 2);
 
   std::string cmd_topic = "/" + robot_ns + publisherTopicName;
   if (unique_state)
@@ -195,7 +193,11 @@ bool CartController::getRosParams() {
   RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initial_pose", std::vector<double>{ 0.45, 0.0, 0.85, 0.0, M_PI, -M_PI_2 }, initPose);
 
   RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "initIKAngle", std::vector<double>(0, 0.0),
-                                           _q_init_expect);  // TODO: use nJnt, which will be initialized in initMembers()
+                                           _q_init_expect);  // TODO: use nJnt, which will be initialized in
+                                                             // initMembers()
+
+  RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "ft_sensor_link", std::string("ft_sensor_link"), ft_sensor_link);
+  RclcppUtility::declare_and_get_parameter(this->node, hw_config_ns + "ft_topic", std::string("ft_sensor/filtered"), ft_topic);
 
   return true;
 }
@@ -214,7 +216,7 @@ void CartController::initMembers() {
 
   if (chain_end_[0] == '/')
     chain_end_.erase(0, 1);
-  else  
+  else
     chain_end_ = robot_ns + chain_end_;
 
   std::string model_ns = robot_ns;
@@ -319,7 +321,11 @@ void CartController::resetFt() {
 
   // std_srvs::srv::Empty srv;
   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-  client->async_send_request(request);
+  auto result = client->async_send_request(request);
+
+  // if (rclcpp::spin_until_future_complete(node, result) == rclcpp::FutureReturnCode::SUCCESS) {
+  //   RCLCPP_INFO_STREAM(node->get_logger(), "Reseted ft sensor offset.");
+  // }
 }
 
 void CartController::initWithJnt(const KDL::JntArray& q_init) {
@@ -938,7 +944,6 @@ void CartController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
     sendPosCmd(q_des, dq_des, dt);
 
     q_des_prev = q_des;
-
   } else if (controller == ControllerType::Velocity) {
     rc = myik_solver_ptr->CartToJntVel_qp(q_cur, des_eef_pose, des_eef_vel, dq_des, dt);
 
@@ -953,7 +958,6 @@ void CartController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
     q_des.data += dq_des.data * dt;
 
     sendVelCmd(q_des, dq_des, dt);
-
   } else if (controller == ControllerType::Torque) {
     // torque controller
   } else

@@ -28,6 +28,7 @@ find_package(magic_enum CONFIG REQUIRED)
 
 
 set(interfaces
+  dummy
   marker
   state_topic
   twist_topic

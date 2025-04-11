@@ -20,9 +20,7 @@ void XrBodyInterface::initInterface() {
 void XrBodyInterface::setSubscriber() {
   getTopicAndFrameName("/body_state", "user_frame");
 
-  subBody =
-      node->create_subscription<ohrc_msgs::msg::BodyState>(stateTopicName, rclcpp::QoS(1), std::bind(&XrBodyInterface::cbBody, this, std::placeholders::_1));
-
+  subBody = node->create_subscription<ohrc_msgs::msg::BodyState>(stateTopicName, rclcpp::QoS(1), std::bind(&XrBodyInterface::cbBody, this, std::placeholders::_1));
 }
 
 void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {
@@ -79,7 +77,7 @@ void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {
       break;
   }
 
-  if(state.reset)
+  if (state.reset)
     this->reset();
 
   isEnable = state.enabled;
@@ -119,7 +117,7 @@ void XrBodyInterface::feedback(const KDL::Frame& targetPos, const KDL::Twist& ta
   amp.data = std::max(std::min((tf2::fromMsg(controller->getForceEef().wrench).head(3).norm() - 1.0) / 10.0, 1.0), 0.0);
 
   // if (controller->getOperationEnable())
-  pubFeedback->publish(amp);
+  // pubFeedback->publish(amp);
   // else
   //   pubFeedback->publish(std_msgs::msg::Float32());
 }
