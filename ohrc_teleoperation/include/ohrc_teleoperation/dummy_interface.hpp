@@ -8,7 +8,7 @@ public:
   using Interface::Interface;
 
   virtual void initInterface() override {
-    interfaceName = "DummyInterface";
+    std::string interfaceName = "DummyInterface";
     RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", FeedbackMode::NoFeedback, feedbackMode);
   };
 };

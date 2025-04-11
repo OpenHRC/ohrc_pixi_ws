@@ -1,7 +1,7 @@
 #include "ohrc_control/admittance_controller.hpp"
 
 void AdmittanceController::initInterface() {
-  interfaceName = "AdmittanceController";
+  // interfaceName = "AdmittanceController";
   this->impParam = getImpParam(getImpCoeff());
 }
 
@@ -22,6 +22,7 @@ void AdmittanceController::getCriticalDampingCoeff(ImpCoeff& impCoeff, const std
 }
 
 AdmittanceController::ImpCoeff AdmittanceController::getImpCoeff() {
+  std::string interfaceName = "AdmittanceController";
   ImpCoeff impCoeff;
   std::vector<bool> isGotMDK(3, false);
   RclcppUtility::declare_and_get_parameter(this->node, interfaceName + std::to_string(controller->getIndex()) + ".imp_ceff_m", std::vector<double>{ 0.0, 0.0, 0.0 }, impCoeff.m_);
