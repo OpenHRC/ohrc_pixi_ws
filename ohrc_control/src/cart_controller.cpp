@@ -469,12 +469,16 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const KDL::JntArray&
   this->initCmd_.flag = true;
 
   if (lastLoop) {
-    if ((q_des_t - q_cur.data).norm() < 1.0e-4 && dq_cur.data.norm() < 1.0e-3 && s == 1.0) {  // TODO: check these thresholds
+    double q_error = (q_des_t - q_cur.data).cwiseAbs().maxCoeff();
+    double dq_error = dq_cur.data.cwiseAbs().maxCoeff();
+
+    if (q_error < 1.0e-4 && dq_error < 1.0e-2 && s == 1.0) {  // TODO: check these thresholds
       RCLCPP_INFO_STREAM(node->get_logger(), "The robot (ns: " + robot_ns + ") has reached the initial pose.");
       reseted = true;
       return true;
     }
-    // RCLCPP_INFO_STREAM(node->get_logger(), "Reaching error > pos:" << (q_des_t - q_cur.data).norm() << ", vel:" << dq_cur.data.norm());
+    RCLCPP_INFO_STREAM_SKIPFIRST_THROTTLE(node->get_logger(), *node->get_clock(), 1000,
+                                          "Robot (ns: " + robot_ns + ") initial reaching error > pos:" << q_error << ", vel:" << dq_error);
     // feedback_gain += 0.1 / freq;
   }
 
