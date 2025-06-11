@@ -127,7 +127,7 @@ void OhrcController::initMenbers(const std::vector<std::string> robots, const st
 
     for (size_t j = 0; j < nInterface; j++) {
       interfaces[i].interfaces.push_back(ohrc_control::selectBaseController(interfaces[i].interfaces[j]->getFeedbackMode(), cartControllers[i]));
-      interfaces[i].interfaces[nInterface + j]->initInterface();
+      interfaces[i].interfaces.back()->initInterface();
     }
 
     interfaces[i].isEnables.resize(interfaces[i].interfaces.size(), false);

@@ -18,6 +18,7 @@ def launch_setup(context, *args, **kwargs):
             package='ohrc_tools',
             executable='ft_filter',
             output='screen',
+            namespace=LaunchConfiguration('namespace'),
             parameters=[
                 {'ft_in': LaunchConfiguration('ft_topic_in')},
                 {'ft_out': LaunchConfiguration('ft_topic_out')},
@@ -37,6 +38,8 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
 
     declared_arguments = [
+        DeclareLaunchArgument('namespace', default_value='', description='namespace for the robot'),
+
         DeclareLaunchArgument('ft_topic_in', default_value='ft_sensor/raw', description='input topic name for the force-torque sensor'),
         DeclareLaunchArgument('ft_topic_out', default_value='ft_sensor/filtered', description='output topic name for the force-torque sensor'),
 

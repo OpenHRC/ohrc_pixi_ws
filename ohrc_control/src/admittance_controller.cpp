@@ -1,6 +1,7 @@
 #include "ohrc_control/admittance_controller.hpp"
 
 void AdmittanceController::initInterface() {
+  // interfaceName = "AdmittanceController";
   this->impParam = getImpParam(getImpCoeff());
 }
 
@@ -21,61 +22,59 @@ void AdmittanceController::getCriticalDampingCoeff(ImpCoeff& impCoeff, const std
 }
 
 AdmittanceController::ImpCoeff AdmittanceController::getImpCoeff() {
+  std::string interfaceName = "AdmittanceController";
   ImpCoeff impCoeff;
   std::vector<bool> isGotMDK(3, false);
-
-  node->declare_parameter("/imp_ceff/m", std::vector<double>{ 0.0, 0.0, 0.0 });
-  node->declare_parameter("/imp_ceff/d", std::vector<double>{ 0.0, 0.0, 0.0 });
-  node->declare_parameter("/imp_ceff/k", std::vector<double>{ 0.0, 0.0, 0.0 });
-  node->get_parameter("/imp_ceff/m", impCoeff.m_);
-  node->get_parameter("/imp_ceff/d", impCoeff.d_);
-  node->get_parameter("/imp_ceff/k", impCoeff.k_);
+  RclcppUtility::declare_and_get_parameter(this->node, interfaceName + std::to_string(controller->getIndex()) + ".imp_ceff_m", std::vector<double>{ 0.0, 0.0, 0.0 }, impCoeff.m_);
+  RclcppUtility::declare_and_get_parameter(this->node, interfaceName + std::to_string(controller->getIndex()) + ".imp_ceff_d", std::vector<double>{ 0.0, 0.0, 0.0 }, impCoeff.d_);
+  RclcppUtility::declare_and_get_parameter(this->node, interfaceName + std::to_string(controller->getIndex()) + ".imp_ceff_k", std::vector<double>{ 0.0, 0.0, 0.0 }, impCoeff.k_);
 
   // isGotMDK[0] = n.getParam("/imp_ceff/m", impCoeff.m_);
   // isGotMDK[1] = n.getParam("/imp_ceff/d", impCoeff.d_);
   // isGotMDK[2] = n.getParam("/imp_ceff/k", impCoeff.k_);
 
-  int nGotMDK = std::accumulate(isGotMDK.begin(), isGotMDK.end(), 0);
+  // int nGotMDK = std::accumulate(isGotMDK.begin(), isGotMDK.end(), 0);
 
-  if (nGotMDK == 0) {
-    node->declare_parameter("/imp_ceff_" + std::to_string(controller->getIndex()) + "/m", std::vector<double>{ 0.0, 0.0, 0.0 });
-    node->declare_parameter("/imp_ceff_" + std::to_string(controller->getIndex()) + "/d", std::vector<double>{ 0.0, 0.0, 0.0 });
-    node->declare_parameter("/imp_ceff_" + std::to_string(controller->getIndex()) + "/k", std::vector<double>{ 0.0, 0.0, 0.0 });
-    node->get_parameter("/imp_ceff_" + std::to_string(controller->getIndex()) + "/m", impCoeff.m_);
-    node->get_parameter("/imp_ceff_" + std::to_string(controller->getIndex()) + "/d", impCoeff.d_);
-    node->get_parameter("/imp_ceff_" + std::to_string(controller->getIndex()) + "/k", impCoeff.k_);
+  // if (nGotMDK == 0) {
+  //   node->declare_parameter("/imp_ceff_" + std::to_string(controller->getIndex()) + "/m", std::vector<double>{ 0.0, 0.0, 0.0 });
+  //   node->declare_parameter("/imp_ceff_" + std::to_string(controller->getIndex()) + "/d", std::vector<double>{ 0.0, 0.0, 0.0 });
+  //   node->declare_parameter("/imp_ceff_" + std::to_string(controller->getIndex()) + "/k", std::vector<double>{ 0.0, 0.0, 0.0 });
+  //   node->get_parameter("/imp_ceff_" + std::to_string(controller->getIndex()) + "/m", impCoeff.m_);
+  //   node->get_parameter("/imp_ceff_" + std::to_string(controller->getIndex()) + "/d", impCoeff.d_);
+  //   node->get_parameter("/imp_ceff_" + std::to_string(controller->getIndex()) + "/k", impCoeff.k_);
 
-    // isGotMDK[0] = n.getParam("/imp_ceff_" + std::to_string(controller->getIndex()) + "/m", impCoeff.m_);
-    // isGotMDK[1] = n.getParam("/imp_ceff_" + std::to_string(controller->getIndex()) + "/d", impCoeff.d_);
-    // isGotMDK[2] = n.getParam("/imp_ceff_" + std::to_string(controller->getIndex()) + "/k", impCoeff.k_);
+  //   // isGotMDK[0] = n.getParam("/imp_ceff_" + std::to_string(controller->getIndex()) + "/m", impCoeff.m_);
+  //   // isGotMDK[1] = n.getParam("/imp_ceff_" + std::to_string(controller->getIndex()) + "/d", impCoeff.d_);
+  //   // isGotMDK[2] = n.getParam("/imp_ceff_" + std::to_string(controller->getIndex()) + "/k", impCoeff.k_);
 
-    nGotMDK = std::accumulate(isGotMDK.begin(), isGotMDK.end(), 0);
-  }
+  //   nGotMDK = std::accumulate(isGotMDK.begin(), isGotMDK.end(), 0);
+  // }
 
-  if (nGotMDK == 3) {
-    impCoeff.m = Map<Vector3d>(impCoeff.m_.data());
-    impCoeff.d = Map<Vector3d>(impCoeff.d_.data());
-    impCoeff.k = Map<Vector3d>(impCoeff.k_.data());
+  // if (nGotMDK == 3) {
+  impCoeff.m = Map<Vector3d>(impCoeff.m_.data());
+  impCoeff.d = Map<Vector3d>(impCoeff.d_.data());
+  impCoeff.k = Map<Vector3d>(impCoeff.k_.data());
 
-    skipMass = (impCoeff.m.array() < 1.0e-2).all();
+  skipMass = (impCoeff.m.array() < 1.0e-2).all();
 
-  } else if (nGotMDK == 2) {
-    // ROS_INFO_STREAM("two of imp coeffs are configured. The last one is selected to achieve critical damping.");
-    RCLCPP_INFO_STREAM(node->get_logger(), "two of imp coeffs are configured. The last one is selected to achieve critical damping.");
+  // } else if (nGotMDK == 2) {
+  //   // ROS_INFO_STREAM("two of imp coeffs are configured. The last one is selected to achieve critical damping.");
+  //   RCLCPP_INFO_STREAM(node->get_logger(), "two of imp coeffs are configured. The last one is selected to achieve critical damping.");
 
-    this->getCriticalDampingCoeff(impCoeff, isGotMDK);
-  } else if (nGotMDK < 2) {
-    // ROS_ERROR_STREAM("al least, two of imp coeff is not configured");
-    RCLCPP_ERROR_STREAM(node->get_logger(), "al least, two of imp coeff is not configured");
-    // ros::shutdown();
-    rclcpp::shutdown();
-  }
+  //   this->getCriticalDampingCoeff(impCoeff, isGotMDK);
+  // } else if (nGotMDK < 2) {
+  //   // ROS_ERROR_STREAM("al least, two of imp coeff is not configured");
+  //   RCLCPP_ERROR_STREAM(node->get_logger(), "al least, two of imp coeff is not configured");
+  //   // ros::shutdown();
+  //   rclcpp::shutdown();
+  // }
 
   return impCoeff;
 }
 
 AdmittanceController::ImpParam AdmittanceController::getImpParam(const ImpCoeff& impCoeff) {
-  // ROS_INFO_STREAM("Imp Coeff: m:[ " << impCoeff.m.transpose() << " ], d:[ " << impCoeff.d.transpose() << " ], k:[ " << impCoeff.k.transpose() << " ]");
+  // ROS_INFO_STREAM("Imp Coeff: m:[ " << impCoeff.m.transpose() << " ], d:[ " << impCoeff.d.transpose() << " ], k:[ "
+  // << impCoeff.k.transpose() << " ]");
   RCLCPP_INFO_STREAM(node->get_logger(), "Imp Coeff: m:[ " << impCoeff.m.transpose() << " ], d:[ " << impCoeff.d.transpose() << " ], k:[ " << impCoeff.k.transpose() << " ]");
 
   ImpParam impParam;
@@ -94,7 +93,6 @@ AdmittanceController::ImpParam AdmittanceController::getImpParam(const ImpCoeff&
         // std::cout << "D_inv: " << D_inv << std::endl;
         return -K * D_inv * x + D_inv * u.at("force") + K * D_inv * u.at("xd_p") + u.at("xd_v");
       };
-
   } else {
     MatrixXd M_inv = impCoeff.m.cwiseInverse().asDiagonal(), D = impCoeff.d.asDiagonal(), K = impCoeff.k.asDiagonal();
     MatrixXd A = MatrixXd::Zero(6, 6), B = MatrixXd::Zero(6, 3), C = MatrixXd::Zero(6, 6);
@@ -120,13 +118,13 @@ VectorXd AdmittanceController::getControlState(const VectorXd& x, const VectorXd
       double d_gain_x = 1.0 - std::max(0., std::min(0.4, std::abs(xd[3]) / 1.0));
       double d_gain_y = 1.0 - std::max(0., std::min(0.4, std::abs(xd[4]) / 1.0));
       double d_gain_z = 1.0 - std::max(0., std::min(0.4, std::abs(xd[5]) / 1.0));
-      // std::cout << "d_gain_x: " << d_gain_x  << ", d_gain_y: " << d_gain_y << ", d_gain_z: " << d_gain_z << std::endl;
+      // std::cout << "d_gain_x: " << d_gain_x  << ", d_gain_y: " << d_gain_y << ", d_gain_z: " << d_gain_z <<
+      // std::endl;
       u = { { "force", exForce }, { "xd_p", xd.head(3) }, { "xd_v", xd.tail(3) }, { "D_gain", Vector3d(d_gain_x, d_gain_y, d_gain_z) } };
     } else
       u = { { "force", exForce }, { "xd_p", xd.head(3) }, { "xd_v", xd.tail(3) } };
     VectorXd x_ = integrator->integrate(0.0, x.head(3), u);
     return (VectorXd(6) << x_, f_dx(0.0, x.head(3), u)).finished();
-
   } else {
     std::unordered_map<std::string, Eigen::MatrixXd> u = { { "force", exForce }, { "xd", xd } };
     return integrator->integrate(0.0, x, u);
@@ -134,6 +132,7 @@ VectorXd AdmittanceController::getControlState(const VectorXd& x, const VectorXd
 }
 
 void AdmittanceController::updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) {
+  // std::cout << "run admittance controller" << std::endl;
   KDL::Frame frame;
   KDL::Twist vel;
   controller->getCartState(frame, vel);
@@ -157,10 +156,11 @@ void AdmittanceController::updateTargetPose(const rclcpp::Time t, KDL::Frame& po
 
   // get command state
   x = getControlState(x, xd, tf2::fromMsg(controller->getForceEef().wrench).head(3), controller->dt, this->impParam);
-  // std::cout << " x: " << x.transpose() << std::endl;
+  // std::cout << " f: " << tf2::fromMsg(controller->getForceEef().wrench).head(3).transpose() << std::endl;
+  std::cout << " x: " << x.transpose() << std::endl;
   // std::cout << "xd: " << xd.transpose() << std::endl;
 
-  tf2::vectorEigenToKDL(x.head(3), pose.p);
+  // tf2::vectorEigenToKDL(x.head(3), pose.p);
   tf2::vectorEigenToKDL(x.tail(3), twist.vel);
 
   // this->targetDistance = (x - xd).head(3).norm();  // TODO: generalize this

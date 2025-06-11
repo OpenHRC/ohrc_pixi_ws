@@ -23,6 +23,7 @@ std::shared_ptr<Interface> selectBaseController(FeedbackMode feedbackMode, std::
     RCLCPP_WARN_STREAM(cartController->get_logger(), "Feedback controller was not selected. Using NoFeedbackController");
     baseController = std::make_shared<NoFeedbackController>(cartController);
   }
+
   return baseController;
 }
 };  // namespace ohrc_control
