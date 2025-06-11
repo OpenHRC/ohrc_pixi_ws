@@ -500,9 +500,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   std::vector<VectorXd> es(nRobot);
   std::vector<Matrix<double, 6, 1>> vs(nRobot);
 
-  // VectorXd kp = 3.0 * VectorXd::Ones(6);  // TODO: make this p gain as ros param <- NO LONGER USED
-  // kp.tail(3) = kp.tail(3) * 0.5 / M_PI * 0.5;
-
+// Removed unused proportional gain initialization code to reduce clutter.
   for (size_t i = 0; i < nRobot; i++) {
     KDL::Jacobian jac(myIKs[i]->getNJnt());
 
