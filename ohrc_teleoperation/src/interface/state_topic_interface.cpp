@@ -9,7 +9,7 @@ void StateTopicInterface::initInterface() {
 }
 
 void StateTopicInterface::setSubscriber() {
-  getTopicAndFrameName("state", "user_frame");
+  getTopicAndFrameName("cmd_state", "user_frame");
   subState =
       node->create_subscription<ohrc_msgs::msg::State>(stateTopicName, rclcpp::QoS(1), std::bind(&StateTopicInterface::cbState, this, std::placeholders::_1), controller->options);
 }
