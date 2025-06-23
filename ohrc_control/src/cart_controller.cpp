@@ -475,7 +475,7 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const KDL::JntArray&
     double q_error = (q_des_t - q_cur.data).cwiseAbs().maxCoeff();
     double dq_error = dq_cur.data.cwiseAbs().maxCoeff();
 
-    if (q_error < 1.0e-4 && dq_error < 1.0e-2 && s == 1.0) {  // TODO: check these thresholds
+    if (q_error < 1.0e-3 && dq_error < 1.0e-2 && s == 1.0) {  // TODO: check these thresholds
       RCLCPP_INFO_STREAM(node->get_logger(), "The robot (ns: " + robot_ns + ") has reached the initial pose.");
       reseted = true;
       return true;
