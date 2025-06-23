@@ -4,7 +4,14 @@ on: [push]
 
 jobs:
   ros_build:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            ros_distro: humble
+          - os: ubuntu-24.04
+            ros_distro: jazzy
+    runs-on: ${{ matrix.os }}
     env:
       WS: /home/runner/work/ohrc_ws
     steps:
@@ -13,7 +20,7 @@ jobs:
     - name: Setup ROS
       uses: ros-tooling/setup-ros@v0.7
       with:
-        required-ros-distributions: humble
+        required-ros-distributions: ${{ matrix.ros_distro }}
 
     - name: apt update and upgrade
       run: |
@@ -25,14 +32,9 @@ jobs:
         mkdir -p ${WS}/src
         ln -s ${GITHUB_WORKSPACE} ${WS}/src/
 
-    - name: clone ur_gz
-      run: |
-        cd ${WS}/src
-        git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation.git -b humble
-
     - name: pre build
       run: |
-        source /opt/ros/humble/setup.bash
+        source /opt/ros/${{ matrix.ros_distro }}/setup.bash
         cd ${WS}/src/OpenHRC
         git submodule update --init --recursive
         rosdep update
@@ -40,72 +42,6 @@ jobs:
 
     - name: build
       run: |
-        source /opt/ros/humble/setup.bash
+        source /opt/ros/${{ matrix.ros_distro }}/setup.bash
         cd ${WS}
-        colcon build --packages-up-to ohrc_teleoperation
-
-    # - name: test
-    #   run: |
-    #     source /opt/ros/noetic/setup.bash
-    #     cd ${WS}
-    #     catkin test
-        
-  # docker_build:
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     CATKIN_WS: /home/runner/work/catkin_ws
-  #   steps:
-  #   - uses: actions/checkout@v4
-
-  #   - name: apt update and upgrade
-  #     run: |
-  #       sudo apt update
-  #       sudo apt upgrade -y
-
-  #   - name: Init workspace
-  #     run: |
-  #       mkdir -p ${CATKIN_WS}/src
-  #       ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
-  #       cd ${CATKIN_WS}/src/OpenHRC
-  #       git submodule update --init --recursive
-
-  #   - name: install docker engine
-  #     run: |
-  #       sudo apt install -y curl
-  #       curl -s curl -s https://raw.githubusercontent.com/itadera/OpenHRC/main/install-docker-rocker.sh | /bin/bash
-  #       sudo service docker start
-        
-  #   - name: build on docker
-  #     run: |
-  #       rocker --user --home osrf/ros:noetic-desktop-full /bin/bash `cd ${CATKIN_WS}/src/OpenHRC && rosdep update && rosdep install -i -y --from-paths ./ && cd ${CATKIN_WS} && catkin build && catkin test`
-
-  # docker_vnc_build:
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     WS: /home/runner/work
-  #   steps:
-  #   - uses: actions/checkout@v4
-
-  #   - name: apt update and upgrade
-  #     run: |
-  #       sudo apt update
-  #       sudo apt upgrade -y
-
-  #   - name: install docker engine
-  #     run: |
-  #       sudo apt install -y curl
-  #       curl -s curl -s https://raw.githubusercontent.com/itadera/OpenHRC/main/install-docker-rocker.sh | /bin/bash
-  #       sudo service docker start
-
-  #   - name: init ws
-  #     run: |
-  #       mkdir ${WS}/src
-  #       ln -s ${GITHUB_WORKSPACE} ${WS}/src/
-
-  #   - name: pre build
-  #     run: |
-  #       git submodule update --init --recursive
-
-  #   - name: build
-  #     run: |
-  #       docker build -t openhrc:noetic . --no-cache
+        colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
