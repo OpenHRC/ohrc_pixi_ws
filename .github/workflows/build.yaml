@@ -4,7 +4,16 @@ on: [push]
 
 jobs:
   ros_build:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+        ros_distro: [humble, jazzy]
+        include:
+          - os: ubuntu-22.04
+            ros_distro: humble
+          - os: ubuntu-24.04
+            ros_distro: jazzy
+    runs-on: ${{ matrix.os }}
     env:
       WS: /home/runner/work/ohrc_ws
     steps:
@@ -13,7 +22,7 @@ jobs:
     - name: Setup ROS
       uses: ros-tooling/setup-ros@v0.7
       with:
-        required-ros-distributions: humble
+        required-ros-distributions: ${{ matrix.ros_distro }}
 
     - name: apt update and upgrade
       run: |
@@ -25,14 +34,9 @@ jobs:
         mkdir -p ${WS}/src
         ln -s ${GITHUB_WORKSPACE} ${WS}/src/
 
-    - name: clone ur_gz
-      run: |
-        cd ${WS}/src
-        git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation.git -b humble
-
     - name: pre build
       run: |
-        source /opt/ros/humble/setup.bash
+        source /opt/ros/${{ matrix.ros_distro }}/setup.bash
         cd ${WS}/src/OpenHRC
         git submodule update --init --recursive
         rosdep update
@@ -40,11 +44,10 @@ jobs:
 
     - name: build
       run: |
-        source /opt/ros/humble/setup.bash
+        source /opt/ros/${{ matrix.ros_distro }}/setup.bash
         cd ${WS}
-        colcon build --packages-up-to ohrc_teleoperation
-
-    # - name: test
+        colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+   # - name: test
     #   run: |
     #     source /opt/ros/noetic/setup.bash
     #     cd ${WS}
