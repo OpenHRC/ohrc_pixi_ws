@@ -20,13 +20,6 @@
   <depend>control_msgs</depend>
 
 
-
-  <depend>osqp</depend>
-  <depend>osqp-eigen</depend>
-
-
-
-
   <depend>liborocos-kdl</depend>
   <depend>xacro</depend>
   <depend>libnlopt0</depend>
@@ -44,6 +37,8 @@
 
   <depend>ohrc_common</depend>
   <depend>ohrc_msgs</depend>
+  
+  <depend>proxsuite</depend>
 
   <depend>urdf</depend>
   <exec_depend>ros2launch</exec_depend>

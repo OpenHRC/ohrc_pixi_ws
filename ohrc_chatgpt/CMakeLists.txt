@@ -18,7 +18,7 @@ find_package(catkin REQUIRED
 # find_package(Boost REQUIRED COMPONENTS system)
 
 
-find_package(OsqpEigen REQUIRED)
+
 
 find_package(magic_enum CONFIG REQUIRED)
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -163,7 +163,7 @@ set(controllers
 foreach(controller ${controllers})
   add_executable(${controller}_automation src/${controller}_automation.cpp)
   add_dependencies(${controller}_automation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-  target_link_libraries(${controller}_automation ${catkin_LIBRARIES} OsqpEigen::OsqpEigen magic_enum::magic_enum)
+  target_link_libraries(${controller}_automation ${catkin_LIBRARIES} magic_enum::magic_enum)
 endforeach(controller)
 
 

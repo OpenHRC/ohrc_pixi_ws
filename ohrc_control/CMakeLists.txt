@@ -20,8 +20,9 @@ find_package(ohrc_common REQUIRED)
 find_package(ohrc_msgs REQUIRED)
 
 
-find_package(OsqpEigen REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
+
+find_package(proxsuite REQUIRED)
 
 add_library(${PROJECT_NAME}  SHARED src/my_ik.cpp
                               src/cart_controller.cpp 
@@ -41,7 +42,7 @@ target_include_directories(${PROJECT_NAME}
 
 ament_target_dependencies(${PROJECT_NAME} rclcpp trac_ik_lib interactive_markers control_msgs tf2_kdl tf2_eigen tf2_eigen_kdl std_msgs std_srvs ohrc_common ohrc_msgs urdf)
 
-target_link_libraries(${PROJECT_NAME} OsqpEigen::OsqpEigen magic_enum::magic_enum)
+target_link_libraries(${PROJECT_NAME} magic_enum::magic_enum proxsuite::proxsuite)
 
 
 # ament_export_dependencies(rclcpp trac_ik_lib interactive_markers control_msgs tf2_kdl tf2_eigen tf2_eigen_kdl std_msgs std_srvs ohrc_common ohrc_msgs urdf)

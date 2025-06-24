@@ -23,10 +23,10 @@ find_package(tf2_eigen REQUIRED)
 find_package(tf2_eigen_kdl REQUIRED)
 find_package(urdf REQUIRED)
 
-find_package(OsqpEigen REQUIRED)
+
 find_package(magic_enum CONFIG REQUIRED)
 
-
+find_package(proxsuite REQUIRED)
 set(interfaces
   dummy
   marker
@@ -45,7 +45,7 @@ foreach(interface ${interfaces})
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
     )
-  target_link_libraries(${interface}_teleoperation OsqpEigen::OsqpEigen magic_enum::magic_enum )
+  target_link_libraries(${interface}_teleoperation magic_enum::magic_enum proxsuite::proxsuite)
 
   install(TARGETS ${interface}_teleoperation
   DESTINATION lib/${PROJECT_NAME}
@@ -69,7 +69,7 @@ foreach(interface ${state_topic_interfaces})
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
     )
-  target_link_libraries(${interface}_teleoperation OsqpEigen::OsqpEigen magic_enum::magic_enum )
+  target_link_libraries(${interface}_teleoperation magic_enum::magic_enum  proxsuite::proxsuite)
 
   install(TARGETS ${interface}_teleoperation
   DESTINATION lib/${PROJECT_NAME}
@@ -90,7 +90,7 @@ foreach(interface ${twist_topic_interfaces})
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
     )
-  target_link_libraries(${interface}_teleoperation OsqpEigen::OsqpEigen magic_enum::magic_enum )
+  target_link_libraries(${interface}_teleoperation magic_enum::magic_enum  proxsuite::proxsuite)
 
   install(TARGETS ${interface}_teleoperation
   DESTINATION lib/${PROJECT_NAME}
@@ -110,7 +110,7 @@ PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
   )
-target_link_libraries(marker_joy_topic_teleoperation OsqpEigen::OsqpEigen magic_enum::magic_enum )
+target_link_libraries(marker_joy_topic_teleoperation magic_enum::magic_enum  proxsuite::proxsuite)
 
 install(TARGETS marker_joy_topic_teleoperation
 DESTINATION lib/${PROJECT_NAME}
@@ -138,7 +138,7 @@ target_include_directories(${PROJECT_NAME}
 
 ament_target_dependencies(${PROJECT_NAME} rclcpp interactive_markers ohrc_control control_msgs tf2_kdl tf2_eigen tf2_eigen_kdl std_msgs std_srvs ohrc_common ohrc_msgs urdf)
 
-target_link_libraries(${PROJECT_NAME} OsqpEigen::OsqpEigen magic_enum::magic_enum)
+target_link_libraries(${PROJECT_NAME} magic_enum::magic_enum proxsuite::proxsuite)
 
 
 ament_export_libraries(${PROJECT_NAME})
