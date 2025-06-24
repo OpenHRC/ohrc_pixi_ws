@@ -15,7 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-find_package(OsqpEigen REQUIRED)
+
 
 find_package(magic_enum CONFIG REQUIRED)
 
@@ -161,7 +161,7 @@ set(interfaces
 foreach(interface ${interfaces})
   add_executable(${interface}_shared_control src/${interface}_shared_control.cpp)
   add_dependencies(${interface}_shared_control ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-  target_link_libraries(${interface}_shared_control ${catkin_LIBRARIES} OsqpEigen::OsqpEigen magic_enum::magic_enum)
+  target_link_libraries(${interface}_shared_control ${catkin_LIBRARIES} magic_enum::magic_enum)
 endforeach(interface)
 
 #############

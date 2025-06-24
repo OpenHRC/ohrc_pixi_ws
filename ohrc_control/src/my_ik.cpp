@@ -500,7 +500,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   std::vector<VectorXd> es(nRobot);
   std::vector<Matrix<double, 6, 1>> vs(nRobot);
 
-// Removed unused proportional gain initialization code to reduce clutter.
+  // Removed unused proportional gain initialization code to reduce clutter.
   for (size_t i = 0; i < nRobot; i++) {
     KDL::Jacobian jac(myIKs[i]->getNJnt());
 
@@ -588,6 +588,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
     A.block(nState + i, 0, 1, nState) = A_ca[i];
   SparseMatrix<double> linearMatrix = A.sparseView();
 
+#if 0
   // TODO: update variables. this seems to be difficult with OSQP since this library is for sparse QP optimization. When updating hessian matrix and changing its sparse form, the
   // function init the solver instanse. At that time, bounds is removed and failed to pass the bounds check. Other QP solver for dense problem would be a solusion. Actually, this
   // propblem matrix is not sparse.
@@ -628,13 +629,22 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
 
   // get the controller input
   VectorXd dq_des_ = qpSolver.getSolution();
+#endif
+
+  proxsuite::proxqp::dense::QP<double> qp(nState, 0, nState + nCA);
+  qp.init(std_utility::weightedSum(w_h, H), gradient, proxsuite::nullopt, proxsuite::nullopt, A, lowerBound, upperBound);
+  qp.solve();
+
+  VectorXd dq_des_ = qp.results.x;
 
   // check if the solution does not include nan
   if (dq_des_.hasNaN())
     return -1;
 
   for (size_t i = 0; i < nRobot; i++) {
-    dq_des[i].resize(myIKs[i]->getNJnt());
+    if (dq_des[i].data.size() != myIKs[i]->getNJnt()) {
+      dq_des[i].resize(myIKs[i]->getNJnt());
+    }
     dq_des[i].data = dq_des_.segment(iJnt[i], myIKs[i]->getNJnt());
   }
 
@@ -728,6 +738,7 @@ int MyIK::CartToJntVel_qp_manipOpt(const KDL::JntArray& q_cur, const KDL::Frame&
   SparseMatrix<double> linearMatrix(nJnt, nJnt);  // TODO: is it better to separate velocity and joint limit?
   linearMatrix.setIdentity();
 
+#if 0
   // TODO: update variables. this seems to be difficult with OSQP since this library is for sparse QP optimization. When updating hessian matrix and changing its sparse form, the
   // function init the solver instanse. At that time, bounds is removed and failed to pass the bounds check. Other QP solver for dense problem would be a solusion. Actually, this
   // propblem matrix is not sparse.
@@ -761,6 +772,7 @@ int MyIK::CartToJntVel_qp_manipOpt(const KDL::JntArray& q_cur, const KDL::Frame&
 
   // get the controller input
   dq_des.data = qpSolver.getSolution();
+#endif
 
   return 1;
 }
@@ -847,7 +859,7 @@ int MyIK::addSelfCollisionAvoidance(const KDL::JntArray& q_cur, std::vector<doub
         // ROS_INFO_STREAM("Collision Detected >> #" << i << " and #" << j);
         A_ca.push_back((d_vec / d).transpose() * (J_end.block(0, 0, 3, nJnt) - J[i].data.block(0, 0, 3, nJnt)));
         lower_vel_limits_.push_back(-eta * (d - ds) / (di - ds));
-        upper_vel_limits_.push_back(OsqpEigen::INFTY);
+        upper_vel_limits_.push_back(proxsuite::helpers::infinite_bound<double>::value());
 
         count++;
       }
@@ -883,7 +895,7 @@ int MyIK::addCollisionAvoidance(const std::vector<Affine3d>& Ts, const std::vect
       A_ca.push_back((d_vec / d).transpose() * (myIKs[comb[0]]->getT_base_world().rotation() * Js_[comb[0]].block(0, 0, 3, nState) -
                                                 myIKs[comb[1]]->getT_base_world().rotation() * Js_[comb[1]].block(0, 0, 3, nState)));
       lower_vel_limits_.push_back(-eta * (d - ds) / (di - ds));
-      upper_vel_limits_.push_back(OsqpEigen::INFTY);
+      upper_vel_limits_.push_back(proxsuite::helpers::infinite_bound<double>::value());
     }
   }
   return A_ca.size();
@@ -930,7 +942,7 @@ int MyIK::calcCollisionAvoidance(int c0, int c1, const std::vector<std::vector<V
         // push back inequality constraint for collision avoidance
         A_ca.push_back((d_vec / d).transpose() * (R0 * Js_0.block(0, 0, 3, nState) - R1 * Js_1.block(0, 0, 3, nState)));
         lower_vel_limits_.push_back(-eta * (d - ds) / (di - ds));
-        upper_vel_limits_.push_back(OsqpEigen::INFTY);
+        upper_vel_limits_.push_back(proxsuite::helpers::infinite_bound<double>::value());
 
         nCollision++;
       }

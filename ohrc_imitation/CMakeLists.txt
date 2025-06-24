@@ -25,10 +25,9 @@ find_package(tf2_eigen REQUIRED)
 find_package(tf2_eigen_kdl REQUIRED)
 find_package(urdf REQUIRED)
 
-find_package(OsqpEigen REQUIRED)
 find_package(magic_enum CONFIG REQUIRED)
 
-
+find_package(proxsuite REQUIRED)
 
 set(interfaces
   marker
@@ -48,7 +47,7 @@ foreach(interface ${interfaces})
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
     )
-    target_link_libraries(${interface}_imitation OsqpEigen::OsqpEigen magic_enum::magic_enum )
+    target_link_libraries(${interface}_imitation magic_enum::magic_enum proxsuite::proxsuite)
 
     install(TARGETS ${interface}_imitation
     DESTINATION lib/${PROJECT_NAME}

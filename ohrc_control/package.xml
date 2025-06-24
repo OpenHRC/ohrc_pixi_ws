@@ -21,9 +21,6 @@
 
 
 
-  <depend>osqp</depend>
-  <depend>osqp-eigen</depend>
-
 
 
 
@@ -44,6 +41,7 @@
 
   <depend>ohrc_common</depend>
   <depend>ohrc_msgs</depend>
+  <depend>proxsuite</depend>
 
   <depend>urdf</depend>
   <exec_depend>ros2launch</exec_depend>

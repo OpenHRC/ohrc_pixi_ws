@@ -47,8 +47,6 @@
   <depend>ohrc_control</depend>
   <depend>ohrc_msgs</depend>
 
-  <depend>osqp</depend>
-  <depend>osqp-eigen</depend>
 
   <depend>magic_enum</depend>
   <depend>dmpbbo</depend>

@@ -486,7 +486,7 @@ void OhrcController::controlLoop() {
 
   rclcpp::Time t = this->get_clock()->now();
   rclcpp::Duration dur = rclcpp::Duration::from_seconds(dt);
-  // begin = std::chrono::high_resolution_clock::now();
+  // auto begin = std::chrono::high_resolution_clock::now();
 
   this->updateDesired();
 
@@ -506,8 +506,8 @@ void OhrcController::controlLoop() {
   } else if (IKmode == IKMode::Concatenated)
     this->update(t, dur);
 
-  // std::chrono::microseconds t = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - begin);
-  // ROS_INFO_STREAM("IK time: " << t.count() * 1.0e-3 << "[ms]");
+  // auto calc_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - begin);
+  // RCLCPP_INFO_STREAM(this->get_logger(), "IK time: " << calc_time.count() * 1.0e-3 << "[ms]");
 }
 
 void OhrcController::control() {

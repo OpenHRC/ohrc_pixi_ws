@@ -19,7 +19,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(dmpbbo REQUIRED)
 
-find_package(OsqpEigen REQUIRED)
 
 find_package(magic_enum CONFIG REQUIRED)
 
@@ -139,7 +138,7 @@ add_library(${PROJECT_NAME}
   ${controller_list}
 )
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} OsqpEigen::OsqpEigen magic_enum::magic_enum dmpbbo::dmp dmpbbo::dynamicalsystems dmpbbo::functionapproximators )
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} magic_enum::magic_enum dmpbbo::dmp dmpbbo::dynamicalsystems dmpbbo::functionapproximators )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -176,7 +175,7 @@ set(controllers
 foreach(controller ${controllers})
   add_executable(${controller}_automation src/controller/${controller}_controller.cpp src/app/${controller}_automation.cpp)
   add_dependencies(${controller}_automation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-  target_link_libraries(${controller}_automation ${catkin_LIBRARIES} OsqpEigen::OsqpEigen magic_enum::magic_enum dmpbbo::dmp dmpbbo::dynamicalsystems dmpbbo::functionapproximators ${Boost_FILESYSTEM_LIBRARY})
+  target_link_libraries(${controller}_automation ${catkin_LIBRARIES} magic_enum::magic_enum dmpbbo::dmp dmpbbo::dynamicalsystems dmpbbo::functionapproximators ${Boost_FILESYSTEM_LIBRARY})
 endforeach(controller)
 
 
@@ -187,7 +186,7 @@ endforeach(controller)
 # foreach(controller ${impedance_controllers})
 #   add_executable(${controller}_impedance_automation src/controller/${controller}_impedance_controller.cpp src/controller/${controller}_controller.cpp src/controller/impedance_controller.cpp src/app/${controller}_impedance_automation.cpp)
 #   add_dependencies(${controller}_impedance_automation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#   target_link_libraries(${controller}_impedance_automation ${catkin_LIBRARIES} OsqpEigen::OsqpEigen magic_enum::magic_enum dmpbbo::dmp dmpbbo::dynamicalsystems dmpbbo::functionapproximators ${Boost_FILESYSTEM_LIBRARY})
+#   target_link_libraries(${controller}_impedance_automation ${catkin_LIBRARIES} magic_enum::magic_enum dmpbbo::dmp dmpbbo::dynamicalsystems dmpbbo::functionapproximators ${Boost_FILESYSTEM_LIBRARY})
 # endforeach(controller)
 
 set(cart_trajectory_controllers
@@ -196,7 +195,7 @@ set(cart_trajectory_controllers
 foreach(controller ${cart_trajectory_controllers})
   add_executable(cart_trajectory_${controller}_automation src/controller/cart_trajectory_controller.cpp src/controller/cart_trajectory_${controller}_controller.cpp src/app/cart_trajectory_${controller}_automation.cpp)
   add_dependencies(cart_trajectory_${controller}_automation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-  target_link_libraries(cart_trajectory_${controller}_automation ${catkin_LIBRARIES} OsqpEigen::OsqpEigen magic_enum::magic_enum dmpbbo::dmp dmpbbo::dynamicalsystems dmpbbo::functionapproximators ${Boost_FILESYSTEM_LIBRARY})
+  target_link_libraries(cart_trajectory_${controller}_automation ${catkin_LIBRARIES} magic_enum::magic_enum dmpbbo::dmp dmpbbo::dynamicalsystems dmpbbo::functionapproximators ${Boost_FILESYSTEM_LIBRARY})
 endforeach(controller)
 
 
