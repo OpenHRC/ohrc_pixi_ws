@@ -20,10 +20,6 @@
   <depend>control_msgs</depend>
 
 
-
-
-
-
   <depend>liborocos-kdl</depend>
   <depend>xacro</depend>
   <depend>libnlopt0</depend>
@@ -41,6 +37,7 @@
 
   <depend>ohrc_common</depend>
   <depend>ohrc_msgs</depend>
+  
   <depend>proxsuite</depend>
 
   <depend>urdf</depend>

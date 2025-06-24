@@ -552,7 +552,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   }
 
   // allocate QP problem matrices and vectores
-  SparseMatrix<double> hessian = std_utility::weightedSum(w_h, H).sparseView();
+  MatrixXd hessian = std_utility::weightedSum(w_h, H);
   VectorXd gradient = -std_utility::weightedSum(w_h, g);
 
   std::vector<std::vector<double>> lower_vel_limits(nRobot), upper_vel_limits(nRobot);
@@ -586,7 +586,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   A.block(0, 0, nState, nState) = MatrixXd::Identity(nState, nState);
   for (size_t i = 0; i < nCA; i++)
     A.block(nState + i, 0, 1, nState) = A_ca[i];
-  SparseMatrix<double> linearMatrix = A.sparseView();
+  // SparseMatrix<double> linearMatrix = A.sparseView();
 
 #if 0
   // TODO: update variables. this seems to be difficult with OSQP since this library is for sparse QP optimization. When updating hessian matrix and changing its sparse form, the
@@ -631,8 +631,8 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   VectorXd dq_des_ = qpSolver.getSolution();
 #endif
 
-  proxsuite::proxqp::dense::QP<double> qp(nState, 0, nState + nCA);
-  qp.init(std_utility::weightedSum(w_h, H), gradient, proxsuite::nullopt, proxsuite::nullopt, A, lowerBound, upperBound);
+  proxsuite::proxqp::dense::QP<double> qp(nState, 0, nState + nCA);  // TODO: verify if this is the best way
+  qp.init(hessian, gradient, proxsuite::nullopt, proxsuite::nullopt, A, lowerBound, upperBound);
   qp.solve();
 
   VectorXd dq_des_ = qp.results.x;
