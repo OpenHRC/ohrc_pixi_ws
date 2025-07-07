@@ -37,6 +37,7 @@
 
   <depend>ohrc_common</depend>
   <depend>ohrc_msgs</depend>
+  <depend>magic_enum</depend>
   
   <depend>proxsuite</depend>
 
