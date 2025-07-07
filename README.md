@@ -65,27 +65,35 @@ $ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 
 ## Getting Started
-You can first try the teleoperation node with interactive markers for UR5e.
+You can first try the teleoperation node for UR5e.
 
 First, run the following command to start the UR5e gazebo simulation, which has been installed automatically with OpenHRC:
 ```bash
 $ ros2 launch ur_simulation_gz ur_sim_control.launch.py initial_joint_controller:=forward_velocity_controller launch_rviz:=false
 ```
 
-Then, run the following command to start the teleoperation node on another terminal:
+We offer several teleoperation interface to control the robot remotely.
+
+#### 1. Interactive Marker
+You can try Interactive Marker on Rviz.
 ```bash
-$ source ~/ros2_ws/install/setup.bash
 $ ros2 launch ohrc_teleoperation marker_teleoperation.launch.py
 ```
 
-
-If you have a 3D mouse (spacenav), you can also use it for teleoperation instead.
+#### 2. keyboard
+You can operate the robot via keyboard as well.
+- Translation -> (UP/DOWN, LEFT/RIGHT, PageUP/PageDOWN)
+- Rotation -> (NK8/NK2, NK4/NK6, NK+/NK-) NK:Numeric Keypad
 ```bash
-$ source ~/ros2_ws/install/setup.bash
-$ sudo apt install ros-humble-spacenav # if you don't have spacenav package
-$ ros2 launch ohrc_teleoperation joy_topic_teleoperation.launch.py
+$ ros2 launch ohrc_teleoperation joy_topic_teleoperation.launch.py device:=keyboard
 ```
 
+#### 3. 3D mouse (spacenav)
+If you have 3D mouse (spacenav), you can also use it.
+```bash
+$ sudo apt install ros-humble-spacenav # if you don't have spacenav package
+$ ros2 launch ohrc_teleoperation joy_topic_teleoperation.launch.py device:=spacenav
+```
 
 ## Controller Structure
 *Under development
