@@ -17,7 +17,6 @@ def generate_launch_description():
         DeclareLaunchArgument('use_rviz', default_value='true'),
         DeclareLaunchArgument('user_frame_viewpoint', default_value='back'),
 
-        DeclareLaunchArgument('keyboard', default_value='true'),
         DeclareLaunchArgument('device', default_value='spacenav', choices=['spacenav', 'keyboard', 'none']),
 
         # Include the other launch file
