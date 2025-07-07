@@ -72,7 +72,7 @@ First, run the following command to start the UR5e gazebo simulation, which has 
 $ ros2 launch ur_simulation_gz ur_sim_control.launch.py initial_joint_controller:=forward_velocity_controller launch_rviz:=false
 ```
 
-We offer several teleoperation interface to control the robot remotely.
+We offer several teleoperation interfaces to control the robot remotely.
 
 #### 1. Interactive Marker
 You can try Interactive Marker on Rviz.
