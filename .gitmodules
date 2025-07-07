@@ -8,3 +8,6 @@
 	path = 3rd_party/trac_ik
 	url = https://bitbucket.org/traclabs/trac_ik.git
 	branch = rolling-devel
+[submodule "3rd_party/ros2-keyboard"]
+	path = 3rd_party/ros2-keyboard
+	url = https://github.com/itadera/ros2-keyboard.git

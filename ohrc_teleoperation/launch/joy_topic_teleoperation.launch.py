@@ -2,7 +2,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 
@@ -17,7 +17,7 @@ def generate_launch_description():
         DeclareLaunchArgument('use_rviz', default_value='true'),
         DeclareLaunchArgument('user_frame_viewpoint', default_value='back'),
 
-        DeclareLaunchArgument('spacenav', default_value='true'),
+        DeclareLaunchArgument('device', default_value='spacenav', choices=['spacenav', 'keyboard', 'none']),
 
         # Include the other launch file
         IncludeLaunchDescription(
@@ -36,7 +36,7 @@ def generate_launch_description():
             package='spacenav',
             executable='spacenav_node',
             name='spacenav',
-            condition=IfCondition(LaunchConfiguration('spacenav')),
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('device'), "' == 'spacenav'"])),
             parameters=[
                     {
                         'zero_when_static': False,
@@ -44,6 +44,18 @@ def generate_launch_description():
                         'static_rot_deadband': 0.01,
                     }
             ],
+            remappings=[
+                ('/spacenav/joy', '/cmd_joy'),
+            ],
             output='screen',
         ),
+
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([FindPackageShare(
+                'keyboard'), '/launch/keyboard_to_joy.launch.py']),
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('device'), "' == 'keyboard'"])),
+            launch_arguments={
+                'joy_topic_name': '/cmd_joy',
+            }.items()
+        )
     ])
