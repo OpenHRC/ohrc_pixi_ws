@@ -46,20 +46,8 @@ def generate_launch_description():
                         'static_rot_deadband': 0.01,
                     }
             ],
-            output='screen',
-        ),
-
-        Node(
-            package='keyboard',
-            executable='keyboard',
-            name='keyboard',
-            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('device'), "' == 'keyboard'"])),
-            parameters=[
-                    {
-                        'zero_when_static': False,
-                        'static_trans_deadband': 0.01,
-                        'static_rot_deadband': 0.01,
-                    }
+            remappings=[
+                ('/spacenav/joy', '/cmd_joy'),
             ],
             output='screen',
         ),
@@ -68,5 +56,8 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([FindPackageShare(
                 'keyboard'), '/launch/keyboard_to_joy.launch.py']),
             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('device'), "' == 'keyboard'"])),
+            launch_arguments={
+                'joy_topic_name': '/cmd_joy',
+            }.items()
         )
     ])
