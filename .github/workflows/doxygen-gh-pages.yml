@@ -4,7 +4,7 @@ on:
   push:
     branches:
       # - add_doxygen
-      - doxygen
+      - ros2
 
 jobs:
   deploy:
