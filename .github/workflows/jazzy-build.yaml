@@ -1,0 +1,9 @@
+name: humble
+on: push
+
+jobs:
+  humble-build:
+    uses: ./build.yaml
+    with:
+      os: ubuntu-24.04
+      ros_distro: jazzy

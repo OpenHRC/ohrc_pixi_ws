@@ -1,16 +1,25 @@
 name: ROS build workflow
 
-on: [push]
+# on: [push]
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      ros_distro:
+        required: true
+        type: string
 
 jobs:
   ros_build:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-22.04
-            ros_distro: humble
-          - os: ubuntu-24.04
-            ros_distro: jazzy
+    # strategy:
+    #   matrix:
+    #     include:
+    #       - os: ubuntu-22.04
+    #         ros_distro: humble
+    #       - os: ubuntu-24.04
+    #         ros_distro: jazzy
     runs-on: ${{ matrix.os }}
     env:
       WS: /home/runner/work/ohrc_ws
