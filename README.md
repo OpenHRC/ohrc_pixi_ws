@@ -1,19 +1,24 @@
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/Automation-Research-Team/OpenHRC)
-[![ROS build workflow](https://github.com/Automation-Research-Team/OpenHRC/actions/workflows/build.yaml/badge.svg)](https://github.com/Automation-Research-Team/OpenHRC/actions/workflows/build.yaml)
-![GitHub](https://img.shields.io/github/license/Automation-Research-Team/OpenHRC)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/OpenHRC/OpenHRC)
+![GitHub](https://img.shields.io/github/license/OpenHRC/OpenHRC)
 # OpenHRC
 #### Open Human-Robot Collaboration/Cooperation Library
 
-Aiming to enhance research on human-robot interaction, we develop this open ROS package for offering easy implementation of HRC software such as interaction and teleoperation.
+Aiming to enhance research on human-robot interaction, we develop this open ROS2 package for offering easy implementation of HRC software such as interaction and teleoperation.
 OpenHRC includes some tools for HRC like a robot controller for multiple robots with (self-)collision avoidance, human skeleton detection, imitation learning and so on. We hope this package helps you implement your HRC ideas instantly.
 
 [Documentation by Doxygen](https://openhrc.github.io/OpenHRC/) is under construction.
 
 ## Requirements
 OpenHRC has been developed and tested in the following environments:
-- Development Environment: Ubuntu 22.04 (ROS2 Humble)
+- Development Environment: Ubuntu 22.04 (ROS 2 Humble)
 
-**If you want to use ROS1 version, please checkout the [`noetic`](https://github.com/Automation-Research-Team/OpenHRC/tree/noetic) branch, which is no longer maintained.**
+
+#### CI Build Status
+| ROS 2 Distribution | Humble | Jazzy |
+|--------------------|--------|-------|
+| Build Status | [![humble-build](https://github.com/OpenHRC/OpenHRC/actions/workflows/humble-build.yaml/badge.svg)](https://github.com/OpenHRC/OpenHRC/actions/workflows/humble-build.yaml) | [![jazzy-build](https://github.com/OpenHRC/OpenHRC/actions/workflows/jazzy-build.yaml/badge.svg)](https://github.com/OpenHRC/OpenHRC/actions/workflows/jazzy-build.yaml) |
+
+**If you want to use ROS1 version, please checkout the [`noetic`](https://github.com/OpenHRC/OpenHRC/tree/noetic) branch, which is no longer maintained.**
 
 
 
@@ -24,7 +29,7 @@ We use [rocker](https://github.com/osrf/rocker) here to simply run the docker co
 
 ### Build
 ```bash
-$ git clone https://github.com/Automation-Research-Team/OpenHRC.git -b ros2
+$ git clone https://github.com/OpenHRC/OpenHRC.git -b ros2
 $ docker build -t openhrc:ros2 docker/.
 ```
 
@@ -50,7 +55,7 @@ In the following instruction, the ros2 workspace directory is assumed to be `~/r
 ### Clone the Source Code and install dependencies
 ```bash
 $ mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
-$ git clone https://github.com/Automation-Research-Team/OpenHRC.git -b ros2 --recursive
+$ git clone https://github.com/OpenHRC/OpenHRC.git -b ros2 --recursive
 $ rosdep update && rosdep install -i -y --from-paths ./ 
 ```
 
@@ -115,7 +120,7 @@ If you use this package in your academic research, we would appreciate it if you
 @software{openhrc,
   author = {Shunki Itadera},
   title = {OpenHRC},
-  url = {https://github.com/Automation-Research-Team/OpenHRC},
+  url = {https://github.com/OpenHRC/OpenHRC},
   year = {2024},
 }
 ```
