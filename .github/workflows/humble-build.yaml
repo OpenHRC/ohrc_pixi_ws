@@ -3,7 +3,7 @@ on: push
 
 jobs:
   humble-build:
-    uses: ./build.yaml
+    uses: ./.github/workflows/build.yaml
     with:
       os: ubuntu-22.04
       ros_distro: humble
