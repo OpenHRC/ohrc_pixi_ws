@@ -20,7 +20,7 @@ jobs:
     #         ros_distro: humble
     #       - os: ubuntu-24.04
     #         ros_distro: jazzy
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ inputs.os }}
     env:
       WS: /home/runner/work/ohrc_ws
     steps:
@@ -29,7 +29,7 @@ jobs:
     - name: Setup ROS
       uses: ros-tooling/setup-ros@v0.7
       with:
-        required-ros-distributions: ${{ matrix.ros_distro }}
+        required-ros-distributions: ${{ inputs.ros_distro }}
 
     - name: apt update and upgrade
       run: |
@@ -43,7 +43,7 @@ jobs:
 
     - name: pre build
       run: |
-        source /opt/ros/${{ matrix.ros_distro }}/setup.bash
+        source /opt/ros/${{ inputs.ros_distro }}/setup.bash
         cd ${WS}/src/OpenHRC
         git submodule update --init --recursive
         rosdep update
@@ -51,6 +51,6 @@ jobs:
 
     - name: build
       run: |
-        source /opt/ros/${{ matrix.ros_distro }}/setup.bash
+        source /opt/ros/${{ inputs.ros_distro }}/setup.bash
         cd ${WS}
         colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
