@@ -1,4 +1,4 @@
-name: humble
+name: humble-build
 on: push
 
 jobs:

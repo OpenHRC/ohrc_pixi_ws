@@ -1,8 +1,8 @@
-name: humble
+name: jazzy-build
 on: push
 
 jobs:
-  humble-build:
+  jazzy-build:
     uses: ./.github/workflows/build.yaml
     with:
       os: ubuntu-24.04
