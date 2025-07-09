@@ -1,7 +1,13 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/OpenHRC/OpenHRC)
 ![GitHub](https://img.shields.io/github/license/OpenHRC/OpenHRC)
-# OpenHRC
-#### Open Human-Robot Collaboration/Cooperation Library
+
+
+<p align="center">
+  <img src="docs/logo_openhrc.jpg" alt="OpenHRC Logo" width="600"/>
+</p>
+
+
+#### OpenHRC: Open Human-Robot Collaboration/Cooperation Library
 
 Aiming to enhance research on human-robot interaction, we develop this open ROS2 package for offering easy implementation of HRC software such as interaction and teleoperation.
 OpenHRC includes some tools for HRC like a robot controller for multiple robots with (self-)collision avoidance, human skeleton detection, imitation learning and so on. We hope this package helps you implement your HRC ideas instantly.
