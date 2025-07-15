@@ -7,7 +7,7 @@
 </p>
 
 
-#### OpenHRC: Open Human-Robot Collaboration/Cooperation Library
+# OpenHRC: Open Human-Robot Collaboration Library
 
 Aiming to enhance research on human-robot interaction, we develop this open ROS2 package for offering easy implementation of HRC software such as interaction and teleoperation.
 OpenHRC includes some tools for HRC like a robot controller for multiple robots with (self-)collision avoidance, human skeleton detection, imitation learning and so on. We hope this package helps you implement your HRC ideas instantly.
