@@ -48,21 +48,7 @@ ForwardingController::ForwardingController() : nh("~"), spinner(0) {
 
   std::string solver_str;
   nh.param("solver", solver_str, std::string("MyIK");
-  // if (!nh.param("solver", solver_str, std::string("MyIK")))
-  //   ROS_WARN_STREAM("Solver type is not choisen {Trac_Ik, KDL, MyIK}: Default MyIK");
-  // else
-  //   ROS_INFO_STREAM("Solver: " << solver_str);
-
-  if (solver_str == "Trac_IK")
-    solver = SolverType::Trac_IK;
-  else if (solver_str == "KDL")
-    solver = SolverType::KDL;
-  else if (solver_str == "MyIK")
-    solver = SolverType::MyIK;
-  else {
-    // ROS_FATAL("Solver type is not correctly choisen from {Trac_IK, KDL, MyIK}");
-    exit(-1);
-  }
+ 
 
   std::string controller_str;
   if (!nh.param("controller", controller_str, std::string("Position")))

@@ -22,7 +22,7 @@ EXTRACT_ANON_NSPACES   = YES
 RECURSIVE              = YES
 
 EXCLUDE                = ./3rd_party
-ｆ
+
 SOURCE_BROWSER         = YES
 
 REFERENCED_BY_RELATION = YES
