@@ -51,6 +51,13 @@ $ rocker --x11 openhrc:ros2 marker_teleoperation_ur5e
 $ rocker --x11 openhrc:humble joy_topic_teleoperation_ur5e
 ``` -->
 
+If you control the robot using your keyboard,
+```bash
+$ rocker --x11 openhrc:ros2 keyboard_teleoperation_ur5e 
+```
+Note that you make sure that the small window named `keyboard` is active (selected).
+- Translation -> (UP/DOWN, LEFT/RIGHT, PageUP/PageDOWN)
+- Rotation -> (NK8/NK2, NK4/NK6, NK+/NK-) NK:Numeric Keypad
 
 ## Native Installation
 
