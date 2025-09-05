@@ -1,11 +1,25 @@
 # ohrc_hw_config
 
-This package stores hardware configuration files for OpenHRC, which are tested and verified on either the real robot or the Gazebo simulation.
+OpenHRC requires two config files: hardware config file for each robot system and control config file for the controller setup.
 
-The naming rule for the configuration files is as follows:
 
+
+
+## hardware config file
+The naming rule for the hardware configuration files is as follows:
 ```
-ohrc_hw_config/(robot)/(robot)_control_config_(publisher).yaml
+ohrc_hw_config/config/(robot)/(robot)_hw_config.yaml
+```
+
+
+
+
+
+
+## control config file
+The naming rule for the control configuration files is as follows:
+```
+ohrc_hw_config/config/(robot)/(robot)_control_config_(publisher).yaml
 ```
 
 The table below lists the currently implemented options for the parameters:

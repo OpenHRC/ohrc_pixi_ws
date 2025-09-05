@@ -5,7 +5,7 @@
   <description>The ohrc_msgs package</description>
 
   <maintainer email="s.itadera@aist.go.jp">Shunki Itadera</maintainer>
-  <license>LGPLv2.1</license>
+  <license>MITv2.1</license>
 
   <build_depend>rosidl_default_generators</build_depend>
   <exec_depend>rosidl_default_runtime</exec_depend>

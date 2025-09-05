@@ -29,11 +29,11 @@ The UR5e default controller is `JointTrajectoryController`. If you need to load 
 
 Use the following commands to launch the modified gazebo simulation with UR5e and the teleoperation controller:
 ```
-# launch modified gazebo simulation with UR5e
-$ roslaunch ohrc_hw_config ur5e_bringup.launch
+# launch gazebo simulation with UR5e
+$ ros2 launch ur_simulation_gz ur_sim_control.launch.py initial_joint_controller:=forward_velocity_controller launch_rviz:=false
 
 # launch teleoperation controller
-$ roslaunch ohrc_teleoperation marker_teleoperation.launch
+$ ros2 launch ohrc_teleoperation marker_teleoperation.launch.py
 ```
 
 If using real hardware with [`ur_robot_driver`](https://github.com/UniversalRobots/Universal_Robots_ROS_Driver), ensure that the loaded controller is checked. You may need to stop the default trajectory controller and start the loaded velocity controller [here](https://github.com/UniversalRobots/Universal_Robots_ROS_Driver/blob/7b6b62bf81f2a032e0b6c7c8e1046cae35e079c7/ur_robot_driver/config/ur5e_controllers.yaml#L129).

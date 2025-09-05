@@ -5,7 +5,7 @@
   <description>The ohrc_control package</description>
 
   <maintainer email="s.itadera@aist.go.jp">Shunki Itadera</maintainer>
-  <license>LGPL</license>
+  <license>MIT</license>
 
   <!-- <buildtool_depend>ament_cmake_auto</buildtool_depend> -->
   <depend>rclcpp</depend>
