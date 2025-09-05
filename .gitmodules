@@ -1,13 +1,6 @@
-[submodule "3rd_party/magic_enum"]
-	path = 3rd_party/magic_enum
-	url = https://github.com/itadera/magic_enum.git
 [submodule "3rd_party/ros-tcp-endpoint"]
 	path = 3rd_party/ros-tcp-endpoint
 	url = https://github.com/itadera/ROS-TCP-Endpoint.git
-[submodule "3rd_party/trac_ik"]
-	path = 3rd_party/trac_ik
-	url = https://bitbucket.org/traclabs/trac_ik.git
-	branch = rolling-devel
 [submodule "3rd_party/ros2-keyboard"]
 	path = 3rd_party/ros2-keyboard
 	url = https://github.com/itadera/ros2-keyboard.git
