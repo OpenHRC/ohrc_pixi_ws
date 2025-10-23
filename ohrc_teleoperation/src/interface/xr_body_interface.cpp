@@ -30,6 +30,7 @@ void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {
       state.pose = body.right_hand.pose;
       state.twist = body.right_hand.twist;
       state.reset = body.right_hand.button[2];  // stick click
+      state.gripper.position = body.right_hand.trigger;  // use trigger value for gripper position
       if (getEnableFlag(body.right_hand, body.left_hand))
         state.enabled = true;
       break;
@@ -38,6 +39,7 @@ void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {
       state.pose = body.left_hand.pose;
       state.twist = body.left_hand.twist;
       state.reset = body.left_hand.button[2];  // stick click
+      state.gripper.position = body.left_hand.trigger;
       if (getEnableFlag(body.left_hand, body.right_hand))
         state.enabled = true;
       break;
@@ -62,10 +64,12 @@ void XrBodyInterface::cbBody(const ohrc_msgs::msg::BodyState::SharedPtr msg) {
         state.pose = body.right_hand.pose;
         state.twist = body.right_hand.twist;
         state.reset = body.right_hand.button[2];  // stick click
+        state.gripper.position = body.right_hand.trigger;
       } else {
         state.pose = body.left_hand.pose;
         state.twist = body.left_hand.twist;
         state.reset = body.left_hand.button[2];  // stick click
+        state.gripper.position = body.left_hand.trigger;
       }
       break;
 

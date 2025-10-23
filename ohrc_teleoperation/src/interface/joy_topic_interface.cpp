@@ -44,8 +44,13 @@ void JoyTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos, 
   twist_msg.angular.y = joy.axes[4] * gain_r;
   twist_msg.angular.z = joy.axes[5] * gain_r;
 
+
+  this->controller->gripperCmd = joy.buttons[0];
+
   if (joy.buttons[1] == 1.0)
     this->reset();
+
+
 
   setPoseFromTwistMsg(twist_msg, pos, twist);
 }

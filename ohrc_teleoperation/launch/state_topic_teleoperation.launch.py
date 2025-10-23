@@ -13,7 +13,7 @@ def generate_launch_description():
         # DeclareLaunchArgument(
         # 'feedback_mode', default_value='PositionFeedback'),
         DeclareLaunchArgument('use_rviz', default_value='true'),
-        DeclareLaunchArgument('user_frame_viewpoint', default_value='back'),
+        DeclareLaunchArgument('user_frame_viewpoint', default_value='right'),
 
         # Include the other launch file
         IncludeLaunchDescription(

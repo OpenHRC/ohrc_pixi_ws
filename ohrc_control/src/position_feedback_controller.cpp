@@ -31,6 +31,6 @@ VectorXd PositionFeedbackController::pControl(const VectorXd& e, const KDL::Twis
     gain[i] = kp;
   }
 
-  gain.tail(3) = gain.tail(3) * 0.5 / M_PI;
+  gain.tail(3) = gain.tail(3) * 0.5 / M_PI * 3.0;
   return v_des + gain.asDiagonal() * kp * e;  // + ki * e_integ;
 }

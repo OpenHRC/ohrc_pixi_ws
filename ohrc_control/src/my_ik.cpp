@@ -653,6 +653,8 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   return 1;
 }
 
+
+
 int MyIK::CartToJntVel_qp_manipOpt(const KDL::JntArray& q_cur, const KDL::Frame& des_eff_pose, const KDL::Twist& des_eff_vel, KDL::JntArray& dq_des, const double& dt,
                                    const MatrixXd& userManipU) {
   KDL::Jacobian jac(nJnt);

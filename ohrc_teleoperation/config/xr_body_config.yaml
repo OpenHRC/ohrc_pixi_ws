@@ -8,5 +8,5 @@
 
 /**:
   ros__parameters:
-    torobo2_right/body_part: "RIGHT_HAND"
-    torobo2_left/body_part: "LEFT_HAND"
+    fr3_right/body_part: "LEFT_HAND"
+    fr3_left/body_part: "RIGHT_HAND"

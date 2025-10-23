@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     TwistTopicInterface:
-      feedback_mode: "NoFeedback" 
+      feedback_mode: "PositionFeedback" 
 
       topic_name: "cmd_vel"
       frame_id: "user_frame"

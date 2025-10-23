@@ -28,8 +28,8 @@ protected:
 
   std::string stateTopicName = "/state", stateFrameId = "world";
   inline void getTopicAndFrameName(std::string DefaultStateTopicName, std::string DefaultStateFrameId) {
-    RclcppUtility::declare_and_get_parameter(node, "topic_name", DefaultStateTopicName, this->stateTopicName);
-    RclcppUtility::declare_and_get_parameter(node, "frame_id", DefaultStateFrameId, this->stateFrameId);
+    RclcppUtility::declare_and_get_parameter(node, interfaceName + ".topic_name", DefaultStateTopicName, this->stateTopicName);
+    RclcppUtility::declare_and_get_parameter(node, interfaceName + ".frame_id", DefaultStateFrameId, this->stateFrameId);
 
     if (stateTopicName[0] != '/')
       stateTopicName = robot_ns + stateTopicName;
@@ -54,10 +54,10 @@ protected:
   FeedbackMode feedbackMode;
 
 public:
-  Interface(const std::shared_ptr<CartController>& controller) : node(controller->getNode()), dt(controller->dt), robot_ns(controller->getRobotNs()), controller(controller) {
+  Interface(const std::shared_ptr<CartController> &controller) : node(controller->getNode()), dt(controller->dt), robot_ns(controller->getRobotNs()), controller(controller) {
     this->interfaceRunning = true;
   }
-  Interface(const std::shared_ptr<CartController>& controller, const std::string interfaceName, FeedbackMode defaultFeedbackMode)
+  Interface(const std::shared_ptr<CartController> &controller, const std::string interfaceName, FeedbackMode defaultFeedbackMode)
     : node(controller->getNode()), dt(controller->dt), robot_ns(controller->getRobotNs()), controller(controller), interfaceName(interfaceName) {
     this->interfaceRunning = true;
     RclcppUtility::declare_and_get_parameter_enum(this->node, interfaceName + ".feedback_mode", defaultFeedbackMode, feedbackMode);
@@ -69,11 +69,11 @@ public:
 
   std::mutex mtx;
 
-  virtual void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist){};
-  virtual void initInterface(){};
-  virtual void resetInterface(){};
-  virtual void updateInterface(){};
-  virtual void feedback(const KDL::Frame& targetPos, const KDL::Twist& targetTwist){};
+  virtual void updateTargetPose(const rclcpp::Time t, KDL::Frame &pose, KDL::Twist &twist) {};
+  virtual void initInterface() {};
+  virtual void resetInterface() {};
+  virtual void updateInterface() {};
+  virtual void feedback(const KDL::Frame &targetPos, const KDL::Twist &targetTwist) {};
 
   int targetIdx = -1, nCompletedTask = 0;
   bool blocked = false;

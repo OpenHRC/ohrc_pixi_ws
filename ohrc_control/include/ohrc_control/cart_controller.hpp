@@ -14,6 +14,7 @@
 #include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
+#include <std_msgs/msg/float64.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <tf2_eigen/tf2_eigen.hpp>
 #include <tf2_kdl/tf2_kdl.hpp>
@@ -210,10 +211,13 @@ protected:
   void getTrajectoryCmd(const VectorXd& q_des, const double& T, trajectory_msgs::msg::JointTrajectory& cmd_trj);
   void getTrajectoryCmd(const VectorXd& q_des, const VectorXd& dq_des, const double& T, trajectory_msgs::msg::JointTrajectory& cmd_trj);
 
+
+
   // virtual void feedbackCart(const Affine3d& T_cur, const Affine3d& T_des, std::shared_ptr<CartController>
   // controller){};
 
 public:
+  float gripperCmd = 1.0;
   // CartController();
   CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const ControllerType controller, const double freq,
                  const bool unique_state = false);
@@ -277,6 +281,8 @@ public:
   void publishState(const KDL::Frame& pose, const KDL::Twist& vel, rclcpp::Publisher<ohrc_msgs::msg::State>::SharedPtr publisher);
   void publishState(const KDL::Frame& pose, const KDL::Twist& vel, const geometry_msgs::msg::Wrench& wrench, rclcpp::Publisher<ohrc_msgs::msg::State>::SharedPtr publisher);
   void publishMarker(const KDL::JntArray q_cur);
+
+  void sendGripperCmd();
 
   void filterJnt(KDL::JntArray& q);
   void updatePosFilterCutoff(const double posFreq);
@@ -440,6 +446,7 @@ public:
 
   // template <typename MsgType>
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr jntCmdPublisher;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr gripperCmdPublisher;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr jntStateCmdPublisher;
   rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr jntTrjCmdPublisher;
   rclcpp::Publisher<ohrc_msgs::msg::State>::SharedPtr desStatePublisher, curStatePublisher;

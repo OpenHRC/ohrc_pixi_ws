@@ -14,8 +14,8 @@ def generate_launch_description():
         DeclareLaunchArgument('controller', default_value='vel'),
         # DeclareLaunchArgument(
         # 'feedback_mode', default_value='HybridFeedback'),
-        DeclareLaunchArgument('use_rviz', default_value='true'),
-        DeclareLaunchArgument('user_frame_viewpoint', default_value='back'),
+        DeclareLaunchArgument('use_rviz', default_value='false'),
+        DeclareLaunchArgument('user_frame_viewpoint', default_value='face'),
 
         # Include the other launch file
         IncludeLaunchDescription(

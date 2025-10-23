@@ -1,13 +1,13 @@
 /**:
   ros__parameters:
     JoyTopicInterface:
-      feedback_mode: "NoFeedback" 
+      feedback_mode: "PositionFeedback" 
 
       gain:
-        horizontal: 0.2
-        rotational: 0.3
+        horizontal: 0.1
+        rotational: 0.1
 
-      topic_name: "/spacenav/joy"
-      frame_id: "user_frame"
+      # topic_name: "/cmd_joy"
+      # frame_id: "user_frame"
 
       diable_pose_feedback: true

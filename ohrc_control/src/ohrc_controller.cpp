@@ -409,6 +409,9 @@ void OhrcController::update(const rclcpp::Time& time, const rclcpp::Duration& pe
     RCLCPP_WARN_STREAM(this->get_logger(), "not implemented");
 
   for (size_t i = 0; i < nRobot; i++)
+      cartControllers[i]->sendGripperCmd();  // TODO: update dq
+
+  for (size_t i = 0; i < nRobot; i++)
     feedback(desPose[i], desVel[i], interfaces[cartControllers[i]->getIndex()].interfaces);
 }
 
