@@ -12,7 +12,7 @@
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
-  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
+  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, MITv2.1, MITv3 -->
   <exec_depend>ur_simulation_gz</exec_depend>
   <license>TODO</license>
 

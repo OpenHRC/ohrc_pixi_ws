@@ -3,7 +3,7 @@ project(ohrc_control)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(trac_ik_lib REQUIRED)
+# find_package(trac_ik_lib REQUIRED)
 find_package(std_msgs REQUIRED)
 
 
@@ -40,12 +40,12 @@ target_include_directories(${PROJECT_NAME}
   )
 
 
-ament_target_dependencies(${PROJECT_NAME} rclcpp trac_ik_lib interactive_markers control_msgs tf2_kdl tf2_eigen tf2_eigen_kdl std_msgs std_srvs ohrc_common ohrc_msgs urdf)
+ament_target_dependencies(${PROJECT_NAME} rclcpp interactive_markers control_msgs tf2_kdl tf2_eigen tf2_eigen_kdl std_msgs std_srvs ohrc_common ohrc_msgs urdf)
 
 target_link_libraries(${PROJECT_NAME} magic_enum::magic_enum proxsuite::proxsuite)
 
 
-# ament_export_dependencies(rclcpp trac_ik_lib interactive_markers control_msgs tf2_kdl tf2_eigen tf2_eigen_kdl std_msgs std_srvs ohrc_common ohrc_msgs urdf)
+# ament_export_dependencies(rclcpp interactive_markers control_msgs tf2_kdl tf2_eigen tf2_eigen_kdl std_msgs std_srvs ohrc_common ohrc_msgs urdf)
 ament_export_libraries(${PROJECT_NAME})
 ament_export_include_directories(include)
 

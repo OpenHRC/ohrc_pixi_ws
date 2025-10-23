@@ -15,7 +15,7 @@
 #include <csignal>
 #include <kdl/chainiksolverpos_nr_jl.hpp>
 #include <mutex>
-#include <trac_ik/trac_ik.hpp>
+// #include <trac_ik/trac_ik.hpp>
 #include <vector>
 
 #include "ohrc_control/my_ik.hpp"
@@ -24,7 +24,7 @@ class ForwardingController {
   static void signal_handler(int signum);
 
 protected:
-  enum SolverType { Trac_IK, KDL, MyIK } solver;
+  enum SolverType { Trac_IK, KDL, MyIK } solver = MyIK;
   enum ControllerType { Position, Velocity, Torque } controller;
   enum RobotType { Follower, Leader };
   // ros::NodeHandle nh;
@@ -63,7 +63,7 @@ protected:
   std::unique_ptr<KDL::ChainIkSolverPos_NR_JL> kdl_solver_ptr;  // Joint Limit Solver
 
   // TRAC-IK
-  std::unique_ptr<TRAC_IK::TRAC_IK> tracik_solver_ptr;
+  // std::unique_ptr<TRAC_IK::TRAC_IK> tracik_solver_ptr;
   std::unique_ptr<KDL::ChainFkSolverPos_recursive> fk_solver_ptr;
   KDL::Chain chain;
   std::vector<KDL::Segment> chain_segs;

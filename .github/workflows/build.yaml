@@ -1,17 +1,26 @@
 name: ROS build workflow
 
-on: [push]
+# on: [push]
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      ros_distro:
+        required: true
+        type: string
 
 jobs:
   ros_build:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-22.04
-            ros_distro: humble
-          - os: ubuntu-24.04
-            ros_distro: jazzy
-    runs-on: ${{ matrix.os }}
+    # strategy:
+    #   matrix:
+    #     include:
+    #       - os: ubuntu-22.04
+    #         ros_distro: humble
+    #       - os: ubuntu-24.04
+    #         ros_distro: jazzy
+    runs-on: ${{ inputs.os }}
     env:
       WS: /home/runner/work/ohrc_ws
     steps:
@@ -20,7 +29,7 @@ jobs:
     - name: Setup ROS
       uses: ros-tooling/setup-ros@v0.7
       with:
-        required-ros-distributions: ${{ matrix.ros_distro }}
+        required-ros-distributions: ${{ inputs.ros_distro }}
 
     - name: apt update and upgrade
       run: |
@@ -34,7 +43,7 @@ jobs:
 
     - name: pre build
       run: |
-        source /opt/ros/${{ matrix.ros_distro }}/setup.bash
+        source /opt/ros/${{ inputs.ros_distro }}/setup.bash
         cd ${WS}/src/OpenHRC
         git submodule update --init --recursive
         rosdep update
@@ -42,6 +51,6 @@ jobs:
 
     - name: build
       run: |
-        source /opt/ros/${{ matrix.ros_distro }}/setup.bash
+        source /opt/ros/${{ inputs.ros_distro }}/setup.bash
         cd ${WS}
         colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
