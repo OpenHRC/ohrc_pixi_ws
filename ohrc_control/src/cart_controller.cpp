@@ -28,12 +28,6 @@ void CartController::init(std::string robot) {
 void CartController::init(std::string robot, std::string hw_config) {
   this->node = std::shared_ptr<rclcpp::Node>(this);
   trans = std::make_unique<TransformUtility>(this->node);
-  // this->node = std::shared_ptr<rclcpp::Node>(this);
-  // nh_.setCallbackQueue(&queue);
-  // spinner_.reset(new ros::AsyncSpinner(1, &queue));
-  // spinner.reset(new ros::AsyncSpinner(0));
-
-  // std::signal(SIGINT, CartController::signal_handler);
 
   header = "[" + hw_config + "(ns: '" + robot + "')] ";
   RCLCPP_INFO_STREAM(node->get_logger(), "Initializing " + header);
@@ -266,23 +260,6 @@ Affine3d CartController::getTransform_base(std::string target) {
   return trans->getTransform(chain_start, target, rclcpp::Time(0), rclcpp::Duration::from_seconds(1.0));
 }
 
-// void CartController::signal_handler(int signum) {
-//   // ros::NodeHandle nh;
-//   // std::vector<std::string> robot_ns{ "/toroboarm_1", "/toroboarm_2" };
-//   // std::vector<std::string> controller{ "/joint_position_controller", "/joint_velocity_controller" };
-//   // ros::Publisher publisher;
-//   // std_msgs::Float64MultiArray cmd;
-//   // cmd.data.resize(7, 0.0);
-//   // while (ros::ok()) {  // exerimental
-//   //   for (size_t i = 0; i < robot_ns.size(); i++) {
-//   //     for (int j = 0; j < controller.size(); i++) {
-//   //       publisher = nh.advertise<std_msgs::Float64MultiArray>(robot_ns[i] + controller[j] + "/command", 1);
-//   //       publisher.publish(cmd);
-//   //     }
-//   //   }
-//   //   ros::shutdown();
-//   // }
-// }
 void CartController::resetFt() {
   // ROS_INFO_STREAM("Called reset ft service.");
   RCLCPP_INFO_STREAM(node->get_logger(), "Called reset ft service.");
@@ -351,6 +328,8 @@ void CartController::cbJntState(const sensor_msgs::msg::JointState::SharedPtr ms
     flagJntState = true;
     _q_cur = q_cur;
     _dq_cur = dq_cur;
+
+    _lastJntStateUpdate = node->get_clock()->now();
   } else
     return;
 
@@ -414,14 +393,6 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const KDL::JntArray&
 
     int rc;
     switch (solver) {
-        // case SolverType::Trac_IK:
-        //   rc = tracik_solver_ptr->CartToJnt(q_init_expect, init_eef_pose, s_moveInitPos.q_des);
-        //   break;
-
-        // case SolverType::KDL:
-        //   rc = kdl_solver_ptr->CartToJnt(q_init_expect, init_eef_pose, s_moveInitPos.q_des);
-        //   break;
-
       case SolverType::MyIK:
         myik_solver_ptr->setNameJnt(nameJnt);
         myik_solver_ptr->setIdxSegJnt(idxSegJnt);
@@ -529,14 +500,10 @@ void CartController::sendIntJntCmd(CartController::s_initCmd initCmd) {
       if (s < 1.0)
         sendTrajectoryCmd(s_moveInitPos.q_des.data, T);
 
-      // rclcpp::sleep_for(rclcpp::Duration::from_seconds(T).to_chrono<std::chrono::nanoseconds>());
-      // lastLoop = true;
       break;
     case PublisherType::TrajectoryAction:
       sendTrajectoryActionCmd(s_moveInitPos.q_des.data, T * (1.0 - s));
-      // rclcpp::Duration(T).sleep();
-      // rclcpp::sleep_for(T.second())
-      // lastLoop = true;
+
       break;
     case PublisherType::JointState:
       sendJointStateCmd(q_des_t, dq_des_t);

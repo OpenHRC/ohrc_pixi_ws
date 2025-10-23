@@ -31,11 +31,13 @@ def generate_launch_description():
             }.items()
         ),
 
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([FindPackageShare(
-                'ros_tcp_endpoint'), '/launch/endpoint.py']),
-        ),
-
+        Node(
+                package="ros_tcp_endpoint",
+                executable="default_server_endpoint",
+                emulate_tty=True,
+                parameters=[{"ROS_IP": "0.0.0.0"}, {"ROS_TCP_PORT": 10000}],
+            )
+        
         # Node(
         #     package='tf2_ros',
         #     executable='static_transform_publisher',
