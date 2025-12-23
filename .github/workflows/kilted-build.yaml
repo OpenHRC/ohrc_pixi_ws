@@ -1,8 +1,8 @@
-name: jazzy-build
+name: kilted-build
 on: push
 
 jobs:
-  jazzy-build:
+  kilted-build:
     uses: ./.github/workflows/build.yaml
     with:
       os: ubuntu-24.04
