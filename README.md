@@ -82,7 +82,7 @@ see [ohrc_control/README.md](./ohrc_control/README.md) -->
 
 <!-- ## Tutorials -->
 <!-- *Under development -->
-1. Teleoperation library: [./ohrc_teleoperation/README.md](./ohrc_teleoperation)
+<!-- 1. Teleoperation library: [./ohrc_teleoperation/README.md](./ohrc_teleoperation) -->
 <!-- 2. Imitation Learning library: [ohrc_imitation_learning/README.md](./ohrc_imitation_learning) -->
 
 
