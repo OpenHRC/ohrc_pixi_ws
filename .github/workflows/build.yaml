@@ -13,13 +13,6 @@ on:
 
 jobs:
   ros_build:
-    # strategy:
-    #   matrix:
-    #     include:
-    #       - os: ubuntu-22.04
-    #         ros_distro: humble
-    #       - os: ubuntu-24.04
-    #         ros_distro: jazzy
     runs-on: ${{ inputs.os }}
     env:
       WS: /home/runner/work/ohrc_ws
