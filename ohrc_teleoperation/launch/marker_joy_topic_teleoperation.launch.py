@@ -36,9 +36,12 @@ def generate_launch_description():
             parameters=[
                     {
                         'zero_when_static': False,
-                        'static_trans_deadband': 0.01,
-                        'static_rot_deadband': 0.01,
+                        'static_trans_deadband': 0.1,
+                        'static_rot_deadband': 0.1,
                     }
+            ],
+            remappings=[
+                ('/spacenav/joy', '/fr3_left/cmd_joy'),
             ],
             output='screen',
         ),

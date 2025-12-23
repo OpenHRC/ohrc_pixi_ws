@@ -101,7 +101,7 @@ endforeach(interface)
 
 
 
-add_executable(marker_joy_topic_teleoperation src/interface/twist_topic_interface.cpp  src/interface/joy_topic_interface.cpp src/interface/marker_interface.cpp src/app/marker_joy_topic_teleoperation.cpp)
+add_executable(marker_joy_topic_teleoperation src/interface/twist_topic_interface.cpp  src/interface/joy_topic_interface.cpp src/interface/marker_interface.cpp src/interface/state_topic_interface.cpp src/app/marker_joy_topic_teleoperation.cpp)
 
 ament_target_dependencies(marker_joy_topic_teleoperation rclcpp ohrc_control ohrc_msgs ohrc_common interactive_markers visualization_msgs control_msgs geometry_msgs std_srvs tf2_kdl urdf tf2_eigen_kdl urdf)
 

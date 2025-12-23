@@ -20,6 +20,8 @@ void TwistTopicInterface::setSubscriber() {
 
 void TwistTopicInterface::cbTwist(const geometry_msgs::msg::Twist::SharedPtr msg) {
   std::lock_guard<std::mutex> lock(mtx);
+
+  updateIsEnable(Eigen::Vector3d(msg->linear.x, msg->linear.y, msg->linear.z).norm() > 1.0e-2);
   _twist = *msg;
   _flagTopic = true;
 }
@@ -77,6 +79,6 @@ void TwistTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos
 
 void TwistTopicInterface::resetInterface() {
   // RCLCPP_INFO_STREAM(node->get_logger(), "Reset interface");
-  // state = ohrc_msgs::msg::State();
+  state = ohrc_msgs::msg::State();
   isFirst = true;
 }

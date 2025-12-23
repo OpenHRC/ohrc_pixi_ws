@@ -1,18 +1,18 @@
 #ifndef CART_CONTROLLER_HPP
 #define CART_CONTROLLER_HPP
 
-#include <control_msgs/action/follow_joint_trajectory.hpp>
-#include <geometry_msgs/msg/transform_stamped.hpp>
-// #include <ros/ros.h>
 #include <tf2_ros/transform_broadcaster.h>
 
 #include <Eigen/Geometry>
 #include <boost/date_time.hpp>
+#include <control_msgs/action/follow_joint_trajectory.hpp>
 #include <csignal>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <kdl/chainiksolverpos_nr_jl.hpp>
 #include <mutex>
 #include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
+#include <std_msgs/msg/float64.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <tf2_eigen/tf2_eigen.hpp>
@@ -29,7 +29,6 @@
 #include "ohrc_msgs/msg/state_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_srvs/srv/empty.hpp"
-// #include "trac_ik/trac_ik.hpp"
 
 // TODO: Add namespace "Controllers"?
 
@@ -50,10 +49,6 @@ class CartController : public rclcpp::Node {
   void init(std::string robot);
   void init(std::string robot, std::string hw_config);
 
-  // ros::AsyncSpinner spinner;
-  // ros::CallbackQueue queue;
-  // boost::shared_ptr<ros::AsyncSpinner> spinner, spinner_;
-  // ros::NodeHandle nh_;
   rclcpp::Publisher<geometry_msgs::msg::WrenchStamped>::SharedPtr pubEefForce;
 
   std::mutex mtx_q;
@@ -64,7 +59,7 @@ class CartController : public rclcpp::Node {
   std_msgs::msg::Float64MultiArray cmd;
   Matrix3d userManipU;
   int rc;
-  // ros::ServiceClient client
+
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr client;
 
   struct s_cbJntState {
@@ -105,10 +100,8 @@ class CartController : public rclcpp::Node {
   bool initialized = false;
 
   KDL::JntArray q_rest;
-  // KDL::JntArray dq_des;
-  // KDL::JntArray q_des;
 
-  rclcpp::Time prev_time;  // = node->get_clock()->now();
+  rclcpp::Time prev_time;
 
   bool ftFound = false;
   const bool unique_state;
@@ -121,7 +114,6 @@ protected:
   SolverType solver;
   ControllerType controller;
   PublisherType publisher;
-  // ros::NodeHandle nh;
 
   // ros::Subscriber jntStateSubscriber, userArmMarker, subForce;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr subJntState;
@@ -163,14 +155,7 @@ protected:
   std::vector<butterworth> posFilter, velFilter, jntFilter;
 
   std::unique_ptr<TransformUtility> trans;
-  // tf2_ros::TransformBroadcaster br;
 
-  // KDL
-  // std::unique_ptr<KDL::ChainIkSolverVel_pinv> vik_solver_ptr;   // PseudoInverse vel solver
-  // std::unique_ptr<KDL::ChainIkSolverPos_NR_JL> kdl_solver_ptr;  // Joint Limit Solver
-
-  // TRAC-IK
-  // std::unique_ptr<TRAC_IK::TRAC_IK> tracik_solver_ptr;
   std::unique_ptr<KDL::ChainFkSolverPos_recursive> fk_solver_ptr;
   KDL::Chain chain;
   std::vector<KDL::Segment> chain_segs;
@@ -197,7 +182,6 @@ protected:
   int moveInitPos(const KDL::JntArray& q_cur, const KDL::JntArray& dq_cur, const std::vector<std::string> nameJnt, std::vector<int> idxSegJnt);
 
   const int index = 0;
-  // int moveInitPos();
 
   void sendPositionCmd(const VectorXd& q_des);
   void sendJointStateCmd(const VectorXd& q_des, const VectorXd& dq_des);
@@ -210,10 +194,10 @@ protected:
   void getTrajectoryCmd(const VectorXd& q_des, const double& T, trajectory_msgs::msg::JointTrajectory& cmd_trj);
   void getTrajectoryCmd(const VectorXd& q_des, const VectorXd& dq_des, const double& T, trajectory_msgs::msg::JointTrajectory& cmd_trj);
 
-  // virtual void feedbackCart(const Affine3d& T_cur, const Affine3d& T_des, std::shared_ptr<CartController>
-  // controller){};
+  rclcpp::Time _lastJntStateUpdate;
 
 public:
+  float gripperCmd = 1.0;
   // CartController();
   CartController(rclcpp::Node::SharedPtr& node, const std::string robot, const std::string root_frame, const ControllerType controller, const double freq,
                  const bool unique_state = false);
@@ -242,6 +226,11 @@ public:
 
   inline void updateCurState() {
     std::lock_guard<std::mutex> lock(mtx_q);
+    if ((node->get_clock()->now() - _lastJntStateUpdate).seconds() > 1.0) {
+      RCLCPP_ERROR_STREAM_ONCE(node->get_logger(), "No joint state update received for 1 second.");
+      rclcpp::shutdown();
+    }
+
     this->_q_cur_t = this->_q_cur;
     this->_dq_cur_t = this->_dq_cur;
 
@@ -249,7 +238,6 @@ public:
   }
 
   inline void getState(KDL::JntArray& q_cur, KDL::JntArray& dq_cur) {
-    // std::lock_guard<std::mutex> lock(mtx_q);
     q_cur = this->_q_cur_t;
     dq_cur = this->_dq_cur_t;
   }
@@ -257,15 +245,9 @@ public:
   inline void getState(KDL::JntArray& q_cur, KDL::JntArray& dq_cur, KDL::Frame& frame, KDL::Twist& twist) {
     getState(q_cur, dq_cur);
     getCartState(frame, twist);
-    // JntToCart(q_cur, dq_cur, frame, twist);
-    // JntToCart(q_cur, frame);
-    // JntVelToCartVel(q_cur, dq_cur, twist);
   }
 
   inline void getCartState(KDL::Frame& frame, KDL::Twist& twist) {
-    // KDL::JntArray q_cur;
-    // KDL::JntArray dq_cur;
-    // getState(q_cur, dq_cur, frame, twist);
     frame = this->_frame_cur;
     twist = this->_twist_cur;
   }
@@ -277,6 +259,8 @@ public:
   void publishState(const KDL::Frame& pose, const KDL::Twist& vel, rclcpp::Publisher<ohrc_msgs::msg::State>::SharedPtr publisher);
   void publishState(const KDL::Frame& pose, const KDL::Twist& vel, const geometry_msgs::msg::Wrench& wrench, rclcpp::Publisher<ohrc_msgs::msg::State>::SharedPtr publisher);
   void publishMarker(const KDL::JntArray q_cur);
+
+  void sendGripperCmd();
 
   void filterJnt(KDL::JntArray& q);
   void updatePosFilterCutoff(const double posFreq);
@@ -440,6 +424,7 @@ public:
 
   // template <typename MsgType>
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr jntCmdPublisher;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr gripperCmdPublisher;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr jntStateCmdPublisher;
   rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr jntTrjCmdPublisher;
   rclcpp::Publisher<ohrc_msgs::msg::State>::SharedPtr desStatePublisher, curStatePublisher;

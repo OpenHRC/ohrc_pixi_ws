@@ -60,6 +60,8 @@ void StateTopicInterface::getTargetState(const ohrc_msgs::msg::State& state, KDL
 
   tf2::transformEigenToKDL(T, pos);
   tf2::twistEigenToKDL(v, twist);
+
+  controller->gripperCmd = state.gripper.position;
 }
 
 void StateTopicInterface::resetInterface() {

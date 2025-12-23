@@ -28,12 +28,6 @@ void CartController::init(std::string robot) {
 void CartController::init(std::string robot, std::string hw_config) {
   this->node = std::shared_ptr<rclcpp::Node>(this);
   trans = std::make_unique<TransformUtility>(this->node);
-  // this->node = std::shared_ptr<rclcpp::Node>(this);
-  // nh_.setCallbackQueue(&queue);
-  // spinner_.reset(new ros::AsyncSpinner(1, &queue));
-  // spinner.reset(new ros::AsyncSpinner(0));
-
-  // std::signal(SIGINT, CartController::signal_handler);
 
   header = "[" + hw_config + "(ns: '" + robot + "')] ";
   RCLCPP_INFO_STREAM(node->get_logger(), "Initializing " + header);
@@ -98,6 +92,8 @@ void CartController::init(std::string robot, std::string hw_config) {
 
   desStatePublisher = node->create_publisher<ohrc_msgs::msg::State>("/" + robot_ns + "state/desired", rclcpp::QoS(100));
   curStatePublisher = node->create_publisher<ohrc_msgs::msg::State>("/" + robot_ns + "state/current", rclcpp::QoS(100));
+
+  gripperCmdPublisher = node->create_publisher<std_msgs::msg::Float64>("/" + robot_ns + "gripper_command", rclcpp::QoS(1));
 
   if (robot_ns != "")
     service = node->create_service<std_srvs::srv::Trigger>("/" + robot_ns + "reset", std::bind(&CartController::resetService, this, _1, _2), rmw_qos_profile_services_default,
@@ -176,13 +172,13 @@ void CartController::initMembers() {
   std::string chain_start_ = chain_start, chain_end_ = chain_end;
   if (chain_start_[0] == '/')
     chain_start_.erase(0, 1);
-  // else
-  //   chain_start_ = robot_ns + chain_start_;
+  else
+    chain_start_ = robot_ns + chain_start_;
 
   if (chain_end_[0] == '/')
     chain_end_.erase(0, 1);
-  // else
-  //   chain_end_ = robot_ns + chain_end_;
+  else
+    chain_end_ = robot_ns + chain_end_;
 
   std::string model_ns = robot_ns;
   if (unique_state) {
@@ -264,23 +260,6 @@ Affine3d CartController::getTransform_base(std::string target) {
   return trans->getTransform(chain_start, target, rclcpp::Time(0), rclcpp::Duration::from_seconds(1.0));
 }
 
-// void CartController::signal_handler(int signum) {
-//   // ros::NodeHandle nh;
-//   // std::vector<std::string> robot_ns{ "/toroboarm_1", "/toroboarm_2" };
-//   // std::vector<std::string> controller{ "/joint_position_controller", "/joint_velocity_controller" };
-//   // ros::Publisher publisher;
-//   // std_msgs::Float64MultiArray cmd;
-//   // cmd.data.resize(7, 0.0);
-//   // while (ros::ok()) {  // exerimental
-//   //   for (size_t i = 0; i < robot_ns.size(); i++) {
-//   //     for (int j = 0; j < controller.size(); i++) {
-//   //       publisher = nh.advertise<std_msgs::Float64MultiArray>(robot_ns[i] + controller[j] + "/command", 1);
-//   //       publisher.publish(cmd);
-//   //     }
-//   //   }
-//   //   ros::shutdown();
-//   // }
-// }
 void CartController::resetFt() {
   // ROS_INFO_STREAM("Called reset ft service.");
   RCLCPP_INFO_STREAM(node->get_logger(), "Called reset ft service.");
@@ -349,6 +328,8 @@ void CartController::cbJntState(const sensor_msgs::msg::JointState::SharedPtr ms
     flagJntState = true;
     _q_cur = q_cur;
     _dq_cur = dq_cur;
+
+    _lastJntStateUpdate = node->get_clock()->now();
   } else
     return;
 
@@ -412,14 +393,6 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const KDL::JntArray&
 
     int rc;
     switch (solver) {
-        // case SolverType::Trac_IK:
-        //   rc = tracik_solver_ptr->CartToJnt(q_init_expect, init_eef_pose, s_moveInitPos.q_des);
-        //   break;
-
-        // case SolverType::KDL:
-        //   rc = kdl_solver_ptr->CartToJnt(q_init_expect, init_eef_pose, s_moveInitPos.q_des);
-        //   break;
-
       case SolverType::MyIK:
         myik_solver_ptr->setNameJnt(nameJnt);
         myik_solver_ptr->setIdxSegJnt(idxSegJnt);
@@ -475,11 +448,11 @@ int CartController::moveInitPos(const KDL::JntArray& q_cur, const KDL::JntArray&
     double q_error = (q_des_t - q_cur.data).cwiseAbs().maxCoeff();
     double dq_error = dq_cur.data.cwiseAbs().maxCoeff();
 
-    if (q_error < 1.0e-3 && dq_error < 1.0e-2 && s == 1.0) {  // TODO: check these thresholds
-      RCLCPP_INFO_STREAM(node->get_logger(), "The robot (ns: " + robot_ns + ") has reached the initial pose.");
-      reseted = true;
-      return true;
-    }
+    // if (q_error < 1.0e-3 && dq_error < 1.0e-2 && s == 1.0) {  // TODO: check these thresholds
+    // RCLCPP_INFO_STREAM(node->get_logger(), "The robot (ns: " + robot_ns + ") has reached the initial pose.");
+    // reseted = true;
+    return true;
+    // }
     RCLCPP_INFO_STREAM_SKIPFIRST_THROTTLE(node->get_logger(), *node->get_clock(), 1000,
                                           "Robot (ns: " + robot_ns + ") initial reaching error > pos:" << q_error << ", vel:" << dq_error);
     // feedback_gain += 0.1 / freq;
@@ -527,14 +500,10 @@ void CartController::sendIntJntCmd(CartController::s_initCmd initCmd) {
       if (s < 1.0)
         sendTrajectoryCmd(s_moveInitPos.q_des.data, T);
 
-      // rclcpp::sleep_for(rclcpp::Duration::from_seconds(T).to_chrono<std::chrono::nanoseconds>());
-      // lastLoop = true;
       break;
     case PublisherType::TrajectoryAction:
       sendTrajectoryActionCmd(s_moveInitPos.q_des.data, T * (1.0 - s));
-      // rclcpp::Duration(T).sleep();
-      // rclcpp::sleep_for(T.second())
-      // lastLoop = true;
+
       break;
     case PublisherType::JointState:
       sendJointStateCmd(q_des_t, dq_des_t);
@@ -628,6 +597,13 @@ void CartController::sendTrajectoryActionCmd(const VectorXd& q_des, const Vector
   // cmd_trjAction.header.stamp = cmd_trjAction.goal.trajectory.header.stamp;
   // jntCmdPublisher.publish(cmd_trjAction);
 }
+
+void CartController::sendGripperCmd() {
+  std_msgs::msg::Float64 gripperCmd_;
+  gripperCmd_.data = this->gripperCmd;
+  gripperCmdPublisher->publish(gripperCmd_);
+}
+
 #if 0
 void CartController::getDesEffPoseVel(const double& dt, const KDL::JntArray& q_cur, const KDL::JntArray& dq_cur, KDL::Frame& des_eef_pose, KDL::Twist& des_eef_vel) {
   bool disable;
