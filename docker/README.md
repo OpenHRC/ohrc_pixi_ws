@@ -4,9 +4,8 @@ You can quickly test UR5e + marker teleoperation on docker environment.
 We use [rocker](https://github.com/osrf/rocker) here to simply run the docker container with GUI support.
 
 ### Build
-```bash
-$ git clone https://github.com/OpenHRC/OpenHRC.git -b ros2
-$ docker build -t openhrc:ros2 docker/.
+```zsh
+$ docker build -t openhrc:ros2 https://github.com/OpenHRC/OpenHRC.git\#ros2:docker
 ```
 
 ### Run
