@@ -9,6 +9,8 @@ class JoyTopicInterface : public TwistTopicInterface {
   sensor_msgs::msg::Joy _joy;
 
   double gain_h = 0.1, gain_r = 0.1;
+  int gripper_idx = 0;
+  enum class GripperOperation { Keep, Switch, None } gripperOperation;
 
 protected:
   // std::string stateTopicName = "/spacenav/joy", stateFrameId = "world";
@@ -18,7 +20,8 @@ protected:
 
 public:
   using TwistTopicInterface::TwistTopicInterface;
-  JoyTopicInterface(const std::shared_ptr<CartController>& controller): TwistTopicInterface(controller, "JoyTopicInterface", FeedbackMode::NoFeedback) {}
+  JoyTopicInterface(const std::shared_ptr<CartController>& controller) : TwistTopicInterface(controller, "JoyTopicInterface", FeedbackMode::NoFeedback) {
+  }
   void updateTargetPose(const rclcpp::Time t, KDL::Frame& pose, KDL::Twist& twist) override;
   void initInterface() override;
   // void resetInterface() override;

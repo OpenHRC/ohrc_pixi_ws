@@ -79,6 +79,6 @@ void TwistTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos
 
 void TwistTopicInterface::resetInterface() {
   // RCLCPP_INFO_STREAM(node->get_logger(), "Reset interface");
-  // state = ohrc_msgs::msg::State();
+  state = ohrc_msgs::msg::State();
   isFirst = true;
 }

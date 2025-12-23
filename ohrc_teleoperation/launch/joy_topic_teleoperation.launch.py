@@ -45,7 +45,7 @@ def generate_launch_description():
                     }
             ],
             remappings=[
-                ('/spacenav/joy', '/fr3_right/cmd_joy'),
+                ('/spacenav/joy', '/cmd_joy'),
             ],
             output='screen',
         ),
@@ -55,7 +55,7 @@ def generate_launch_description():
                 'keyboard'), '/launch/keyboard_to_joy.launch.py']),
             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('device'), "' == 'keyboard'"])),
             launch_arguments={
-                'joy_topic_name': '/fr3_left/cmd_joy',
+                'joy_topic_name': '/cmd_joy',
             }.items()
         )
     ])

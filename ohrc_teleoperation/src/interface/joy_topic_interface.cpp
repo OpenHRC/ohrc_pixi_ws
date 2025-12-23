@@ -12,6 +12,9 @@ void JoyTopicInterface::initInterface() {
 
 void JoyTopicInterface::setSubscriber() {
   getTopicAndFrameName("cmd_joy", "user_frame");
+  RclcppUtility::declare_and_get_parameter(node, robot_ns + "gripper_idx", 0, gripper_idx);
+  RclcppUtility::declare_and_get_parameter_enum(node, robot_ns + "gripper_operation", GripperOperation::Switch, gripperOperation);
+
   subJoy = node->create_subscription<sensor_msgs::msg::Joy>(stateTopicName, rclcpp::QoS(1), std::bind(&JoyTopicInterface::cbJoy, this, std::placeholders::_1), controller->options);
 }
 
@@ -44,13 +47,23 @@ void JoyTopicInterface::updateTargetPose(const rclcpp::Time t, KDL::Frame& pos, 
   twist_msg.angular.y = joy.axes[4] * gain_r;
   twist_msg.angular.z = joy.axes[5] * gain_r;
 
+  if (gripperOperation == GripperOperation::Keep) {
+    this->controller->gripperCmd = joy.buttons[gripper_idx];
 
-  this->controller->gripperCmd = joy.buttons[0];
+  } else if (gripperOperation == GripperOperation::Switch) {
+    static bool lastGripperCmd = false;
 
-  if (joy.buttons[1] == 1.0)
-    this->reset();
+    if (joy.buttons[gripper_idx] == 1 && !lastGripperCmd) {
+      if (this->controller->gripperCmd < 0.5)
+        this->controller->gripperCmd = 1.0;
+      else
+        this->controller->gripperCmd = 0.0;
+    }
+    lastGripperCmd = joy.buttons[gripper_idx];
+  }
 
-
+  // if (joy.buttons[0] == 1 && joy.buttons[1] == 1)  // both buttons pressed
+  //   this->reset();
 
   setPoseFromTwistMsg(twist_msg, pos, twist);
 }
