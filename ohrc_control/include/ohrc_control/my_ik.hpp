@@ -19,7 +19,6 @@
 #include <thread>
 #include <visualization_msgs/msg/marker.hpp>
 
-
 #include "ohrc_common/utility.h"
 #include "rclcpp/rclcpp.hpp"
 
@@ -63,7 +62,6 @@ class MyIK : public std::enable_shared_from_this<MyIK> {
   std::vector<std::string> nameJnt;
   std::vector<int> idxSegJnt;
 
-
   bool poseFeedbackDisabled = false;  // no longer used
 
   // void initializeSingleRobot(const KDL::Chain& chain);
@@ -72,16 +70,17 @@ class MyIK : public std::enable_shared_from_this<MyIK> {
 
   std::vector<std::vector<long long>> combsRobot, combosLink;
 
-  int addCollisionAvoidance(const std::vector<Affine3d> &Ts, const std::vector<MatrixXd> &Js_, std::vector<double> &lower_vel_limits_, std::vector<double> &upper_vel_limits_,
-                            std::vector<MatrixXd> &A_ca);
+  int addCollisionAvoidance(const std::vector<Affine3d> &Ts, const std::vector<MatrixXd> &Js_, std::vector<double> &lower_vel_limits_, std::vector<double> &upper_vel_limits_, std::vector<MatrixXd> &A_ca);
   int addCollisionAvoidance(const std::vector<KDL::JntArray> &q_cur, std::vector<double> &lower_vel_limits_, std::vector<double> &upper_vel_limits_, std::vector<MatrixXd> &A_ca);
 
-  int calcCollisionAvoidance(int c0, int c1, const std::vector<std::vector<Vector3d>> &p_all, const std::vector<std::vector<KDL::Jacobian>> &J_all, double ds, double di,
-                             double eta, std::vector<double> &lower_vel_limits_, std::vector<double> &upper_vel_limits_, std::vector<MatrixXd> &A_ca);
+  int calcCollisionAvoidance(int c0, int c1, const std::vector<std::vector<Vector3d>> &p_all, const std::vector<std::vector<KDL::Jacobian>> &J_all, double ds, double di, double eta,
+                             std::vector<double> &lower_vel_limits_, std::vector<double> &upper_vel_limits_, std::vector<MatrixXd> &A_ca);
 
   bool getClosestPointLineSegments(const Vector3d &a0, const Vector3d &a1, const Vector3d &b0, const Vector3d &b1, double &as, double &bs);
   double getDistance(const Vector3d &a0, const Vector3d &a1, const Vector3d &b0, const Vector3d &b1, const double &as, const double &bs);
   Vector3d getVec(const Vector3d &a0, const Vector3d &a1, const Vector3d &b0, const Vector3d &b1, const double &as, const double &bs);
+
+  double getDeltaManipulability(std::shared_ptr<MyIK> myIK, const KDL::JntArray q_cur, const MatrixXd J, const Matrix<double, 6, 1> v);
 
   bool enableCollisionAvoidance = true;
   std::vector<double> w_h, init_w_h;
@@ -96,11 +95,10 @@ public:
   VectorXd getUpdatedJntVelLimit(const KDL::JntArray &q_cur, std::vector<double> &lower_vel_limits, std::vector<double> &upper_vel_limits, const double &dt);
 
   // single robot initilizer (with URDF)
-  MyIK(const rclcpp::Node::SharedPtr &node, const std::string robot_ns, const std::string &base_link, const std::string &tip_link,
-       const std::string &URDF_param = "/robot_description", double _eps = 1e-5, Affine3d T_base_world = Affine3d::Identity(), SolveType _type = Pure);
-  // single robot initilizer (without URDF)
-  MyIK(const rclcpp::Node::SharedPtr &node, const KDL::Chain &_chain, const KDL::JntArray &_q_min, const KDL::JntArray &_q_max, double _eps = 1e-5,
+  MyIK(const rclcpp::Node::SharedPtr &node, const std::string robot_ns, const std::string &base_link, const std::string &tip_link, const std::string &URDF_param = "/robot_description", double _eps = 1e-5,
        Affine3d T_base_world = Affine3d::Identity(), SolveType _type = Pure);
+  // single robot initilizer (without URDF)
+  MyIK(const rclcpp::Node::SharedPtr &node, const KDL::Chain &_chain, const KDL::JntArray &_q_min, const KDL::JntArray &_q_max, double _eps = 1e-5, Affine3d T_base_world = Affine3d::Identity(), SolveType _type = Pure);
   // multiple robot initilizer
   MyIK(const rclcpp::Node::SharedPtr &node, const std::vector<std::string> &base_link, const std::vector<std::string> &tip_link, const std::vector<Affine3d> &T_base_world,
        const std::vector<std::shared_ptr<MyIK>> &myik_ptr, double _eps = 1e-5, SolveType _type = Pure);
@@ -113,11 +111,9 @@ public:
 
   int CartToJntVel_qp(const KDL::JntArray &q_cur, const KDL::Frame &des_eff_pose, const KDL::Twist &des_eff_vel, KDL::JntArray &dq_des, const double &dt);
   int CartToJntVel_qp(const KDL::JntArray &q_cur, const KDL::Twist &des_eff_vel, const VectorXd &e, KDL::JntArray &dq_des, const double &dt);
-  int CartToJntVel_qp(const std::vector<KDL::JntArray> &q_cur, const std::vector<KDL::Frame> &des_eff_pose, const std::vector<KDL::Twist> &des_eff_vel,
-                      std::vector<KDL::JntArray> &dq_des, const double &dt);
+  int CartToJntVel_qp(const std::vector<KDL::JntArray> &q_cur, const std::vector<KDL::Frame> &des_eff_pose, const std::vector<KDL::Twist> &des_eff_vel, std::vector<KDL::JntArray> &dq_des, const double &dt);
 
-  int CartToJntVel_qp_manipOpt(const KDL::JntArray &q_cur, const KDL::Frame &des_eff_pose, const KDL::Twist &des_eff_vel, KDL::JntArray &dq_des, const double &dt,
-                               const MatrixXd &userManipU);
+  int CartToJntVel_qp_manipOpt(const KDL::JntArray &q_cur, const KDL::Frame &des_eff_pose, const KDL::Twist &des_eff_vel, KDL::JntArray &dq_des, const double &dt, const MatrixXd &userManipU);
 
   void updateVelP(const KDL::JntArray &q_cur, const KDL::Frame &des_eff_pose, KDL::Twist &des_eff_vel, const VectorXd &e);
 

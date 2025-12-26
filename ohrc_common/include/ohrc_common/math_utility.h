@@ -4,9 +4,9 @@
 #include <math.h>
 
 #include <Eigen/Dense>
+#include <kdl/jntarray.hpp>
 #include <unordered_map>
 #include <vector>
-#include <kdl/jntarray.hpp>
 
 namespace math_utility {
 
@@ -138,6 +138,10 @@ inline Eigen::Quaterniond QuatFromTwoVectors(Eigen::Vector3d u, Eigen::Vector3d 
   Eigen::Vector3d w = u.cross(v);
 
   return Eigen::Quaterniond(d + sqrt(d * d + w.dot(w)), w(0), w(1), w(2)).normalized();
+}
+
+inline Eigen::MatrixXd numericalMatrixDifferntiation(Eigen::MatrixXd A_plus, Eigen::MatrixXd A_minus, double delta) {
+  return (A_plus - A_minus) / (2.0 * delta);
 }
 
 class Integrator {
