@@ -498,6 +498,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
 
   std::vector<MatrixXd> Js(nRobot);
   std::vector<VectorXd> es(nRobot);
+  std::vector<double> w_damp(nRobot);
   std::vector<Matrix<double, 6, 1>> vs(nRobot);
 
   // Removed unused proportional gain initialization code to reduce clutter.
@@ -513,9 +514,17 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
     Affine3d Ts_d, Ts;
     tf2::transformKDLToEigen(des_eff_pose[i], Ts_d);
     tf2::transformKDLToEigen(p, Ts);
-    es[i] = getCartError(Ts, Ts_d);
 
     tf2::twistKDLToEigen(des_eff_vel[i], vs[i]);
+
+    // derivative of manipulability w.r.t. end effector position
+    double delta_w = this->getDeltaManipulability(myIKs[i], q_cur[i], Js[i], vs[i]);
+    w_damp[i] = 1.0 / (Js[i] * Js[i].transpose()).determinant() * 1.0e-1 * std::pow(0.5, delta_w);  // TODO; think about the marging way
+
+    // std::cout << "Manipulability gradient: " << w_damp[i] << std::endl;
+
+    // es[i] = 1.0 / (Js[i] * Js[i].transpose()).determinant() * VectorXd::Ones(6) * 3.0e-2;  // getCartError(Ts, Ts_d) +
+    // manip[i] = (Js[i] * Js[i].transpose()).determinant();
 
     // if (!myIKs[i]->getPoseFeedbackDisabled()) {
     // vs[i] = vs[i] + kp.asDiagonal() * es[i];
@@ -532,7 +541,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   std::vector<VectorXd> g(nRobot + nAddObj);
 
   // additonal objective term in QP (1) for singularity avoidance
-  w_h[nRobot] = 5.0e-0;
+  w_h[nRobot] = 1.0e+1;
   H[nRobot] = MatrixXd::Identity(nState, nState);
   g[nRobot] = VectorXd::Zero(nState);  // this will be updated in the loop below
 
@@ -542,13 +551,14 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   g[nRobot + 1] = (std_utility::concatenateVectors(q_rest) - std_utility::concatenateVectors(q_cur)).transpose();
 
   for (size_t i = 0; i < nRobot; i++) {
-    VectorXd w = (VectorXd(6) << 1.0, 1.0, 1.0, 0.5 / M_PI, 0.5 / M_PI, 0.5 / M_PI).finished() * 1.0e2;
-    double w_n = 0.0;  // 1.0e-6;  // this leads dq -> 0 witch is conflict with additonal task
-    double gamma = 0.5 * es[i].transpose() * w.asDiagonal() * es[i] + w_n;
+    // VectorXd w = (VectorXd(6) << 1.0, 1.0, 1.0, 0.5 / M_PI, 0.5 / M_PI, 0.5 / M_PI).finished() * 1.0e4;
+    // double w_n = 0.0;  // 1.0e-6;  // this leads dq -> 0 witch is conflict with additonal task
+    // double gamma = 0.5 * es[i].transpose() * w.asDiagonal() * es[i] + w_n;
+    // double gamma = es[i].transpose() * es[i];
     // std::cout << gamma << std::endl;
     H[i] = Js_[i].transpose() * Js_[i];
     g[i] = vs[i].transpose() * Js_[i];
-    H[nRobot].block(iJnt[i], iJnt[i], myIKs[i]->getNJnt(), myIKs[i]->getNJnt()) = gamma * MatrixXd::Identity(myIKs[i]->getNJnt(), myIKs[i]->getNJnt());
+    H[nRobot].block(iJnt[i], iJnt[i], myIKs[i]->getNJnt(), myIKs[i]->getNJnt()) = w_damp[i] * MatrixXd::Identity(myIKs[i]->getNJnt(), myIKs[i]->getNJnt());
   }
 
   // allocate QP problem matrices and vectores
@@ -652,8 +662,6 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
 
   return 1;
 }
-
-
 
 int MyIK::CartToJntVel_qp_manipOpt(const KDL::JntArray& q_cur, const KDL::Frame& des_eff_pose, const KDL::Twist& des_eff_vel, KDL::JntArray& dq_des, const double& dt,
                                    const MatrixXd& userManipU) {
@@ -1111,5 +1119,27 @@ void MyIK::resetRobotWeight() {
 }
 void MyIK::setRobotWeight(int robotIndex, double rate) {
   w_h[robotIndex] = rate * init_w_h[robotIndex];
+}
+
+double MyIK::getDeltaManipulability(std::shared_ptr<MyIK> myIK, const KDL::JntArray q_cur, const MatrixXd J, const Matrix<double, 6, 1> v) {
+  Eigen::MatrixXd J_plus, J_minus;
+  double delta = 1.0e-6;
+  Eigen::VectorXd dwdq(myIK->getNJnt());
+
+  for (int j = 0; j < myIK->getNJnt(); j++) {
+    VectorXd e = VectorXd::Zero(myIK->getNJnt());
+    e(j) = delta;
+
+    KDL::JntArray q_plus = q_cur;
+    q_plus.data = q_plus.data + e;
+    KDL::JntArray q_minus = q_cur;
+    q_minus.data = q_minus.data - e;
+
+    myIK->JntToJac(q_plus, J_plus);
+    myIK->JntToJac(q_minus, J_minus);
+    MatrixXd dJdq_ = math_utility::numericalMatrixDifferntiation(J_plus, J_minus, delta);
+    dwdq[j] = 0.5 * ((J * J.transpose()).inverse() * (dJdq_ * J.transpose() + J * dJdq_.transpose())).trace();
+  }
+  return dwdq.transpose() * J.completeOrthogonalDecomposition().pseudoInverse() * v;
 }
 };  // namespace MyIK
