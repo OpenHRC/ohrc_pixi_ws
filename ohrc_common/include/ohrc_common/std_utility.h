@@ -51,7 +51,7 @@ inline U weightedSum(std::vector<T> weight, std::vector<U> vec) {
 // compare abosolute values of input, and find max element.
 // but return original value
 template <typename _Tp>
-_GLIBCXX14_CONSTEXPR inline _Tp max_abs(std::initializer_list<_Tp> __l) {
+inline _Tp max_abs(std::initializer_list<_Tp> __l) {
   return std::max(__l, [](_Tp v1, _Tp v2) { return std::abs(v1) < std::abs(v2); });
 }
 
