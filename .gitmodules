@@ -1,0 +1,3 @@
+[submodule "src/OpenHRC"]
+	path = src/OpenHRC
+	url = https://github.com/OpenHRC/OpenHRC.git

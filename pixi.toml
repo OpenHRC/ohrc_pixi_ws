@@ -1,0 +1,33 @@
+[workspace]
+authors = ["Shunki Itadera <s.itadera@aist.go.jp>"]
+channels = ["robostack-jazzy", "conda-forge"]
+name = "my_ros2_project4"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+ros-jazzy-controller-manager = ">=4.38.0,<5"
+ros-jazzy-ur-simulation-gz = ">=2.5.0,<3"
+ros-jazzy-ros-base = ">=0.11.0,<0.12"
+filelock = ">=3.20.1,<4"
+ros-jazzy-rmw-cyclonedds-cpp = ">=2.2.3,<3"
+ros-jazzy-ros2-controllers = ">=4.33.1,<5"
+ros-dev-tools = ">=1.0.1,<2"
+colcon-common-extensions = ">=0.3.0,<0.4"
+ros-jazzy-ament-cmake-auto = ">=2.5.4,<3"
+compilers = ">=1.11.0,<2"
+pkg-config = ">=0.29.2,<0.30"
+cmake = ">=4.2.1,<5"
+ninja = ">=1.13.2,<2"
+sdl = ">=1.2.68,<2"
+proxsuite = ">=0.7.2,<0.8"
+magic_enum = ">=0.9.7,<0.10"
+
+[activation.env]
+RMW_IMPLEMENTATION = "rmw_cyclonedds_cpp"
+GZ_SIM_SYSTEM_PLUGIN_PATH = "$CONDA_PREFIX/lib"
+
+[activation]
+scripts = ["install/setup.sh"]
