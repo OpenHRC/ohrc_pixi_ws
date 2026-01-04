@@ -22,11 +22,9 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 
 #if __has_include(<magic_enum.hpp>)
-#include <magic_enum.hpp>
-#elif __has_include(<magic_enum/magic_enum.hpp>)
-#include <magic_enum/magic_enum.hpp>
+#include <magic_enum.hpp>  // if ros-*-magic-enum is installed
 #else
-#error "magic_enum header not found. Please adjust include paths."
+#include <magic_enum/magic_enum.hpp>
 #endif
 
 #include "ohrc_common/utility.h"
