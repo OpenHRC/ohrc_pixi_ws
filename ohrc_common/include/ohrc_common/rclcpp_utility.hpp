@@ -3,7 +3,13 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "magic_enum/magic_enum.hpp"
+#if __has_include(<magic_enum.hpp>)
+#include <magic_enum.hpp>
+#elif __has_include(<magic_enum/magic_enum.hpp>)
+#include <magic_enum/magic_enum.hpp>
+#else
+#error "magic_enum header not found. Please adjust include paths."
+#endif
 
 namespace RclcppUtility {
 
