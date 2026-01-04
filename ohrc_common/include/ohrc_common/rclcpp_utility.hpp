@@ -3,7 +3,11 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "magic_enum.hpp"
+#if __has_include(<magic_enum.hpp>)
+#include <magic_enum.hpp>  // if ros-*-magic-enum is installed
+#else
+#include <magic_enum/magic_enum.hpp>
+#endif
 
 namespace RclcppUtility {
 
