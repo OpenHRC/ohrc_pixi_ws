@@ -23,6 +23,8 @@ class RandomMarkerPublisher(Node):
         self.average_time = 0.0
         self.attempts = 0
 
+        np.random.seed(100)
+
     def state_callback(self, msg):
         pos = np.array([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
         m_pos = np.array([self.marker.pose.position.x, self.marker.pose.position.y, self.marker.pose.position.z])
