@@ -58,15 +58,15 @@ void CartController::init(std::string robot, std::string hw_config) {
   subJntState = node->create_subscription<sensor_msgs::msg::JointState>(jnt_state_topic, rclcpp::QoS(1), std::bind(&CartController::cbJntState, this, _1), options);
   subFlagPtrs.push_back(&flagJntState);
 
-  RCLCPP_INFO_STREAM(node->get_logger(), "Looking for force/torque sensor TF: " << robot_ns + ft_sensor_link << ", topic: " << robot_ns + ft_topic);
-  if (trans->canTransform(chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1))) {
-    this->Tft_eff = trans->getTransform(chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1));
-    subForce = node->create_subscription<geometry_msgs::msg::WrenchStamped>(robot_ns + ft_topic, rclcpp::QoS(1), std::bind(&CartController::cbForce, this, _1), options);
-    pubEefForce = node->create_publisher<geometry_msgs::msg::WrenchStamped>("/" + robot_ns + "eef_force", rclcpp::QoS(1));
-    subFlagPtrs.push_back(&flagForce);
-    this->ftFound = true;
-  } else
-    RCLCPP_WARN_STREAM(node->get_logger(), "force/torque sensor was not found. Compliance control does not work.");
+  // RCLCPP_INFO_STREAM(node->get_logger(), "Looking for force/torque sensor TF: " << robot_ns + ft_sensor_link << ", topic: " << robot_ns + ft_topic);
+  // if (trans->canTransform(chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1))) {
+  //   this->Tft_eff = trans->getTransform(chain_end, robot_ns + ft_sensor_link, rclcpp::Time(0), rclcpp::Duration::from_seconds(0.1));
+  //   subForce = node->create_subscription<geometry_msgs::msg::WrenchStamped>(robot_ns + ft_topic, rclcpp::QoS(1), std::bind(&CartController::cbForce, this, _1), options);
+  //   pubEefForce = node->create_publisher<geometry_msgs::msg::WrenchStamped>("/" + robot_ns + "eef_force", rclcpp::QoS(1));
+  //   subFlagPtrs.push_back(&flagForce);
+  //   this->ftFound = true;
+  // } else
+  //   RCLCPP_WARN_STREAM(node->get_logger(), "force/torque sensor was not found. Compliance control does not work.");
 
   if (ftFound) {
     client = node->create_client<std_srvs::srv::Trigger>("/" + robot_ns + "ft_filter/reset_offset");
@@ -101,8 +101,8 @@ void CartController::init(std::string robot, std::string hw_config) {
 
   if (initPoseFrame[0] == '/')
     initPoseFrame.erase(0, 1);
-  else
-    initPoseFrame = robot_ns + initPoseFrame;
+
+  initPoseFrame = robot_ns + initPoseFrame;
 
   Affine3d T_init_base = getTransform_base(initPoseFrame);
   T_init = Translation3d(initPose[0], initPose[1], initPose[2]) *
@@ -196,13 +196,13 @@ void CartController::initMembers() {
 
   if (chain_start[0] == '/')
     chain_start = chain_start.erase(0, 1);
-  else
-    chain_start = robot_ns + chain_start;
+  // else
+  chain_start = robot_ns + chain_start;
 
   if (chain_end[0] == '/')
     chain_end = chain_end.erase(0, 1);
-  else
-    chain_end = robot_ns + chain_end;
+  // else
+  chain_end = robot_ns + chain_end;
 
   this->T_base_root = trans->getTransform(root_frame, chain_start, rclcpp::Time(0), rclcpp::Duration(1, 0));
 

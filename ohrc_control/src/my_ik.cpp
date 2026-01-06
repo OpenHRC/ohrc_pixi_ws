@@ -586,7 +586,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   // if (enableSelfCollisionAvoidance)
   // nCA = addSelfCollisionAvoidance(q_cur[i], lower_vel_limits_, upper_vel_limits_, A_ca);
 
-  if (enableCollisionAvoidance && nRobot > 1)
+  if (enableCollisionAvoidance)
     nCA = addCollisionAvoidance(q_cur, lower_vel_limits_, upper_vel_limits_, A_ca);
   // nCA = addCollisionAvoidance(Ts, Js_, lower_vel_limits_, upper_vel_limits_, A_ca);
 
@@ -933,10 +933,10 @@ int MyIK::calcCollisionAvoidance(int c0, int c1, const std::vector<std::vector<V
       Vector3d d_vec = getVec(p0[i], p0[i + 1], p1[j], p1[j + 1], as, bs);
       double d = d_vec.norm();
 
-      // ROS_INFO_STREAM("d: " << d << " i:" << i << " j:" << j << " as: " << as << " bs: " << bs);
+      std::cout << "d: " << d << " i:" << i << " j:" << j << " as: " << as << " bs: " << bs << std::endl;
 
       if (d < di) {  // if the relative shortest distance is smaller than the infulenced distance
-        // std::cout << "collision detected between " << i << " and " << j << std::endl;
+        std::cout << "collision detected between " << i << " and " << j << std::endl;
 
         // get extended Jacobian
         MatrixXd Js_0 = MatrixXd::Zero(J0[i + 1].rows(), nState);
@@ -1007,11 +1007,12 @@ int MyIK::addCollisionAvoidance(const std::vector<KDL::JntArray>& q_cur, std::ve
 
   // collision avoidance against other robots
   if (nRobot > 1) {
-    for (auto& comb : combsRobot)
+    for (auto& comb : combsRobot) {
       nCollision += calcCollisionAvoidance(comb[0], comb[1], p_all, J_all, ds, di, eta, lower_vel_limits_, upper_vel_limits_, A_ca);
+    }
   }
 
-  // ROS_INFO_STREAM("nCollision: " << nCollision);
+  // std::cout << "nCollision: " << nCollision << std::endl;
 
   return A_ca.size();
 }
