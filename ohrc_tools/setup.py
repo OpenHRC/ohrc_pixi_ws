@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'reset_keyboard_caller = ohrc_tools.reset_keyboard_caller:main',
+            'reaching_game = ohrc_tools.reaching_game:main',
         ],
     },
 )
