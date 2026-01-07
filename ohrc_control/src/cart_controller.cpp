@@ -187,13 +187,6 @@ void CartController::initMembers() {
     // chain_end_ = robot_ns + chain_end_;
   }
 
-  myik_solver_ptr = std::make_shared<MyIK::MyIK>(this->node, model_ns, chain_start_, chain_end_, urdf_param, eps, T_base_root);
-  myik_solver_ptr->initializeSingleRobot();
-  bool valid = myik_solver_ptr->getKDLChain(chain);
-  chain_segs = chain.segments;
-
-  fk_solver_ptr = std::make_unique<KDL::ChainFkSolverPos_recursive>(chain);
-
   if (chain_start[0] == '/')
     chain_start = chain_start.erase(0, 1);
   // else
@@ -205,6 +198,13 @@ void CartController::initMembers() {
   chain_end = robot_ns + chain_end;
 
   this->T_base_root = trans->getTransform(root_frame, chain_start, rclcpp::Time(0), rclcpp::Duration(1, 0));
+
+  myik_solver_ptr = std::make_shared<MyIK::MyIK>(this->node, model_ns, chain_start_, chain_end_, urdf_param, eps, T_base_root);
+  myik_solver_ptr->initializeSingleRobot();
+  bool valid = myik_solver_ptr->getKDLChain(chain);
+  chain_segs = chain.segments;
+
+  fk_solver_ptr = std::make_unique<KDL::ChainFkSolverPos_recursive>(chain);
 
   nJnt = chain.getNrOfJoints();
   _q_cur.resize(nJnt);

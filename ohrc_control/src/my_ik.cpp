@@ -500,6 +500,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   std::vector<VectorXd> es(nRobot);
   std::vector<double> w_damp(nRobot);
   std::vector<Matrix<double, 6, 1>> vs(nRobot);
+  std::vector<Affine3d> Ts(nRobot);
 
   // Removed unused proportional gain initialization code to reduce clutter.
   for (size_t i = 0; i < nRobot; i++) {
@@ -511,9 +512,9 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
     KDL::Frame p;
     myIKs[i]->JntToCart(q_cur[i], p);
 
-    Affine3d Ts_d, Ts;
+    Affine3d Ts_d;  //, Ts;
     tf2::transformKDLToEigen(des_eff_pose[i], Ts_d);
-    tf2::transformKDLToEigen(p, Ts);
+    tf2::transformKDLToEigen(p, Ts[i]);
 
     tf2::twistKDLToEigen(des_eff_vel[i], vs[i]);
 
@@ -900,7 +901,7 @@ int MyIK::addCollisionAvoidance(const std::vector<Affine3d>& Ts, const std::vect
     // std::cout << (myIKs[comb[0]]->getT_base_world() * Ts[comb[0]]).translation().transpose() << std::endl;
     // std::cout << (myIKs[comb[1]]->getT_base_world() * Ts[comb[1]]).translation().transpose() << std::endl;
     double d = d_vec.norm();
-    // std::cout << d << std::endl;
+    std::cout << d << std::endl;
     if (d < di) {
       A_ca.push_back((d_vec / d).transpose() * (myIKs[comb[0]]->getT_base_world().rotation() * Js_[comb[0]].block(0, 0, 3, nState) -
                                                 myIKs[comb[1]]->getT_base_world().rotation() * Js_[comb[1]].block(0, 0, 3, nState)));
@@ -933,10 +934,10 @@ int MyIK::calcCollisionAvoidance(int c0, int c1, const std::vector<std::vector<V
       Vector3d d_vec = getVec(p0[i], p0[i + 1], p1[j], p1[j + 1], as, bs);
       double d = d_vec.norm();
 
-      std::cout << "d: " << d << " i:" << i << " j:" << j << " as: " << as << " bs: " << bs << std::endl;
+      // std::cout << "d: " << d << " i:" << i << " j:" << j << " as: " << as << " bs: " << bs << std::endl;
 
       if (d < di) {  // if the relative shortest distance is smaller than the infulenced distance
-        std::cout << "collision detected between " << i << " and " << j << std::endl;
+        // std::cout << "collision detected between " << i << " and " << j << std::endl;
 
         // get extended Jacobian
         MatrixXd Js_0 = MatrixXd::Zero(J0[i + 1].rows(), nState);
