@@ -42,9 +42,9 @@ protected:
     if (condition && !isEnable) {
       RCLCPP_INFO_STREAM(node->get_logger(), "[" + interfaceName + "] Enabled");
       resetInterface();
-    } else if (!condition && isEnable)
+    } else if (!condition && isEnable) {
       RCLCPP_INFO_STREAM(node->get_logger(), "[" + interfaceName + "] Disabled");
-
+    }
     isEnable = condition;
     return condition;
   }

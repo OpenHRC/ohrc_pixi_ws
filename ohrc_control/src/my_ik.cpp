@@ -500,6 +500,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   std::vector<VectorXd> es(nRobot);
   std::vector<double> w_damp(nRobot);
   std::vector<Matrix<double, 6, 1>> vs(nRobot);
+  std::vector<Affine3d> Ts(nRobot);
 
   // Removed unused proportional gain initialization code to reduce clutter.
   for (size_t i = 0; i < nRobot; i++) {
@@ -511,9 +512,9 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
     KDL::Frame p;
     myIKs[i]->JntToCart(q_cur[i], p);
 
-    Affine3d Ts_d, Ts;
+    Affine3d Ts_d;  //, Ts;
     tf2::transformKDLToEigen(des_eff_pose[i], Ts_d);
-    tf2::transformKDLToEigen(p, Ts);
+    // tf2::transformKDLToEigen(p, Ts[i]);
 
     tf2::twistKDLToEigen(des_eff_vel[i], vs[i]);
 
@@ -933,7 +934,7 @@ int MyIK::calcCollisionAvoidance(int c0, int c1, const std::vector<std::vector<V
       Vector3d d_vec = getVec(p0[i], p0[i + 1], p1[j], p1[j + 1], as, bs);
       double d = d_vec.norm();
 
-      // ROS_INFO_STREAM("d: " << d << " i:" << i << " j:" << j << " as: " << as << " bs: " << bs);
+      // std::cout << "d: " << d << " i:" << i << " j:" << j << " as: " << as << " bs: " << bs << std::endl;
 
       if (d < di) {  // if the relative shortest distance is smaller than the infulenced distance
         // std::cout << "collision detected between " << i << " and " << j << std::endl;
@@ -1007,11 +1008,12 @@ int MyIK::addCollisionAvoidance(const std::vector<KDL::JntArray>& q_cur, std::ve
 
   // collision avoidance against other robots
   if (nRobot > 1) {
-    for (auto& comb : combsRobot)
+    for (auto& comb : combsRobot) {
       nCollision += calcCollisionAvoidance(comb[0], comb[1], p_all, J_all, ds, di, eta, lower_vel_limits_, upper_vel_limits_, A_ca);
+    }
   }
 
-  // ROS_INFO_STREAM("nCollision: " << nCollision);
+  // std::cout << "nCollision: " << nCollision << std::endl;
 
   return A_ca.size();
 }

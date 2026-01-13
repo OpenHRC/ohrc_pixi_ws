@@ -5,7 +5,11 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /RobotModel1
         - /RobotModel1/Description Topic1
+        - /RobotModel2
+        - /InteractiveMarkers1
+        - /InteractiveMarkers2
       Splitter Ratio: 0.5
     Tree Height: 975
   - Class: rviz_common/Selection
@@ -52,7 +56,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /robot_description
+        Value: /toroboarm_1/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -64,62 +68,65 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        base_link_inertia:
+        base_dummy:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        flange:
+        eef_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        forearm_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        ft_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        ground_plane:
+        ft_sensor_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        shoulder_link:
+        ft_sensor_link_top:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        link0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        tool0:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        upper_arm_link:
+        link1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        world:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        wrist_1_link:
+        link2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        wrist_2_link:
+        link3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        wrist_3_link:
+        link4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link7:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        peg_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -128,14 +135,116 @@ Visualization Manager:
         Inertia: false
         Mass: false
       Name: RobotModel
-      TF Prefix: ""
+      TF Prefix: toroboarm_1
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /toroboarm_2/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_dummy:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        eef_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        ft_sensor_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ft_sensor_link_top:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        link0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link7:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        peg_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: toroboarm_2
       Update Interval: 0
       Value: true
       Visual Enabled: true
     - Class: rviz_default_plugins/InteractiveMarkers
       Enable Transparency: true
       Enabled: true
-      Interactive Markers Namespace: /eef_marker
+      Interactive Markers Namespace: /toroboarm_1/eef_marker
+      Name: InteractiveMarkers
+      Show Axes: false
+      Show Descriptions: true
+      Show Visual Aids: false
+      Value: true
+    - Class: rviz_default_plugins/InteractiveMarkers
+      Enable Transparency: true
+      Enabled: true
+      Interactive Markers Namespace: /toroboarm_2/eef_marker
       Name: InteractiveMarkers
       Show Axes: false
       Show Descriptions: true
@@ -145,7 +254,7 @@ Visualization Manager:
       Enabled: true
       Name: Marker
       Namespaces:
-        random_markers: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -200,25 +309,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.6343176364898682
+      Distance: 2.5716302394866943
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.0457618348300457
-        Y: -0.07058511674404144
-        Z: 0.49734944105148315
+        X: 0.2733567953109741
+        Y: -0.23918959498405457
+        Z: 0.5445282459259033
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.15039828419685364
+      Pitch: 0.9203978776931763
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.5353983640670776
+      Yaw: 1.650397777557373
     Saved: ~
 Window Geometry:
   Displays:
@@ -234,5 +343,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 2560
-  X: 2429
-  Y: 387
+  X: 6460
+  Y: 682
