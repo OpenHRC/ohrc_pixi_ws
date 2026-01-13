@@ -40,10 +40,10 @@ protected:
   const std::string interfaceName = "";
   bool updateIsEnable(bool condition) {
     if (condition && !isEnable) {
-      // RCLCPP_INFO_STREAM(node->get_logger(), "[" + interfaceName + "] Enabled");
+      RCLCPP_INFO_STREAM(node->get_logger(), "[" + interfaceName + "] Enabled");
       resetInterface();
     } else if (!condition && isEnable) {
-      // RCLCPP_INFO_STREAM(node->get_logger(), "[" + interfaceName + "] Disabled");
+      RCLCPP_INFO_STREAM(node->get_logger(), "[" + interfaceName + "] Disabled");
     }
     isEnable = condition;
     return condition;

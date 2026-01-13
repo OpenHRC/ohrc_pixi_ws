@@ -514,7 +514,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
 
     Affine3d Ts_d;  //, Ts;
     tf2::transformKDLToEigen(des_eff_pose[i], Ts_d);
-    tf2::transformKDLToEigen(p, Ts[i]);
+    // tf2::transformKDLToEigen(p, Ts[i]);
 
     tf2::twistKDLToEigen(des_eff_vel[i], vs[i]);
 
@@ -587,7 +587,7 @@ int MyIK::CartToJntVel_qp(const std::vector<KDL::JntArray>& q_cur, const std::ve
   // if (enableSelfCollisionAvoidance)
   // nCA = addSelfCollisionAvoidance(q_cur[i], lower_vel_limits_, upper_vel_limits_, A_ca);
 
-  if (enableCollisionAvoidance)
+  if (enableCollisionAvoidance && nRobot > 1)
     nCA = addCollisionAvoidance(q_cur, lower_vel_limits_, upper_vel_limits_, A_ca);
   // nCA = addCollisionAvoidance(Ts, Js_, lower_vel_limits_, upper_vel_limits_, A_ca);
 
@@ -901,7 +901,7 @@ int MyIK::addCollisionAvoidance(const std::vector<Affine3d>& Ts, const std::vect
     // std::cout << (myIKs[comb[0]]->getT_base_world() * Ts[comb[0]]).translation().transpose() << std::endl;
     // std::cout << (myIKs[comb[1]]->getT_base_world() * Ts[comb[1]]).translation().transpose() << std::endl;
     double d = d_vec.norm();
-    std::cout << d << std::endl;
+    // std::cout << d << std::endl;
     if (d < di) {
       A_ca.push_back((d_vec / d).transpose() * (myIKs[comb[0]]->getT_base_world().rotation() * Js_[comb[0]].block(0, 0, 3, nState) -
                                                 myIKs[comb[1]]->getT_base_world().rotation() * Js_[comb[1]].block(0, 0, 3, nState)));
