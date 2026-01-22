@@ -4,4 +4,4 @@ log/
 .pixi/
 pixi.lock
 
-*/.DS_Store
+**/.DS_Store

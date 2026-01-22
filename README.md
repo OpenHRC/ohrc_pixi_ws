@@ -33,7 +33,7 @@ which is alias of `pixi run colcon build --symlink-install --cmake-args -DCMAKE_
 ## 5. Run an example
 Open two terminals and `cd` to ohrc_pixi_ws directory.
 
-### 1st terminal (run ur%e simulation)
+### 1st terminal (run ur5e simulation)
 ```bash
 pixi run ur5e_gz
 ```
