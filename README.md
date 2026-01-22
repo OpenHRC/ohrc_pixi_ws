@@ -24,8 +24,23 @@ cd ohrc_pixi_ws
 pixi install
 ```
 
-### 4. Build OpenHRC (and others in src)
+## 4. Build OpenHRC (and others in src)
 ```bash
-pixi build
+pixi run build
 ```
+which is alias of `pixi run colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release`.
 
+## 5. Run an example
+Open two terminals and `cd` to ohrc_pixi_ws directory.
+
+### 1st terminal (run ur%e simulation)
+```bash
+pixi run ur5e_gz
+```
+which is alias of `pixi run ros2 launch ur_simulation_gz ur_sim_control.launch.py initial_joint_controller:=forward_velocity_controller launch_rviz:=false gazebo_gui:=false`.
+
+### 3nd terminal (execute marker teleoperation)
+```bash
+pixi run ohrc_marker_teleoperation
+``` 
+which is alias of `pixi run ros2 launch ohrc_teleoperation marker_teleoperation.launch.py`.
