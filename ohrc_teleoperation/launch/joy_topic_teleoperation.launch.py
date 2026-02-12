@@ -33,9 +33,9 @@ def generate_launch_description():
             }.items()
         ),
         Node(
-            package='spacenav',
-            executable='spacenav_node',
-            name='spacenav',
+            package="spacemouse_ros2",
+            executable="pyspacemouse_publisher",
+            name="spacemouse_publisher",
             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('device'), "' == 'spacenav'"])),
             parameters=[
                     {
@@ -45,7 +45,7 @@ def generate_launch_description():
                     }
             ],
             remappings=[
-                ('/spacenav/joy', '/cmd_joy'),
+                ('/joy', '/cmd_joy'),
             ],
             output='screen',
         ),

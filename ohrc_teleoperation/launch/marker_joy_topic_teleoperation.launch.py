@@ -30,9 +30,9 @@ def generate_launch_description():
             }.items()
         ),
         Node(
-            package='spacenav',
-            executable='spacenav_node',
-            name='spacenav',
+            package="spacemouse_ros2",
+            executable="pyspacemouse_publisher",
+            name="spacemouse_publisher",
             parameters=[
                     {
                         'zero_when_static': False,
@@ -41,7 +41,7 @@ def generate_launch_description():
                     }
             ],
             remappings=[
-                ('/spacenav/joy', '/fr3_left/cmd_joy'),
+                ('/joy', '/fr3_left/cmd_joy'),
             ],
             output='screen',
         ),
