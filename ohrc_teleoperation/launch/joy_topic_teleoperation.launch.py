@@ -32,22 +32,13 @@ def generate_launch_description():
                 'user_frame_viewpoint': LaunchConfiguration('user_frame_viewpoint'),
             }.items()
         ),
-        Node(
-            package="spacemouse_ros2",
-            executable="pyspacemouse_publisher",
-            name="spacemouse_publisher",
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([FindPackageShare(
+                'spacemouse_ros2'), '/launch/spacemouse_publisher.launch.py']),
             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('device'), "' == 'spacenav'"])),
-            parameters=[
-                    {
-                        'zero_when_static': False,
-                        'static_trans_deadband': 0.01,
-                        'static_rot_deadband': 0.01,
-                    }
-            ],
-            remappings=[
-                ('/joy', '/cmd_joy'),
-            ],
-            output='screen',
+            launch_arguments={
+                'joy_topic_name': 'cmd_joy',
+            }.items()
         ),
 
         IncludeLaunchDescription(

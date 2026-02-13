@@ -4,8 +4,8 @@
       feedback_mode: "PositionFeedback" 
 
       gain:
-        horizontal: 0.1
-        rotational: 0.1
+        horizontal: 0.3
+        rotational: 0.3
 
       # topic_name: "/cmd_joy"
       # frame_id: "user_frame"
