@@ -29,6 +29,7 @@ ament_auto_add_library(ohrc_common
   src/filter_utility/kalman.cpp
 )
 target_link_libraries(ohrc_common magic_enum::magic_enum)
+ament_export_libraries(ohrc_common)
 ament_export_include_directories(include)
 ament_auto_package(    
   USE_SCOPED_HEADER_INSTALL_DIR)
