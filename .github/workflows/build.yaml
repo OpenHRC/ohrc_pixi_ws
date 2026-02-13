@@ -53,7 +53,11 @@ jobs:
         source /opt/ros/${{ inputs.ros_distro }}/setup.bash
         cd ${WS}
 
-        PYVER=$(python3 - <<'PY'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")PY)
+        PYVER=$(python3 - <<'PY'
+        import sys
+        print(f"{sys.version_info.major}.{sys.version_info.minor}")
+        PY
+        )
         export PYTHONPATH="/opt/ros/${{ inputs.ros_distro }}/lib/python${PYVER}/site-packages:${PYTHONPATH:-}"
 
         env | grep -E 'PYTHONPATH|CMAKE_PREFIX_PATH|AMENT_PREFIX_PATH' || true
