@@ -2,7 +2,7 @@
 authors = ["Shunki Itadera <s.itadera@aist.go.jp>"]
 channels = ["robostack-jazzy", "conda-forge"]
 name = "ohrc_pixi_ws"
-platforms = ["osx-arm64"]
+platforms = ["osx-arm64", "linux-64"]
 version = "0.1.0"
 
 [tasks]
@@ -21,6 +21,7 @@ filelock = ">=3.20.1,<4"
 sdl = ">=1.2.68,<2"
 proxsuite = ">=0.7.2,<0.8"
 magic_enum = ">=0.9.7,<0.10"
+setuptools = "69.5.*"
 
 
 [activation]

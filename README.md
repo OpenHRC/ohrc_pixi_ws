@@ -4,11 +4,12 @@ This is as setup file for [OpenHRC](https://github.com/OpenHRC/OpenHRC) on [Pixi
 
 We have tested on
 - macOS Tahoe
+- Ubuntu 22.04
 
 ## 1. Install Pixi
 Follow the official instruction [WEB](https://pixi.prefix.dev/latest/installation/)
 
-If you install it on macOS
+If you install it on macOS or Linux
 ```bash
 curl -fsSL https://pixi.sh/install.sh | sh
 ```

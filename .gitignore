@@ -5,3 +5,5 @@ log/
 pixi.lock
 
 **/.DS_Store
+
+.vscode/
