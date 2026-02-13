@@ -26,8 +26,8 @@ jobs:
 
     - name: apt update and upgrade
       run: |
-        sudo apt update
-        sudo apt upgrade -y
+        apt-get update
+        apt-get upgrade -y
 
     - name: Init workspace
       run: |
@@ -40,10 +40,10 @@ jobs:
         cd ${WS}/src/OpenHRC
         git submodule update --init --recursive
         rosdep update
-        rosdep install -i -y --from-paths ./ 
+        rosdep install --rosdistro ${{ inputs.ros_distro }} -i -y --from-paths ./ 
 
     - name: build
       run: |
         source /opt/ros/${{ inputs.ros_distro }}/setup.bash
         cd ${WS}
-        colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+        colcon build --merge-install --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
