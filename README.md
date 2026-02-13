@@ -29,8 +29,10 @@ OpenHRC has been developed and tested in the following environments:
 
 
 
-## Quick Start with Docker
-See [quick_start_w_docker_guide](./docker/README.md).
+## Quick Start
+This package offers container/virtual environment configurations for quick start.
+1. [Using Docker](./docker/README.md)
+2. [Using Pixi](https://github.com/OpenHRC/ohrc_pixi_ws)
 
 
 ## Native Installation
