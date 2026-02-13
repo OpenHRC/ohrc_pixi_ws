@@ -17,33 +17,43 @@ jobs:
     env:
       WS: /home/runner/work/ohrc_ws
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
 
     - name: Setup ROS
       uses: ros-tooling/setup-ros@v0.7
       with:
         required-ros-distributions: ${{ inputs.ros_distro }}
+        use-ros2-testing: false
 
-    - name: apt update and upgrade
+
+    - name: apt update 
       run: |
         sudo apt-get update
-        sudo apt-get upgrade -y
 
     - name: Init workspace
       run: |
         mkdir -p ${WS}/src
-        ln -s ${GITHUB_WORKSPACE} ${WS}/src/
+        ln -s "${GITHUB_WORKSPACE}" "${WS}/src/OpenHRC"
 
     - name: pre build
       run: |
         source /opt/ros/${{ inputs.ros_distro }}/setup.bash
         cd ${WS}/src/OpenHRC
         git submodule update --init --recursive
+        sudo rosdep init || true
         rosdep update
-        rosdep install --rosdistro ${{ inputs.ros_distro }} -i -y --from-paths ./ 
+        rosdep install --rosdistro ${{ inputs.ros_distro }} -i -y --from-paths "${WS}/src" --ignore-src
 
     - name: build
       run: |
         source /opt/ros/${{ inputs.ros_distro }}/setup.bash
         cd ${WS}
+
+        which python3
+        python3 -c "import sys; print(sys.version); print(sys.executable)"
+        python3 -c "import ament_package, inspect; print(ament_package.__file__)"
         colcon build --merge-install --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
