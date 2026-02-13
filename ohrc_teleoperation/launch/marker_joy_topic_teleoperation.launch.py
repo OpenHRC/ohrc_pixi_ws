@@ -1,9 +1,10 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
+from launch.conditions import IfCondition
 
 
 def generate_launch_description():
@@ -29,20 +30,21 @@ def generate_launch_description():
                 'user_frame_viewpoint': LaunchConfiguration('user_frame_viewpoint'),
             }.items()
         ),
-        Node(
-            package='spacenav',
-            executable='spacenav_node',
-            name='spacenav',
-            parameters=[
-                    {
-                        'zero_when_static': False,
-                        'static_trans_deadband': 0.1,
-                        'static_rot_deadband': 0.1,
-                    }
-            ],
-            remappings=[
-                ('/spacenav/joy', '/fr3_left/cmd_joy'),
-            ],
-            output='screen',
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([FindPackageShare(
+                'spacemouse_ros2'), '/launch/spacemouse_publisher.launch.py']),
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('device'), "' == 'spacenav'"])),
+            launch_arguments={
+                'joy_topic_name': 'cmd_joy',
+            }.items()
         ),
+
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([FindPackageShare(
+                'keyboard'), '/launch/keyboard_to_joy.launch.py']),
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('device'), "' == 'keyboard'"])),
+            launch_arguments={
+                'joy_topic_name': '/cmd_joy',
+            }.items()
+        )
     ])
