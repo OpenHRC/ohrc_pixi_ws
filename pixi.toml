@@ -2,7 +2,7 @@
 authors = ["Shunki Itadera <s.itadera@aist.go.jp>"]
 channels = ["robostack-jazzy", "conda-forge"]
 name = "ohrc_pixi_ws"
-platforms = ["osx-arm64", "linux-64"]
+platforms = ["osx-arm64", "linux-64", "win-64"]
 version = "0.1.0"
 
 [tasks]
@@ -18,7 +18,7 @@ ros-jazzy-rmw-cyclonedds-cpp = ">=2.2.3,<3"
 ros-jazzy-ros2-controllers = ">=4.33.1,<5"
 ros-dev-tools = ">=1.0.1,<2"
 filelock = ">=3.20.1,<4"
-sdl = ">=1.2.68,<2"
+sdl = ">=1.2.68,<1.3"
 proxsuite = ">=0.7.2,<0.8"
 magic_enum = ">=0.9.7,<0.10"
 setuptools = "69.5.*"
@@ -26,6 +26,9 @@ setuptools = "69.5.*"
 
 [activation]
 scripts = ["install/setup.sh"]
+
+[target.win-64.activation]
+scripts = ["install/setup.bat"]
 
 [activation.env]
 RMW_IMPLEMENTATION = "rmw_cyclonedds_cpp"
