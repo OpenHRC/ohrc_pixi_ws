@@ -21,4 +21,4 @@ jobs:
           pixi-version: v0.62.2
 
       - name: Build
-        run: pixi run build
+        run: pixi run clone && pixi run build
