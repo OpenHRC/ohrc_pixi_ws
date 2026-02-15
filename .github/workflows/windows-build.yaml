@@ -1,0 +1,8 @@
+name: windows-build
+on: push
+
+jobs:
+  windows-build:
+    uses: ./.github/workflows/build.yaml
+    with:
+      os: windows-latest

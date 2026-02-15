@@ -1,0 +1,8 @@
+name: ubuntu-build
+on: push
+
+jobs:
+  ubuntu-build:
+    uses: ./.github/workflows/build.yaml
+    with:
+      os: ubuntu-latest

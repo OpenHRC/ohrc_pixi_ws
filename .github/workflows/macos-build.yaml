@@ -1,0 +1,8 @@
+name: macos-build
+on: push
+
+jobs:
+  macos-build:
+    uses: ./.github/workflows/build.yaml
+    with:
+      os: macos-latest
