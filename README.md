@@ -6,6 +6,11 @@ We have tested on
 - macOS Tahoe
 - Ubuntu 22.04
 
+#### CI Build Status
+| ROS 2 Distribution | ubuntu-latest                                                                                                                                                                         | macos-latest                                                                                                                                                                       | windwos-latest                                                                                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build Status       | [![ubuntu-build](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/ubuntu-build.yaml/badge.svg)](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/ubuntu-build.yaml) | [![macos-build](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/macos-build.yaml/badge.svg)](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/macos-build.yaml) | [![windows-build](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/windows-build.yaml/badge.svg)](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/windows-build.yaml) |
+
 ## 1. Install Pixi
 Follow the official instruction [WEB](https://pixi.prefix.dev/latest/installation/)
 
