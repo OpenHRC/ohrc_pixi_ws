@@ -6,6 +6,7 @@ platforms = ["osx-arm64", "linux-64", "win-64"]
 version = "0.1.0"
 
 [tasks]
+clone = "git clone https://github.com/OpenHRC/OpenHRC.git src/OpenHRC --depth 1 --branch ros2  --recursive"
 build = "colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release"
 ur5e_gz = "ros2 launch ur_simulation_gz ur_sim_control.launch.py initial_joint_controller:=forward_velocity_controller launch_rviz:=false gazebo_gui:=false"
 ohrc_marker_teleoperation = "ros2 launch ohrc_teleoperation marker_teleoperation.launch.py"

@@ -25,9 +25,9 @@ cd ohrc_pixi_ws
 pixi install
 ```
 
-## 4. Build OpenHRC (and others in src)
+## 4. Clone and build OpenHRC
 ```bash
-pixi run build
+pixi run clone && pixi run build
 ```
 which is alias of `pixi run colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release`.
 
