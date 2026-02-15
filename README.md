@@ -7,9 +7,9 @@ We have tested on
 - Ubuntu 22.04
 
 #### CI Build Status
-| ROS 2 Distribution | ubuntu-latest                                                                                                                                                                         | macos-latest                                                                                                                                                                       | windows-latest                                                                                                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build Status       | [![ubuntu-build](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/ubuntu-build.yaml/badge.svg)](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/ubuntu-build.yaml) | [![macos-build](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/macos-build.yaml/badge.svg)](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/macos-build.yaml) | [![windows-build](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/windows-build.yaml/badge.svg)](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/windows-build.yaml) |
+| OS           | ubuntu-latest                                                                                                                                                                         | macos-latest                                                                                                                                                                       | windows-latest                                                                                                                                                                           |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build Status | [![ubuntu-build](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/ubuntu-build.yaml/badge.svg)](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/ubuntu-build.yaml) | [![macos-build](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/macos-build.yaml/badge.svg)](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/macos-build.yaml) | [![windows-build](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/windows-build.yaml/badge.svg)](https://github.com/OpenHRC/ohrc_pixi_ws/actions/workflows/windows-build.yaml) |
 
 ## 1. Install Pixi
 Follow the official instruction [WEB](https://pixi.prefix.dev/latest/installation/)
@@ -21,7 +21,7 @@ curl -fsSL https://pixi.sh/install.sh | sh
 
 ## 2. Clone this repository
 ```bash
-git clone https://github.com/OpenHRC/ohrc_pixi_ws.git --recursive
+git clone https://github.com/OpenHRC/ohrc_pixi_ws.git
 ```
 
 ## 3. Install Dependencies
